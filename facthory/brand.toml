@@ -19,6 +19,13 @@ repository = "https://github.com/storytold/wordcraft"
 svg = "page.svg"
 base = "facthorypage"
 
+# Facthory's other asset files, credited in ATTRIBUTION.md's Facthory block (render.py).
+[[asset]]
+path = "dmg/background.svg"
+author = "@XusBadia (WordCraft contributors); recoloured and retitled by Bandpey GmbH"
+source = "derived from WordCraft's `packaging/macos/dmg/background.svg`; title outlined from Inter SemiBold (OFL-1.1)"
+licence = "MIT OR Apache-2.0"
+
 [files]
 # Never touched: upstream's licences and notices stay exactly as written (Apache-2.0 §4).
 skip = ["LICENSE-APACHE", "LICENSE-MIT", "NOTICE", ".github"]
@@ -289,6 +296,16 @@ regex = true
 from = "icons/app-icon"
 to = "assets/app-icon"
 replace = true
+
+[[copy]]
+# The DMG window: our colours, title and icon (the release workflow renders it with generate.py).
+from = "dmg/background.svg"
+to = "packaging/macos/dmg/background.svg"
+
+[[copy]]
+# Packages carry README.md (packaging/env.sh copy_docs): ours, not upstream's.
+from = "../.github/README.md"
+to = "README.md"
 
 # ---------------------------------------------------------------------------------------------
 # `rebrand.py check`: no upstream mark in what ships, except the credits above.

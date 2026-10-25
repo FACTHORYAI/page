@@ -19,6 +19,9 @@ Files Facthory adds to upstream's tree, and nothing else:
 | `facthory/README.md` | This list |
 | `.github/README.md` | The repository's front page |
 | `.github/workflows/facthory.yml` | The branded build: apply, upstream's gate on the branded tree, release build, mark check |
+| `.github/workflows/facthory-release.yml` | Signed installers for macOS, Windows and Linux from a tag `v<version>`, as a draft release |
+| `facthory/release.py` | Collects a release's files and writes `SHA256SUMS`, the update feed `latest.json` and the notes |
+| `facthory/dmg/background.svg` | The disk image window, from upstream's, in our colours and with our name |
 
 And two upstream files changed:
 
@@ -49,7 +52,27 @@ And two upstream files changed:
   keeps every upstream credit and lists our icon as ours.
 
 Telemetry and crash reporting: WordCraft has none, so there is nothing to turn off. Updates:
-WordCraft has no built-in updater; ours comes with the signed releases.
+WordCraft has no built-in updater; ours reads the update feed of our releases (see Releases).
+
+## Releases
+
+A tag `v<version>` (the version in `Cargo.toml`, normally upstream's release it merges) runs
+`.github/workflows/facthory-release.yml`: each platform brands a fresh checkout and runs
+upstream's packaging scripts, which sign with the secrets of the environment `release`
+(`bandpey-hq/github-infra`):
+
+| Platform | Files | Signing |
+| -------- | ----- | ------- |
+| macOS | `facthorypage-<v>-macos-universal.dmg`, CLI zip | Developer ID, notarized and stapled |
+| Windows | `facthorypage-<v>-windows-x64.msi` and `-arm64.msi`, portable zips | Authenticode |
+| Linux | AppImage (with `.zsync`), `.deb`, `.rpm`, `.tar.gz`; x86_64 and aarch64 | SHA-256 sums |
+
+The result is a draft GitHub release with `SHA256SUMS` and `latest.json`; a person checks it and
+publishes it. A manual run of the workflow builds the same files, unsigned when the secrets are
+missing, as workflow artifacts.
+
+`latest.json`, at `releases/latest/download/latest.json`, is the update feed: the version and,
+per platform, the file the app updates itself from with its size and SHA-256.
 
 ## The check
 
