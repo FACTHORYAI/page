@@ -11,8 +11,9 @@
 //! - Windows: the MSI upgrades the app installed in Program Files.
 //! - Linux: the new AppImage replaces this one (`$APPIMAGE`), when its folder is writable.
 //!
-//! Any other copy (the .deb and .rpm, the portable zips and tarballs, a read-only folder, an
-//! unsigned build) gets a notice with a link to the release instead. Builds without
+//! A .deb or .rpm install gets a notice that the system's updates install the new version (from
+//! our apt and dnf repositories, `facthory/packages.py`); any other copy (the portable zips and
+//! tarballs, a read-only folder, an unsigned build) gets a notice with a link to the release. Builds without
 //! `FACTHORY_UPDATE_FEED` (every build but our release workflow's) never check, nor do runs
 //! without preferences, with `FACTHORY_UPDATES=off`, or with `"enabled": false` in `update.json`
 //! in the settings folder.
@@ -40,9 +41,11 @@ const FILE_MAX: u64 = 2 * 1024 * 1024 * 1024;
 enum Phase {
     Idle,
     /// A newer version this copy can't install itself: the notice links to its release.
+    /// `packaged`: the system's package manager updates this copy (a .deb or .rpm install).
     Available {
         version: String,
         page: String,
+        packaged: bool,
     },
     /// Downloaded and checked: installs when the app quits.
     Ready {
@@ -137,11 +140,11 @@ pub fn ui(ctx: &egui::Context) {
                         }
                     });
                 }
-                Phase::Available { version, page } => {
+                Phase::Available { version, page, packaged } => {
                     ui.label(egui::RichText::new(format!("{name} {version} is available")).strong());
-                    ui.label("Download it from its release page.");
+                    ui.label(if *packaged { "Your system's software updates install it." } else { "Download it from its release page." });
                     ui.horizontal(|ui| {
-                        if ui.button("Download").clicked() {
+                        if ui.button(if *packaged { "What's new" } else { "Download" }).clicked() {
                             action = Some(Action::Open(page.clone()));
                         }
                         if ui.button("Skip this version").clicked() {
@@ -233,7 +236,7 @@ fn check(name: &str, feed_url: &str, settings: &Path, downloads: &Path) -> Resul
         return Ok(Phase::Idle);
     }
     log::info!("updates: {name} {} is available", feed.version);
-    let available = Phase::Available { version: feed.version.clone(), page: feed.page.clone() };
+    let available = Phase::Available { version: feed.version.clone(), page: feed.page.clone(), packaged: packaged() };
     let (Some(asset), Some(method)) = (feed.asset, Method::for_this_copy()) else { return Ok(available) };
     std::fs::create_dir_all(downloads).map_err(|e| format!("{}: {e}", downloads.display()))?;
     let file = downloads.join(&asset.name);
@@ -245,6 +248,14 @@ fn check(name: &str, feed_url: &str, settings: &Path, downloads: &Path) -> Resul
             Ok(available)
         }
     }
+}
+
+/// A copy the system's package manager installed (.deb, .rpm, from our repositories): it updates
+/// with the system, so the notice only says a new version exists.
+fn packaged() -> bool {
+    std::env::consts::OS == "linux"
+        && std::env::var_os("APPIMAGE").is_none()
+        && std::env::current_exe().is_ok_and(|exe| exe.starts_with("/usr/") || exe.starts_with("/opt/"))
 }
 
 /// The feed's entry for this platform (`release.py`), or `None` where the app can't update itself.
@@ -454,13 +465,15 @@ impl Sha256 {
         if self.pending.len() < 64 {
             return;
         }
-        let block = std::mem::take(&mut self.pending);
-        self.block(&block);
-        let mut blocks = rest.chunks_exact(64);
-        for b in &mut blocks {
+        if let Ok(block) = <[u8; 64]>::try_from(self.pending.as_slice()) {
+            self.block(&block);
+        }
+        self.pending.clear();
+        let (blocks, remainder) = rest.as_chunks::<64>();
+        for b in blocks {
             self.block(b);
         }
-        self.pending.extend_from_slice(blocks.remainder());
+        self.pending.extend_from_slice(remainder);
     }
 
     fn finish(mut self) -> [u8; 32] {
@@ -471,20 +484,20 @@ impl Sha256 {
             tail.push(0);
         }
         tail.extend_from_slice(&bits.to_be_bytes());
-        for b in tail.chunks_exact(64) {
+        for b in tail.as_chunks::<64>().0 {
             self.block(b);
         }
         let mut out = [0u8; 32];
-        for (o, s) in out.chunks_exact_mut(4).zip(self.state) {
-            o.copy_from_slice(&s.to_be_bytes());
+        for (o, s) in out.as_chunks_mut::<4>().0.iter_mut().zip(self.state) {
+            *o = s.to_be_bytes();
         }
         out
     }
 
-    fn block(&mut self, block: &[u8]) {
+    fn block(&mut self, block: &[u8; 64]) {
         let mut w = [0u32; 64];
-        for (wi, c) in w.iter_mut().zip(block.chunks_exact(4)) {
-            *wi = <[u8; 4]>::try_from(c).map(u32::from_be_bytes).unwrap_or(0);
+        for (wi, c) in w.iter_mut().zip(block.as_chunks::<4>().0) {
+            *wi = u32::from_be_bytes(*c);
         }
         for i in 16..64 {
             let s0 = w[i - 15].rotate_right(7) ^ w[i - 15].rotate_right(18) ^ (w[i - 15] >> 3);

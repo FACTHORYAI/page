@@ -21,6 +21,8 @@ Files Facthory adds to upstream's tree, and nothing else:
 | `.github/workflows/facthory.yml` | The branded build: apply, upstream's gate on the branded tree, release build, mark check |
 | `.github/workflows/facthory-release.yml` | Signed installers for macOS, Windows and Linux from a tag `v<version>`, as a draft release |
 | `facthory/release.py` | Collects a release's files and writes `SHA256SUMS`, the update feed `latest.json` and the notes |
+| `facthory/packages.py` | Builds the apt and dnf repositories from the newest releases' `.deb` and `.rpm` files, signed |
+| `.github/workflows/facthory-packages.yml` | Publishes those repositories on GitHub Pages when a release is published |
 | `facthory/dmg/background.svg` | The disk image window, from upstream's, in our colours and with our name |
 | `facthory/update/facthory_update.rs` | The updater, copied into the app at build time (see Updates) |
 
@@ -75,6 +77,11 @@ missing, as workflow artifacts.
 `latest.json`, at `releases/latest/download/latest.json`, is the update feed: the version and,
 per platform, the file the app updates itself from with its size and SHA-256.
 
+Publishing a release also runs `.github/workflows/facthory-packages.yml`: the `.deb` and `.rpm`
+files of the two newest releases become a signed apt repository and a dnf repository on this
+repository's GitHub Pages site, `https://facthoryai.github.io/page/`, whose front page says how
+to add them. Installs from there update with the system.
+
 ## Updates
 
 `facthory/update/facthory_update.rs` is copied into the app when the brand is applied, and
@@ -90,7 +97,8 @@ with "Restart now":
 | macOS app in a writable folder | The new bundle takes the old one's place after the app quits |
 | Windows, installed with the MSI | The MSI upgrades it after the app quits (with the administrator prompt) |
 | Linux AppImage in a writable folder | The new AppImage takes the old one's name |
-| `.deb`, `.rpm`, portable zips, tarballs, unsigned builds | A notice with a link to the release |
+| `.deb`, `.rpm` | The system's updates, from our repositories; the notice says so |
+| Portable zips, tarballs, unsigned builds | A notice with a link to the release |
 
 Downloads use the system's `curl`, so the app carries no TLS stack. Only builds made by the
 release workflow (`FACTHORY_UPDATE_FEED`) check. Updates are off in runs without preferences,
