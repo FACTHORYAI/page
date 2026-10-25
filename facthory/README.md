@@ -16,9 +16,12 @@ Files Facthory adds to upstream's tree, and nothing else:
 | `facthory/rebrand.py` | Applies `brand.toml` to a checkout (`apply`) and checks shipped files for upstream marks (`check`) |
 | `facthory/icons/page.svg` | The Facthory Page icon (original artwork) |
 | `facthory/icons/render.py` | Renders the icon set (`facthory/icons/app-icon/`, committed) with resvg, and credits it in `ATTRIBUTION.md` |
+| `facthory/sync.py` | Merges the next upstream release (W3), resolving the two known conflicts below |
 | `facthory/README.md` | This list |
+| `facthory/.gitignore` | Keeps Python's bytecode out of the repository |
 | `.github/README.md` | The repository's front page |
 | `.github/workflows/facthory.yml` | The branded build: apply, upstream's gate on the branded tree, release build, mark check |
+| `.github/workflows/upstream-sync.yml` | Every three hours: merge the next upstream release on `sync/<tag>`, open its pull request, merge it when the branded build passes |
 | `.github/workflows/facthory-release.yml` | Signed installers for macOS, Windows and Linux from a tag `v<version>`, as a draft release |
 | `facthory/release.py` | Collects a release's files and writes `SHA256SUMS`, the update feed `latest.json` and the notes |
 | `facthory/packages.py` | Builds the apt and dnf repositories from the newest releases' `.deb` and `.rpm` files, signed |
@@ -111,6 +114,24 @@ the settings folder; "Skip this version" is kept there too.
 sibling apps, upstream's domains and publisher) is left in the shipped text (`packaging/`,
 `assets/`, build scripts) or in the built binaries, outside the credits `brand.toml` allows.
 The branded build runs it on the release binaries.
+
+## Upstream sync
+
+`.github/workflows/upstream-sync.yml` runs as the GitHub App **facthory-office-sync**
+(bandpey-hq/github-infra, `apps/office-sync.json`), because upstream's releases change its own
+workflows and the Actions token may not push those. Its key is a secret of the environment
+`upstream-sync`, which only `main` may use; until the App exists, the workflow does nothing.
+
+1. Every three hours, `facthory/sync.py merge` takes the oldest upstream release `main` lacks
+   and merges it on `sync/<tag>`. A change upstream made to a file we removed keeps it removed;
+   a conflict in `ATTRIBUTION.md` takes upstream's file and writes our block again. Any other
+   conflict opens an issue and stops there.
+2. The App opens the pull request; the checks run on it as on any other.
+3. When the Facthory Page build passes on exactly that commit, the workflow merges it. When it
+   fails, it says so on the pull request: usually a rule in `brand.toml` that upstream's change
+   no longer matches. Fix the rule on the branch; the merge follows the green build.
+
+One sync pull request is open at a time, so releases land in order.
 
 ## When upstream changes
 
