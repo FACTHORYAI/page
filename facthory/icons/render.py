@@ -58,9 +58,9 @@ def icns(pngs: dict[int, bytes]) -> bytes:
     return b"icns" + struct.pack(">I", 8 + len(body)) + body
 
 
-def attribution(svg: Path, out: Path) -> None:
+def attribution(brand: dict, svg: Path, out: Path) -> None:
     """Credit Facthory's own files in ATTRIBUTION.md: one block right under the title, replaced in
-    place when it exists."""
+    place when it exists. The icon set, then brand.toml's [[asset]] entries."""
     path = ROOT / "ATTRIBUTION.md"
     text = path.read_text(encoding="utf-8")
     src = svg.relative_to(ROOT).as_posix()
@@ -70,6 +70,7 @@ def attribution(svg: Path, out: Path) -> None:
         for p in sorted(out.rglob("*"))
         if p.is_file()
     ]
+    rows += [f"| `facthory/{a['path']}` | {a['author']} | {a['source']} | {a['licence']} |" for a in brand.get("asset", [])]
     block = "\n".join(
         [f"{BEGIN}: Facthory's own files, written by facthory/icons/render.py; see facthory/README.md -->",
          "| Facthory asset | Author | Source | Licence |", "|---|---|---|---|", *rows, END]
@@ -89,7 +90,7 @@ def main() -> int:
         brand = tomllib.load(f)
     svg, out = HERE / brand["icon"]["svg"], HERE / "app-icon"
     if sys.argv[1:] == ["--attribution"]:
-        attribution(svg, out)
+        attribution(brand, svg, out)
         return 0
     if not shutil.which("resvg"):
         print("error: resvg not found (cargo install resvg)", file=sys.stderr)
@@ -120,7 +121,7 @@ def main() -> int:
         (out / f"{base}.ico").write_bytes(ico({s: render(svg, s, tmp / f"ico-{s}.png") for s in ICO}))
         mac_pngs = {s: render(mac, s, tmp / f"mac-{s}.png") for s in sorted({s for _, s in ICNS})}
         (out / f"{base}.icns").write_bytes(icns(mac_pngs))
-    attribution(svg, out)
+    attribution(brand, svg, out)
     print(f"icons written to {out.relative_to(ROOT)}; ATTRIBUTION.md credits them")
     return 0
 

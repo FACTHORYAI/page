@@ -1,0 +1,64 @@
+name: Facthory Page Linux repositories
+
+# The apt and dnf repositories (facthory/packages.py), served by GitHub Pages at
+# https://facthoryai.github.io/page/: the .deb and .rpm files of the two newest published
+# releases, with the metadata signed by the key PACKAGES_GPG_KEY of the environment `release`.
+# Runs when a release is published, or by hand. Users add the repository once (the site's
+# index.html says how) and get updates with their system's.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: facthory-packages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    environment: release
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Tools
+        run: sudo apt-get install -y --no-install-recommends apt-utils createrepo-c
+      - name: The packages of the two newest releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p pkgs
+          gh release list --repo "$GITHUB_REPOSITORY" --exclude-drafts --exclude-pre-releases --limit 2 --json tagName --jq '.[].tagName' |
+            while read -r tag; do
+              gh release download "$tag" --repo "$GITHUB_REPOSITORY" --dir "pkgs/$tag" --pattern '*.deb' --pattern '*.rpm'
+            done
+      - name: Sign and build the repositories
+        env:
+          PACKAGES_GPG_KEY: ${{ secrets.PACKAGES_GPG_KEY }}
+        run: |
+          if [ -z "$PACKAGES_GPG_KEY" ]; then echo "::error::The environment release has no PACKAGES_GPG_KEY"; exit 1; fi
+          export GNUPGHOME="$RUNNER_TEMP/gnupg"
+          mkdir -m 700 "$GNUPGHOME"
+          printf '%s\n' "$PACKAGES_GPG_KEY" | gpg --batch --quiet --import
+          python3 facthory/packages.py pkgs site "$GITHUB_REPOSITORY"
+          rm -rf "$GNUPGHOME"
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5.0.0

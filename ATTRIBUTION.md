@@ -18,6 +18,7 @@
 | `facthory/icons/app-icon/hicolor/512x512/apps/com.facthory.page.png` | Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT OR Apache-2.0 |
 | `facthory/icons/app-icon/hicolor/64x64/apps/com.facthory.page.png` | Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT OR Apache-2.0 |
 | `facthory/icons/app-icon/hicolor/scalable/apps/com.facthory.page.svg` | Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT OR Apache-2.0 |
+| `facthory/dmg/background.svg` | @XusBadia (WordCraft contributors); recoloured and retitled by Bandpey GmbH | derived from WordCraft's `packaging/macos/dmg/background.svg`; title outlined from Inter SemiBold (OFL-1.1) | MIT OR Apache-2.0 |
 <!-- facthory:end -->
 
 Every non-code asset in this repository (fonts, icons, images, example documents) is listed here with its author, source and licence. `cargo xtask assets` (part of `cargo xtask ci`) fails if an asset file is missing from this table.

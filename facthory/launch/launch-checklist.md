@@ -8,16 +8,16 @@ Store listings and a "switch from Microsoft" guide. W7 starts after W0, W2, W4, 
 **Claude** = Claude Code sessions (code, builds, verification, drafts). Where both appear, the first
 does the work and the second signs off.
 
-**Snapshot, 2026-10-25** (pull requests in FACTHORYAI/page, grid and deck; the owner merges them):
-- W2, the brand patch set: #3 in each.
-- W3, the upstream sync: #4 in each. Its GitHub App and environments are in bandpey-hq/github-infra#25.
-- W4, signed releases and the in-app updater: #5 in each. The `release` environment, the signing
-  secrets and runbook section M are in bandpey-hq/github-infra#25.
-- W6, the fidelity corpus and its runner: #6 in each.
-- W7 and W9, the listings, guides and this folder: #7 in each.
+**Status, 2026-10-25**: every package so far is merged to `main` in FACTHORYAI/page, grid and deck:
+- W2, the brand patch set (#3 in each);
+- W3, the upstream sync (#4);
+- W4, signed releases and the in-app updater (#5);
+- W6, the fidelity corpus and its runner (#6);
+- W7 and W9, the listings, guides and this folder (#7).
 
-Merging comes first; then the owner's accounts and signing (runbook M), then a first tagged
-release per app.
+bandpey-hq/github-infra#25 is merged and applied: the environments `upstream-sync`, `release` and
+`github-pages` exist on all three repositories. Next come the sync App (runbook L), the owner's
+accounts and signing (runbook M), then a first tagged release per app.
 
 ## Gate 1: W0, names cleared
 
@@ -46,8 +46,8 @@ release per app.
 
 Per repository (`FACTHORYAI/page`, `grid`, `deck`):
 
-- [ ] **Claude**: W2 pull requests merged to `main`; the branded build (`facthory.yml`) green on
-  `main`.
+- [x] **Claude**: W2 pull requests merged to `main`; the branded build (`facthory.yml`) green on
+  `main` (2026-10-25).
 - [ ] **Claude**: `python3 facthory/rebrand.py check` passes on the release binaries of every
   platform (it runs in the release jobs).
 - [ ] **Claude**: screenshots of each app on each OS showing the Facthory name and icon, the About
