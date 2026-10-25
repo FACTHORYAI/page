@@ -7,7 +7,12 @@ whether upstream's layout has <base>-macos-512.png and <base>.svg.
 Needs resvg (cargo install resvg). The outputs are committed, so builds never need it. Writes
 the .ico and .icns containers itself (PNG entries), so no macOS or Windows tool is needed.
 
-  python3 facthory/icons/render.py
+Upstream's `cargo xtask assets` needs an ATTRIBUTION.md row for every image in the repository, so
+this also writes one marked block under ATTRIBUTION.md's title that credits these files; upstream
+seldom edits the top of that file, so merges rarely touch the block.
+
+  python3 facthory/icons/render.py                 render, then write the block
+  python3 facthory/icons/render.py --attribution   only rewrite the block (after an upstream merge)
 """
 
 from __future__ import annotations
@@ -21,6 +26,9 @@ import tomllib
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
+ROOT = HERE.parent.parent
+BEGIN = "<!-- facthory:begin"
+END = "<!-- facthory:end -->"
 HICOLOR = [16, 24, 32, 48, 64, 128, 256, 512]
 ICO = [16, 20, 24, 32, 40, 48, 64, 128, 256]
 # icns entry types holding PNG data, by pixel size; the @2x types reuse the same pixels.
@@ -50,15 +58,43 @@ def icns(pngs: dict[int, bytes]) -> bytes:
     return b"icns" + struct.pack(">I", 8 + len(body)) + body
 
 
+def attribution(svg: Path, out: Path) -> None:
+    """Credit Facthory's own files in ATTRIBUTION.md: one block right under the title, replaced in
+    place when it exists."""
+    path = ROOT / "ATTRIBUTION.md"
+    text = path.read_text(encoding="utf-8")
+    src = svg.relative_to(ROOT).as_posix()
+    rows = [f"| `{src}` | Bandpey GmbH | original artwork | MIT OR Apache-2.0 |"]
+    rows += [
+        f"| `{p.relative_to(ROOT).as_posix()}` | Bandpey GmbH | rendered from `{src}` by `facthory/icons/render.py` | MIT OR Apache-2.0 |"
+        for p in sorted(out.rglob("*"))
+        if p.is_file()
+    ]
+    block = "\n".join(
+        [f"{BEGIN}: Facthory's own files, written by facthory/icons/render.py; see facthory/README.md -->",
+         "| Facthory asset | Author | Source | Licence |", "|---|---|---|---|", *rows, END]
+    )
+    if BEGIN in text:
+        start = text.index(BEGIN)
+        end = text.index(END, start) + len(END)
+        text = text[:start] + block + text[end:]
+    else:
+        title, _, rest = text.partition("\n")
+        text = f"{title}\n\n{block}\n{rest}"
+    path.write_text(text, encoding="utf-8")
+
+
 def main() -> int:
+    with (HERE.parent / "brand.toml").open("rb") as f:
+        brand = tomllib.load(f)
+    svg, out = HERE / brand["icon"]["svg"], HERE / "app-icon"
+    if sys.argv[1:] == ["--attribution"]:
+        attribution(svg, out)
+        return 0
     if not shutil.which("resvg"):
         print("error: resvg not found (cargo install resvg)", file=sys.stderr)
         return 1
-    with (HERE.parent / "brand.toml").open("rb") as f:
-        brand = tomllib.load(f)
     icon, app_id, base = brand["icon"], brand["brand"]["app_id"], brand["icon"]["base"]
-    svg = HERE / icon["svg"]
-    out = HERE / "app-icon"
     if out.exists():
         shutil.rmtree(out)
     out.mkdir()
@@ -84,7 +120,8 @@ def main() -> int:
         (out / f"{base}.ico").write_bytes(ico({s: render(svg, s, tmp / f"ico-{s}.png") for s in ICO}))
         mac_pngs = {s: render(mac, s, tmp / f"mac-{s}.png") for s in sorted({s for _, s in ICNS})}
         (out / f"{base}.icns").write_bytes(icns(mac_pngs))
-    print(f"icons written to {out.relative_to(HERE.parent.parent)}")
+    attribution(svg, out)
+    print(f"icons written to {out.relative_to(ROOT)}; ATTRIBUTION.md credits them")
     return 0
 
 

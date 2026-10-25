@@ -15,16 +15,17 @@ Files Facthory adds to upstream's tree, and nothing else:
 | `facthory/brand.toml` | The brand as data: names, app ids, links, publisher, the exact edits, the installer GUID namespace, the mark check |
 | `facthory/rebrand.py` | Applies `brand.toml` to a checkout (`apply`) and checks shipped files for upstream marks (`check`) |
 | `facthory/icons/page.svg` | The Facthory Page icon (original artwork) |
-| `facthory/icons/render.py` | Renders the icon set (`facthory/icons/app-icon/`, committed) with resvg |
+| `facthory/icons/render.py` | Renders the icon set (`facthory/icons/app-icon/`, committed) with resvg, and credits it in `ATTRIBUTION.md` |
 | `facthory/README.md` | This list |
 | `.github/README.md` | The repository's front page |
 | `.github/workflows/facthory.yml` | The branded build: apply, upstream's gate on the branded tree, release build, mark check |
 
-And one upstream file removed:
+And two upstream files changed:
 
-| Path | Why |
-| ---- | --- |
-| `.github/dependabot.yml` | Dependency updates reach us with upstream's releases; our own bump PRs would only diverge from upstream's lockfile |
+| Path | Change | Why |
+| ---- | ------ | --- |
+| `.github/dependabot.yml` | Removed | Dependency updates reach us with upstream's releases; our own bump PRs would only diverge from upstream's lockfile |
+| `ATTRIBUTION.md` | One block under the title (`<!-- facthory:begin … end -->`), written by `facthory/icons/render.py` | Upstream's `cargo xtask assets` needs a row for every image in the repository, ours included; upstream seldom edits the top of the file, and after a merge that touches it, `render.py --attribution` rewrites the block |
 
 ## What the brand changes in a build
 
