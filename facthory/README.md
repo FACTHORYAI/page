@@ -30,6 +30,9 @@ Files Facthory adds to upstream's tree, and nothing else:
 | `facthory/update/facthory_update.rs` | The updater, copied into the app at build time (see Updates) |
 | `.github/workflows/facthory-fidelity.yml` | The fidelity corpus run: weekly, by hand, and on corpus changes; pass rates as the job summary |
 | `facthory/corpus/` | The fidelity corpus (W6): `corpus.toml` (real Office files, pinned, never committed), `fidelity.py` (the runner), `scan.py` (checks a candidate file), and its README |
+| `facthory/store/listing.md` | The Microsoft Store listing (W9): every field ready to paste, with what must happen before it is submitted |
+| `facthory/guide/switching.md` | The switching guide (W7): install, open your files, what is the same, what is missing |
+| `facthory/launch/` | Launch material for all three apps: the launch and Store checklists, the privacy policy, the age rating, the MSI requirements, the downloads copy |
 
 And two upstream files changed:
 
