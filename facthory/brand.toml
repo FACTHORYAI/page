@@ -1,0 +1,288 @@
+# Facthory Page: upstream WordCraft (storytold/wordcraft) under the Facthory brand.
+# Applied to a fresh checkout by facthory/rebrand.py before every build; the tracked tree stays
+# upstream's so releases merge cleanly. Order and semantics: the docstring of rebrand.py.
+
+[brand]
+name = "Facthory Page"
+app_id = "com.facthory.page"
+publisher = "Bandpey GmbH"
+website = "https://facthory.com/page"
+repository = "https://github.com/FACTHORYAI/page"
+support = "https://github.com/FACTHORYAI/page/issues"
+
+[upstream]
+name = "WordCraft"
+team = "ArtCraft team"
+repository = "https://github.com/storytold/wordcraft"
+
+[icon]
+svg = "page.svg"
+base = "facthorypage"
+
+[files]
+# Never touched: upstream's licences and notices stay exactly as written (Apache-2.0 §4).
+skip = ["LICENSE-APACHE", "LICENSE-MIT", "NOTICE", ".github"]
+# Credit files: only tokens marked credits = true (ids, paths, URLs) apply, so upstream's authors
+# keep their credit while the paths they name follow the renames.
+credits = ["ATTRIBUTION.md", "contributors"]
+# The ArtCraft marks, licensed only for unmodified WordCraft (docs/brand/LICENSE-brand.txt).
+delete = ["docs/brand"]
+
+# ---------------------------------------------------------------------------------------------
+# Rules before the tokens, on upstream's text. Each fails the build when upstream moves it.
+
+[[rule]]
+why = "ProgIDs, the AppDir and other dotted names cannot take the space in the display name"
+files = ["packaging/*", "apps/*"]
+find = 'WordCraft\.(?=[A-Z])'
+replace = 'FacthoryPage.'
+regex = true
+
+[[rule]]
+why = "Settings › Default apps takes the registered name URL-encoded"
+files = "apps/wordcraft/src/default_apps.rs"
+find = "registeredAppMachine=WordCraft"
+replace = "registeredAppMachine=Facthory%20Page"
+count = 2
+
+[[rule]]
+why = "The ArtCraft Discord becomes our issue tracker: About link"
+files = "crates/ui-egui/src/dialogs.rs"
+find = 'tl!("Join us on Discord: discord.gg/artcraft")'
+replace = 'tl!("Report a problem: github.com/FACTHORYAI/page/issues")'
+count = 1
+
+[[rule]]
+files = "crates/ui-egui/src/i18n/*.tsv"
+kind = "tsv"
+key = "Join us on Discord: discord.gg/artcraft"
+new_key = "Report a problem: github.com/FACTHORYAI/page/issues"
+
+[[rule]]
+why = "The title-bar community pill: help, hidden by default"
+files = "crates/ui-egui/src/chrome.rs"
+find = 'tl!("Join the ArtCraft community on Discord")'
+replace = 'tl!("Get help or report a problem")'
+count = 1
+
+[[rule]]
+files = "crates/ui-egui/src/i18n/*.tsv"
+kind = "tsv"
+key = "Join the ArtCraft community on Discord"
+new_key = "Get help or report a problem"
+
+[[rule]]
+files = "crates/ui-egui/src/chrome.rs"
+find = 'tl!("Discord"), medium(11.5)'
+replace = 'tl!("Help"), medium(11.5)'
+count = 1
+
+[[rule]]
+files = "crates/ui-egui/src/chrome.rs"
+find = '"discord",(\s+t\.on_accent,)'
+replace = '"help",\1'
+regex = true
+count = 1
+
+[[rule]]
+files = "crates/ui-egui/src/lib.rs"
+find = "show_discord: true,"
+replace = "show_discord: false,"
+count = 1
+
+[[rule]]
+why = "Help tab: the Community Discord button"
+files = "crates/ui-egui/src/ribbon.rs"
+find = '"discord", "Community\nDiscord", "ui.discord"'
+replace = '"help", "Help and\nFeedback", "ui.discord"'
+count = 1
+
+[[rule]]
+files = "crates/ui-egui/src/i18n/*.tsv"
+kind = "tsv"
+key = 'Community\nDiscord'
+new_key = 'Help and\nFeedback'
+
+[[rule]]
+why = "File backstage: the Discord community entry"
+files = "crates/ui-egui/src/backstage.rs"
+find = '("Discord community", "discord")'
+replace = '("Help and feedback", "discord")'
+count = 1
+
+[[rule]]
+files = "crates/ui-egui/src/i18n/*.tsv"
+kind = "tsv"
+key = "Discord community"
+new_key = "Help and feedback"
+
+[[rule]]
+files = "crates/ui-egui/src/keytips.rs"
+find = 'c("Community Discord", "ui.discord")'
+replace = 'c("Help and feedback", "ui.discord")'
+count = 1
+
+[[rule]]
+why = "The spelling list knows our name instead of upstream's"
+files = "assets/spelling/en-extra.txt"
+find = '^artcraft$'
+replace = "facthory"
+regex = true
+count = 1
+
+# ---------------------------------------------------------------------------------------------
+# Tokens, in order, over every text file. credits = true: also in the credit files.
+
+[[token]]
+from = "ai.storyteller.wordcraft"
+to = "com.facthory.page"
+credits = true
+
+[[token]]
+from = "ai.storyteller"
+to = "com.facthory"
+credits = true
+
+[[token]]
+from = "wordcraft@storyteller.ai"
+to = "support@facthory.com"
+
+[[token]]
+from = "https://getartcraft.com/apps/wordcraft"
+to = "https://facthory.com/page"
+credits = true
+
+[[token]]
+from = "getartcraft.com/apps/wordcraft"
+to = "facthory.com/page"
+credits = true
+
+[[token]]
+from = "https://getartcraft.com/"
+to = "https://facthory.com/"
+
+[[token]]
+from = "https://discord.gg/artcraft"
+to = "https://github.com/FACTHORYAI/page/issues"
+
+[[token]]
+from = "discord.gg/artcraft"
+to = "github.com/FACTHORYAI/page/issues"
+
+[[token]]
+from = "github.com/storytold/wordcraft"
+to = "github.com/FACTHORYAI/page"
+
+[[token]]
+from = "storytold/wordcraft"
+to = "FACTHORYAI/page"
+
+[[token]]
+from = "Learning Machines LLC"
+to = "Bandpey GmbH"
+
+[[token]]
+from = "WORDCRAFT"
+to = "FACTHORY_PAGE"
+
+[[token]]
+from = "WordCraft"
+to = "Facthory Page"
+
+[[token]]
+from = "Wordcraft"
+to = "FacthoryPage"
+
+# Crate, binary, file and directory names: one lowercase word, so Rust identifiers
+# (wordcraft_docx -> facthorypage_docx), module paths and log targets stay consistent.
+[[token]]
+from = "wordcraft"
+to = "facthorypage"
+credits = true
+
+# ---------------------------------------------------------------------------------------------
+# Windows Installer: our own UpgradeCode and component GUIDs, stable across releases.
+
+[guids]
+namespace = "https://facthory.com/page/windows-installer"
+files = ["packaging/windows/*.wxs"]
+
+# ---------------------------------------------------------------------------------------------
+# Rules after the tokens and renames: the credits, which name upstream on purpose.
+
+[[rule]]
+phase = "after"
+why = "About: who makes it and what it is based on (brand licence: plain-text credit allowed)"
+files = "crates/ui-egui/src/dialogs.rs"
+find = 'A free, open-source word processor written from scratch in Rust.\nPart of the Crafting Apps from the ArtCraft team.'
+replace = 'A free, open-source word processor from Facthory.\nBased on WordCraft by the ArtCraft team.'
+count = 1
+
+[[rule]]
+phase = "after"
+files = "crates/ui-egui/src/i18n/*.tsv"
+kind = "tsv"
+key = 'A free, open-source word processor written from scratch in Rust.\nPart of the Crafting Apps from the ArtCraft team.'
+new_key = 'A free, open-source word processor from Facthory.\nBased on WordCraft by the ArtCraft team.'
+
+[[rule]]
+phase = "after"
+why = "About: our copyright, then upstream's, which the licence requires us to keep"
+files = "crates/ui-egui/src/dialogs.rs"
+find = "MIT OR Apache-2.0. Copyright (c) 2026 ArtCraft Team and the Facthory Page contributors."
+replace = "MIT OR Apache-2.0. Copyright (c) 2026 Bandpey GmbH. Based on WordCraft, copyright (c) 2026 ArtCraft Team and the WordCraft contributors."
+count = 1
+
+[[rule]]
+phase = "after"
+files = "crates/ui-egui/src/i18n/*.tsv"
+kind = "tsv"
+key = "MIT OR Apache-2.0. Copyright (c) 2026 ArtCraft Team and the Facthory Page contributors."
+new_key = "MIT OR Apache-2.0. Copyright (c) 2026 Bandpey GmbH. Based on WordCraft, copyright (c) 2026 ArtCraft Team and the WordCraft contributors."
+
+[[rule]]
+phase = "after"
+why = "Windows file properties: our copyright and upstream's"
+files = "apps/facthorypage/build.rs"
+find = '"Copyright (c) the Facthory Page authors. MIT OR Apache-2.0."'
+replace = '"Copyright (c) Bandpey GmbH; based on WordCraft, copyright (c) the WordCraft authors. MIT OR Apache-2.0."'
+count = 1
+
+[[rule]]
+phase = "after"
+why = "The app icon is ours; its attribution rows say so"
+files = "ATTRIBUTION.md"
+find = '^(\| `assets/app-icon/[^`]+` \|).*$'
+replace = '\1 Bandpey GmbH | original artwork (`facthory/icons/page.svg`), rendered by `facthory/icons/render.py` | MIT OR Apache-2.0 | Facthory Page app icon |'
+regex = true
+
+# ---------------------------------------------------------------------------------------------
+
+[[copy]]
+from = "icons/app-icon"
+to = "assets/app-icon"
+replace = true
+
+# ---------------------------------------------------------------------------------------------
+# `rebrand.py check`: no upstream mark in what ships, except the credits above.
+
+[check]
+paths = ["packaging", "assets", "apps/*/build.rs", "apps/*/index.html", "Cargo.toml"]
+# Developer notes and scripts under packaging/ do not ship.
+exclude = ["*/tests/*", "*.png", "*.ico", "*.icns", "*.md", "*.py"]
+forbid = [
+  "artcraft", "wordcraft", "storytold", "storyteller", "getartcraft", "learning machines",
+  "crafting apps", "photocraft", "vectorcraft", "filmcraft", "lightcraft", "pdfcraft",
+  "effectcraft", "designcraft", "gridcraft", "deckcraft",
+]
+allow = [
+  'Based on WordCraft by the ArtCraft team.',
+  'Based on WordCraft, copyright (c) 2026 ArtCraft Team and the WordCraft contributors.',
+  'based on WordCraft, copyright (c) the WordCraft authors.',
+  # Provenance of the public-domain hyphenation patterns embedded in the app.
+  '% DesignCraft US English hyphenation patterns (Liang/TeX notation).',
+  "trained with DesignCraft's patgen-style trainer",
+  'Released into the public domain (CC0-1.0) by the DesignCraft contributors.',
+  # Build input used unmodified (Cargo git dependency), not a product surface.
+  'https://github.com/storytold/craft-libs',
+]
