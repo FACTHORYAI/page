@@ -8,12 +8,16 @@ Store listings and a "switch from Microsoft" guide. W7 starts after W0, W2, W4, 
 **Claude** = Claude Code sessions (code, builds, verification, drafts). Where both appear, the first
 does the work and the second signs off.
 
-**Snapshot, 2026-10-25** (read from the local clones, not from GitHub; confirm before relying on
-it): the W2 brand patch set (`facthory/brand.toml`, `rebrand.py`, icons, the branded build
-`.github/workflows/facthory.yml`) exists in all three repositories, on branch `w2-rebrand` in Grid
-and Deck and under `w4-release` in Page; whether it is merged to `main` is not confirmed. A W4
-release workflow is in progress for Page only (uncommitted). No in-app updater exists yet. No W6
-corpus or W9 work is visible.
+**Snapshot, 2026-10-25** (pull requests in FACTHORYAI/page, grid and deck; the owner merges them):
+- W2, the brand patch set: #3 in each.
+- W3, the upstream sync: #4 in each. Its GitHub App and environments are in bandpey-hq/github-infra#25.
+- W4, signed releases and the in-app updater: #5 in each. The `release` environment, the signing
+  secrets and runbook section M are in bandpey-hq/github-infra#25.
+- W6, the fidelity corpus and its runner: #6 in each.
+- W7 and W9, the listings, guides and this folder: #7 in each.
+
+Merging comes first; then the owner's accounts and signing (runbook M), then a first tagged
+release per app.
 
 ## Gate 1: W0, names cleared
 
