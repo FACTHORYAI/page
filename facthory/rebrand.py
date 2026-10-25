@@ -11,7 +11,9 @@ facthory/brand.toml, applied in this order:
   [[token]]                  ordered replacements over every text file. Tokens with
                              credits = true also apply to the credit files ([files].credits:
                              licences, NOTICE, ATTRIBUTION.md), which otherwise keep upstream's
-                             copyright and credits as written.
+                             copyright and credits as written. Phrases in [files].keep are left
+                             as they are: names fixed inside binary fixtures (a test font's family
+                             name) that the text naming them must keep matching.
   [guids]                    every GUID in these files becomes one derived from the brand's app
                              id, so our installers never share an UpgradeCode or a component
                              with upstream's.
@@ -21,7 +23,9 @@ facthory/brand.toml, applied in this order:
   [[copy]]                   brand files (icons) replace upstream's.
   [files].delete             upstream-only files (the ArtCraft marks) are removed.
 
-Then `git add -A` records the result, so tools that read the index see the branded tree.
+Then cargo puts Cargo.lock back in its own order (renamed packages sort elsewhere; the packages,
+versions and checksums stay the same), so a later `git diff Cargo.lock` stays empty, and
+`git add -A` records the result, so tools that read the index see the branded tree.
 
   python3 facthory/rebrand.py apply             brand the tree (once; a stamp file guards it)
   python3 facthory/rebrand.py check [FILE ...]  fail on an upstream mark in the shipped text
@@ -136,6 +140,7 @@ def apply_tokens(brand: dict, files: list[str]) -> None:
     tokens = brand.get("token", [])
     credits = brand.get("files", {}).get("credits", [])
     skip = brand.get("files", {}).get("skip", [])
+    keep = brand.get("files", {}).get("keep", [])
     for p in files:
         if matches(p, skip):
             continue
@@ -145,10 +150,15 @@ def apply_tokens(brand: dict, files: list[str]) -> None:
             continue
         is_credit = matches(p, credits)
         new = text
+        # Kept phrases sit behind placeholders no token can match while the tokens run.
+        for i, k in enumerate(keep):
+            new = new.replace(k, f"\0keep{i}\0")
         for t in tokens:
             if is_credit and not t.get("credits", False):
                 continue
             new = new.replace(t["from"], t["to"])
+        for i, k in enumerate(keep):
+            new = new.replace(f"\0keep{i}\0", k)
         if new != text:
             write_text(path, new)
 
@@ -238,6 +248,10 @@ def apply() -> None:
     apply_rules(brand, files, "after")
     apply_copies(brand)
     apply_deletes(brand)
+    if (ROOT / "Cargo.lock").exists():
+        if not shutil.which("cargo"):
+            raise BrandError("cargo is needed to put the renamed Cargo.lock back in order")
+        subprocess.run(["cargo", "metadata", "--format-version", "1"], cwd=ROOT, check=True, stdout=subprocess.DEVNULL)
     STAMP.write_text(f"{brand['brand']['name']}\n", encoding="utf-8")
     if (ROOT / ".git").exists():
         subprocess.run(["git", "add", "-A", "--", "."], cwd=ROOT, check=True)
