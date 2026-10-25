@@ -106,6 +106,10 @@ def apply_rules(brand: dict, files: list[str], phase: str) -> None:
             text = read_text(path)
             if text is None:
                 continue
+            # A Windows checkout has CRLF line ends: rules match on LF and the file keeps its ends.
+            crlf = "\r\n" in text and text.count("\r\n") == text.count("\n")
+            if crlf:
+                text = text.replace("\r\n", "\n")
             if rule.get("kind") == "tsv":
                 text, n = tsv_row(text, rule["key"], rule["new_key"], rule.get("translation"))
             elif rule.get("regex"):
@@ -114,7 +118,7 @@ def apply_rules(brand: dict, files: list[str], phase: str) -> None:
                 n = text.count(rule["find"])
                 text = text.replace(rule["find"], rule["replace"])
             if n:
-                write_text(path, text)
+                write_text(path, text.replace("\n", "\r\n") if crlf else text)
                 found += n
         want = rule.get("count")
         if want is None and found == 0:

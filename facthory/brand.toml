@@ -27,6 +27,9 @@ skip = ["LICENSE-APACHE", "LICENSE-MIT", "NOTICE", ".github"]
 credits = ["ATTRIBUTION.md", "contributors"]
 # The ArtCraft marks, licensed only for unmodified WordCraft (docs/brand/LICENSE-brand.txt).
 delete = ["docs/brand"]
+# Authorship lines the tokens would otherwise turn into a false credit: upstream's data files
+# (the spelling supplements, embedded in the app) say who wrote them.
+keep = ["Written by WordCraft contributors"]
 
 # ---------------------------------------------------------------------------------------------
 # Rules before the tokens, on upstream's text. Each fails the build when upstream moves it.
@@ -129,11 +132,28 @@ find = ', like the PdfCraft catalog.'
 replace = '.'
 count = 1
 
+# The spelling list (sorted; a test checks the order) knows our name in its place, not upstream's.
 [[rule]]
-why = "The spelling list knows our name instead of upstream's"
+why = "The spelling list drops ArtCraft"
 files = "assets/spelling/en-extra.txt"
-find = '^artcraft$'
-replace = "facthory"
+find = '^artcraft\n'
+replace = ""
+regex = true
+count = 1
+
+[[rule]]
+why = "The spelling list drops WordCraft"
+files = "assets/spelling/en-extra.txt"
+find = '^wordcraft\n'
+replace = ""
+regex = true
+count = 1
+
+[[rule]]
+why = "The spelling list knows Facthory, in its sorted place"
+files = "assets/spelling/en-extra.txt"
+find = '^facebook\n'
+replace = "facebook\nfacthory\n"
 regex = true
 count = 1
 
@@ -286,6 +306,7 @@ allow = [
   'Based on WordCraft by the ArtCraft team.',
   'Based on WordCraft, copyright (c) 2026 ArtCraft Team and the WordCraft contributors.',
   'based on WordCraft, copyright (c) the WordCraft authors.',
+  'Written by WordCraft contributors',
   # Provenance of the public-domain hyphenation patterns embedded in the app.
   '% DesignCraft US English hyphenation patterns (Liang/TeX notation).',
   "trained with DesignCraft's patgen-style trainer",
