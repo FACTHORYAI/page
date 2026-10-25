@@ -15,8 +15,9 @@ GitHub serves for the newest published, non-draft, non-prerelease release):
    "assets": {"<platform>": {"name", "url", "sha256", "size"}}}
 
 with one asset per platform an app can update itself on: macos-universal (DMG),
-windows-x64 and windows-arm64 (MSI), linux-x86_64 and linux-aarch64 (AppImage). The .deb and
-.rpm update through the system's package manager and the Store build through the Store.
+windows-x64 and windows-arm64 (MSI), linux-x86_64 and linux-aarch64 (AppImage). The Microsoft
+Store installs the same MSI and leaves its updates to the app, so Store copies update from here
+too; the .deb and .rpm update through the system's package manager.
 """
 
 from __future__ import annotations

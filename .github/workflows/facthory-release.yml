@@ -74,6 +74,8 @@ jobs:
       FACTHORY_PAGE_VERSION: ${{ needs.version.outputs.version }}
       FACTHORY_PAGE_BUILD_DATE: ${{ needs.version.outputs.date }}
       FACTHORY_PAGE_BUILD_SHA: ${{ github.sha }}
+      # The updater's feed (facthory/update/): builds without it never check.
+      FACTHORY_UPDATE_FEED: https://github.com/${{ github.repository }}/releases/latest/download/latest.json
     steps:
       - name: Require signing for a tagged release
         if: github.ref_type == 'tag'
@@ -161,6 +163,8 @@ jobs:
       FACTHORY_PAGE_VERSION: ${{ needs.version.outputs.version }}
       FACTHORY_PAGE_BUILD_DATE: ${{ needs.version.outputs.date }}
       FACTHORY_PAGE_BUILD_SHA: ${{ github.sha }}
+      # The updater's feed (facthory/update/): builds without it never check.
+      FACTHORY_UPDATE_FEED: https://github.com/${{ github.repository }}/releases/latest/download/latest.json
     steps:
       - name: Require signing for a tagged release
         if: github.ref_type == 'tag'
@@ -247,6 +251,8 @@ jobs:
       FACTHORY_PAGE_VERSION: ${{ needs.version.outputs.version }}
       FACTHORY_PAGE_BUILD_DATE: ${{ needs.version.outputs.date }}
       FACTHORY_PAGE_BUILD_SHA: ${{ github.sha }}
+      # The updater's feed (facthory/update/): builds without it never check.
+      FACTHORY_UPDATE_FEED: https://github.com/${{ github.repository }}/releases/latest/download/latest.json
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
