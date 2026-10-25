@@ -1,0 +1,1583 @@
+# W6 fidelity corpus for Page (.docx): draft manifest, generated 2026-10-25
+# Every file is pinned by URL and SHA-256 and is NOT committed: fetch, verify, cache (bucket).
+# licence/licence_url: git sources: the licence file at the pinned commit (read); public-sector entries: see their source/note for where the licence was read.
+# producer: docProps/app.xml Application + AppVersion as read from the file.
+# tier: smoke = 20 early picks under 1.5 MB with publish_renders = yes (cover most features; for the gate), full = the rest.
+# producer is checked against traces only the Office apps write (Word w:rsids, Excel rupBuild, PowerPoint p14 or a 2007/2010 build).
+# publish_renders: yes = renders/screenshots may go into public test reports; review = check content first.
+
+schema = "facthory-corpus/1"
+app = "page"
+format = "docx"
+
+[[file]]
+id = "docx-oxsdk-000"
+url = "https://raw.githubusercontent.com/dotnet/Open-XML-SDK/431ab05cf160248cc3885a4a766026d4f8243792/test/DocumentFormat.OpenXml.Tests.Assets/assets/TestFiles/Complex01.docx"
+sha256 = "d75bb3978e5cbbbd251c2cd1f4c4f123e7c3253292757f203418b8bfdf79ee2c"
+size = 847839
+licence = "MIT"
+licence_url = "https://github.com/dotnet/Open-XML-SDK/blob/431ab05cf160248cc3885a4a766026d4f8243792/LICENSE"
+source = "dotnet/Open-XML-SDK@431ab05cf160:test/DocumentFormat.OpenXml.Tests.Assets/assets/TestFiles/Complex01.docx"
+producer = "Microsoft Office Word 15.0000"
+features = ["charts", "comments", "content-controls", "endnotes", "equations", "fields", "footnotes", "headers-footers", "images", "lists", "multi-section", "ole", "shapes", "smartart", "tables", "text-boxes", "toc", "tracked-changes"]
+stats = ["paras:160", "styles:65"]
+tier = "smoke"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-docx4j-001"
+url = "https://raw.githubusercontent.com/plutext/docx4j/da086de488768dbf296e58fb6f3affab7189146f/docx4j-core-tests/src/test/resources/text-extraction/phase0/evidence/extraction-probe-r3-word-save.docx"
+sha256 = "717346f43220c596268ae94320b6aef72d8b15ae29771378841a04a8dc4ad8f5"
+size = 95467
+licence = "Apache-2.0"
+licence_url = "https://github.com/plutext/docx4j/blob/da086de488768dbf296e58fb6f3affab7189146f/legals/LICENSE"
+source = "plutext/docx4j@da086de48876:docx4j-core-tests/src/test/resources/text-extraction/phase0/evidence/extraction-probe-r3-word-save.docx"
+producer = "Microsoft Office Word 16.0000"
+features = ["charts", "comments", "content-controls", "endnotes", "equations", "fields", "footnotes", "headers-footers", "images", "lists", "multi-section", "ole", "shapes", "smartart", "tables", "text-boxes", "tracked-changes", "tracked-formatting"]
+stats = ["paras:176", "styles:20"]
+tier = "smoke"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-poi-002"
+url = "https://raw.githubusercontent.com/apache/poi/4f3c25563919e7efa4a75feccf6cef1ac3d05a04/test-data/integration/stress010.docx"
+sha256 = "48bbb9a5b330705a0abb2a954937a15b5c7f6baad761320027af49cff608ffa5"
+size = 263616
+licence = "Apache-2.0"
+licence_url = "https://github.com/apache/poi/blob/4f3c25563919e7efa4a75feccf6cef1ac3d05a04/legal/LICENSE"
+source = "apache/poi@4f3c25563919:test-data/integration/stress010.docx"
+producer = "Microsoft Office Word 14.0000"
+features = ["comments", "footnotes", "headers-footers", "images", "lists", "multi-section", "rtl", "rtl-script", "shapes", "tables", "text-boxes"]
+stats = ["paras:1788", "styles:34"]
+tier = "full"
+publish_renders = "review"
+note = "Apache POI test-data: many files are user-supplied bug attachments; Apache-2.0 asserted by the ASF repository, authorship unverified; review content before publishing renders"
+
+[[file]]
+id = "docx-oxsdk-003"
+url = "https://raw.githubusercontent.com/dotnet/Open-XML-SDK/431ab05cf160248cc3885a4a766026d4f8243792/test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/bvt/complex2005_12rtm.docx"
+sha256 = "0c1f7476c57ad2aaa049560a6617751254edeb72f1d8660f1d1ed21cf0cd1f26"
+size = 631942
+licence = "MIT"
+licence_url = "https://github.com/dotnet/Open-XML-SDK/blob/431ab05cf160248cc3885a4a766026d4f8243792/LICENSE"
+source = "dotnet/Open-XML-SDK@431ab05cf160:test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/bvt/complex2005_12rtm.docx"
+producer = "Microsoft Office Word 13.0000"
+features = ["content-controls", "fields", "glossary", "headers-footers", "images", "lists", "multi-section", "ole", "shapes", "smartart", "tables", "text-boxes", "toc"]
+stats = ["paras:1528", "styles:63"]
+tier = "smoke"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-docx4j-004"
+url = "https://raw.githubusercontent.com/plutext/docx4j/da086de488768dbf296e58fb6f3affab7189146f/docx4j-core-tests/src/test/resources/text-extraction/extraction-probe.word-resave.docx"
+sha256 = "29015eedb3381fb39e2739db43cba724edc151f31f8967789bfddd12d9e01bff"
+size = 66749
+licence = "Apache-2.0"
+licence_url = "https://github.com/plutext/docx4j/blob/da086de488768dbf296e58fb6f3affab7189146f/legals/LICENSE"
+source = "plutext/docx4j@da086de48876:docx4j-core-tests/src/test/resources/text-extraction/extraction-probe.word-resave.docx"
+producer = "Microsoft Office Word 16.0000"
+features = ["charts", "comments", "content-controls", "endnotes", "equations", "fields", "footnotes", "headers-footers", "images", "lists", "multi-section", "ole", "shapes", "smartart", "tables", "text-boxes", "tracked-changes", "tracked-formatting"]
+stats = ["paras:143", "styles:18"]
+tier = "smoke"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxsdk-005"
+url = "https://raw.githubusercontent.com/dotnet/Open-XML-SDK/431ab05cf160248cc3885a4a766026d4f8243792/test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/wordprocessing/Normalize/complex0.docx"
+sha256 = "8b017a865291c5832b54fd2f7eefa08e710584df07cc9585a4c65c5ddb42f216"
+size = 220153
+licence = "MIT"
+licence_url = "https://github.com/dotnet/Open-XML-SDK/blob/431ab05cf160248cc3885a4a766026d4f8243792/LICENSE"
+source = "dotnet/Open-XML-SDK@431ab05cf160:test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/wordprocessing/Normalize/complex0.docx"
+producer = "Microsoft Office Word 12.0000"
+features = ["columns", "comments", "fields", "headers-footers", "images", "multi-section", "ole", "shapes", "tables"]
+stats = ["paras:678", "styles:26"]
+tier = "smoke"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxpt-006"
+url = "https://raw.githubusercontent.com/OfficeDev/Open-Xml-PowerTools/5881422a881f6ccefce2b9801b5dc6a753670d6e/TestFiles/HC031-Complicated-Document.docx"
+sha256 = "a8a2606fb50ba4b3e3edb13ee0c287e70f617c15be791b88da5b384c07f8c278"
+size = 42336
+licence = "MIT"
+licence_url = "https://github.com/OfficeDev/Open-Xml-PowerTools/blob/5881422a881f6ccefce2b9801b5dc6a753670d6e/LICENSE"
+source = "OfficeDev/Open-Xml-PowerTools@5881422a881f:TestFiles/HC031-Complicated-Document.docx"
+producer = "Microsoft Office Word 15.0000"
+features = ["comments", "content-controls", "endnotes", "equations", "fields", "footnotes", "headers-footers", "lists", "multi-section", "shapes", "tables", "text-boxes", "toc", "tracked-changes"]
+stats = ["paras:149", "styles:65"]
+tier = "smoke"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-docx4j-007"
+url = "https://raw.githubusercontent.com/plutext/docx4j/da086de488768dbf296e58fb6f3affab7189146f/docx4j-core-tests/src/test/resources/loadAndSave.docx"
+sha256 = "122f53311702e32affbc0ec99ced129990e6728a9b4b6df30f5684f73a20247f"
+size = 55625
+licence = "Apache-2.0"
+licence_url = "https://github.com/plutext/docx4j/blob/da086de488768dbf296e58fb6f3affab7189146f/legals/LICENSE"
+source = "plutext/docx4j@da086de48876:docx4j-core-tests/src/test/resources/loadAndSave.docx"
+producer = "Microsoft Office Word 16.0000"
+features = ["charts", "comments", "content-controls", "endnotes", "equations", "fields", "footnotes", "headers-footers", "images", "ole", "rtl", "rtl-script", "shapes", "tables", "text-boxes", "toc"]
+stats = ["paras:43", "styles:63"]
+tier = "smoke"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxsdk-008"
+url = "https://raw.githubusercontent.com/dotnet/Open-XML-SDK/431ab05cf160248cc3885a4a766026d4f8243792/test/DocumentFormat.OpenXml.Tests.Assets/assets/TestFiles/Strict01.docx"
+sha256 = "60697d46b7ec6e23cd50cf63d66d6866c964453cb6962f729cebffca6d0b803f"
+size = 831961
+licence = "MIT"
+licence_url = "https://github.com/dotnet/Open-XML-SDK/blob/431ab05cf160248cc3885a4a766026d4f8243792/LICENSE"
+source = "dotnet/Open-XML-SDK@431ab05cf160:test/DocumentFormat.OpenXml.Tests.Assets/assets/TestFiles/Strict01.docx"
+producer = "Microsoft Office Word 15.0000"
+features = ["charts", "comments", "content-controls", "endnotes", "equations", "fields", "footnotes", "headers-footers", "images", "lists", "multi-section", "ole", "shapes", "smartart", "tables", "toc", "tracked-changes"]
+stats = ["paras:154", "styles:65"]
+tier = "smoke"
+publish_renders = "yes"
+conformance = "strict"
+
+[[file]]
+id = "docx-poi-009"
+url = "https://raw.githubusercontent.com/apache/poi/4f3c25563919e7efa4a75feccf6cef1ac3d05a04/test-data/integration/stress004.docx"
+sha256 = "ac9e1510b76a96868f4df82c59e4a3b852d7e66d3ad7ba785de2a86d9a7f523d"
+size = 529658
+licence = "Apache-2.0"
+licence_url = "https://github.com/apache/poi/blob/4f3c25563919e7efa4a75feccf6cef1ac3d05a04/legal/LICENSE"
+source = "apache/poi@4f3c25563919:test-data/integration/stress004.docx"
+producer = "Microsoft Office Word 14.0000"
+features = ["fields", "footnotes", "headers-footers", "images", "lists", "multi-section", "rtl", "rtl-script", "tables"]
+stats = ["paras:627", "styles:59"]
+tier = "full"
+publish_renders = "review"
+note = "Apache POI test-data: many files are user-supplied bug attachments; Apache-2.0 asserted by the ASF repository, authorship unverified; review content before publishing renders"
+
+[[file]]
+id = "docx-oxsdk-010"
+url = "https://raw.githubusercontent.com/dotnet/Open-XML-SDK/431ab05cf160248cc3885a4a766026d4f8243792/test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/wordprocessing/columns/columns2.docx"
+sha256 = "3cb2f452fc64f5fde494fd7ab5bc4a70bb93fa534db3deae18a6fc5139d38011"
+size = 52053
+licence = "MIT"
+licence_url = "https://github.com/dotnet/Open-XML-SDK/blob/431ab05cf160248cc3885a4a766026d4f8243792/LICENSE"
+source = "dotnet/Open-XML-SDK@431ab05cf160:test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/wordprocessing/columns/columns2.docx"
+producer = "Microsoft Office Word 12.0000"
+features = ["cjk", "columns"]
+stats = ["paras:2195", "styles:4"]
+tier = "smoke"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-pydocx-011"
+url = "https://raw.githubusercontent.com/python-openxml/python-docx/e45454602b53e8e572b179ccf1c91093ec9f4ed7/features/steps/test_files/shp-inline-shape-access.docx"
+sha256 = "8fcf0f0433be0968d9305c564ce69601931695ffe163d264fb69b7782feff517"
+size = 122610
+licence = "MIT"
+licence_url = "https://github.com/python-openxml/python-docx/blob/e45454602b53e8e572b179ccf1c91093ec9f4ed7/LICENSE"
+source = "python-openxml/python-docx@e45454602b53:features/steps/test_files/shp-inline-shape-access.docx"
+producer = "Microsoft Macintosh Word 14.0000"
+features = ["charts", "images", "ole", "smartart"]
+stats = ["paras:9", "styles:6"]
+tier = "smoke"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-poi-012"
+url = "https://raw.githubusercontent.com/apache/poi/4f3c25563919e7efa4a75feccf6cef1ac3d05a04/test-data/document/IllustrativeCases.docx"
+sha256 = "4c2407d338f02a6ae107eac0b3e925ffb3d37921942ebe88db8660dea0891a00"
+size = 22858
+licence = "Apache-2.0"
+licence_url = "https://github.com/apache/poi/blob/4f3c25563919e7efa4a75feccf6cef1ac3d05a04/legal/LICENSE"
+source = "apache/poi@4f3c25563919:test-data/document/IllustrativeCases.docx"
+producer = "Microsoft Office Outlook 12.0000"
+features = ["tables"]
+stats = ["paras:388", "styles:12"]
+tier = "full"
+publish_renders = "review"
+note = "Apache POI test-data: many files are user-supplied bug attachments; Apache-2.0 asserted by the ASF repository, authorship unverified; review content before publishing renders"
+
+[[file]]
+id = "docx-docx4j-013"
+url = "https://raw.githubusercontent.com/plutext/docx4j/da086de488768dbf296e58fb6f3affab7189146f/docx4j-samples-docx4j/Docx4j_GettingStarted.docx"
+sha256 = "28050a08ec79f88c78c3eacb697c616cd1eeed2278b374c1849f08b6540e2a40"
+size = 450778
+licence = "Apache-2.0"
+licence_url = "https://github.com/plutext/docx4j/blob/da086de488768dbf296e58fb6f3affab7189146f/legals/LICENSE"
+source = "plutext/docx4j@da086de48876:docx4j-samples-docx4j/Docx4j_GettingStarted.docx"
+producer = "Microsoft Office Word 16.0000"
+features = ["columns", "content-controls", "fields", "footnotes", "images", "lists", "multi-section", "tables", "toc"]
+stats = ["paras:1442", "styles:55"]
+tier = "smoke"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxsdk-014"
+url = "https://raw.githubusercontent.com/dotnet/Open-XML-SDK/431ab05cf160248cc3885a4a766026d4f8243792/test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/O15Conformance/WD/CommentExTest/Comments-Sample-15-12-01/Comment041.docx"
+sha256 = "3191d8b27094e5e72dda3f302ddab389f633797b074ebde5224d4f072ccf2b77"
+size = 58280
+licence = "MIT"
+licence_url = "https://github.com/dotnet/Open-XML-SDK/blob/431ab05cf160248cc3885a4a766026d4f8243792/LICENSE"
+source = "dotnet/Open-XML-SDK@431ab05cf160:test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/O15Conformance/WD/CommentExTest/Comments-Sample-15-12-01/Comment041.docx"
+producer = "Microsoft Office Word 00.0001"
+features = ["rtl", "rtl-script"]
+stats = ["paras:27", "styles:4"]
+tier = "smoke"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxsdk-015"
+url = "https://raw.githubusercontent.com/dotnet/Open-XML-SDK/431ab05cf160248cc3885a4a766026d4f8243792/test/DocumentFormat.OpenXml.Tests.Assets/assets/TestFiles/complex2010.docx"
+sha256 = "752e6a16a622527017691f3269fc50b665eeef2e5e68daa1226fed8232ef31c5"
+size = 236104
+licence = "MIT"
+licence_url = "https://github.com/dotnet/Open-XML-SDK/blob/431ab05cf160248cc3885a4a766026d4f8243792/LICENSE"
+source = "dotnet/Open-XML-SDK@431ab05cf160:test/DocumentFormat.OpenXml.Tests.Assets/assets/TestFiles/complex2010.docx"
+producer = "Microsoft Office Word 14.0000"
+features = ["columns", "comments", "fields", "headers-footers", "images", "multi-section", "ole", "shapes", "tables"]
+stats = ["paras:679", "styles:26"]
+tier = "smoke"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-docx4j-016"
+url = "https://raw.githubusercontent.com/plutext/docx4j/da086de488768dbf296e58fb6f3affab7189146f/docx4j-core-tests/src/test/resources/revisions/cr043/cr043-tracked.docx"
+sha256 = "d09ba0adb56d9222529f5315c8b9c2482e798bba947df709992128dae3773bda"
+size = 44084
+licence = "Apache-2.0"
+licence_url = "https://github.com/plutext/docx4j/blob/da086de488768dbf296e58fb6f3affab7189146f/legals/LICENSE"
+source = "plutext/docx4j@da086de48876:docx4j-core-tests/src/test/resources/revisions/cr043/cr043-tracked.docx"
+producer = "Microsoft Office Word 16.0000"
+features = ["comments", "content-controls", "endnotes", "fields", "glossary", "headers-footers", "images", "multi-section", "shapes", "tables", "text-boxes", "tracked-changes", "tracked-formatting"]
+stats = ["paras:60", "styles:34"]
+tier = "smoke"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-docx4j-017"
+url = "https://raw.githubusercontent.com/plutext/docx4j/da086de488768dbf296e58fb6f3affab7189146f/docs/developer/rFonts.docx"
+sha256 = "d3a9fd32e4766ef88bb0276baffa6a4c4bab97a115a06e9c631550bc9a114203"
+size = 96416
+licence = "Apache-2.0"
+licence_url = "https://github.com/plutext/docx4j/blob/da086de488768dbf296e58fb6f3affab7189146f/legals/LICENSE"
+source = "plutext/docx4j@da086de48876:docs/developer/rFonts.docx"
+producer = "Microsoft Office Word 14.0000"
+features = ["cjk", "fields", "images", "lists", "rtl-script", "tables"]
+stats = ["paras:509", "styles:232"]
+tier = "smoke"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxsdk-018"
+url = "https://raw.githubusercontent.com/dotnet/Open-XML-SDK/431ab05cf160248cc3885a4a766026d4f8243792/test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/asSources/wordprocessing/complex1_NOR.docx"
+sha256 = "e88a8f272e3c28baae8aa82875acf8d29e26cb8746b9436a2adf9a05bfc63fbe"
+size = 544449
+licence = "MIT"
+licence_url = "https://github.com/dotnet/Open-XML-SDK/blob/431ab05cf160248cc3885a4a766026d4f8243792/LICENSE"
+source = "dotnet/Open-XML-SDK@431ab05cf160:test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/asSources/wordprocessing/complex1_NOR.docx"
+producer = "Microsoft Office Word 12.0000"
+features = ["columns", "fields", "headers-footers", "images", "multi-section", "ole", "shapes", "tables"]
+stats = ["paras:681", "styles:11"]
+tier = "smoke"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-poi-019"
+url = "https://raw.githubusercontent.com/apache/poi/4f3c25563919e7efa4a75feccf6cef1ac3d05a04/test-data/integration/stress015.docx"
+sha256 = "1609d3eed78c3a6bb5308726ea242b2351d3e8ec690b26267f8af544599fe2ea"
+size = 343372
+licence = "Apache-2.0"
+licence_url = "https://github.com/apache/poi/blob/4f3c25563919e7efa4a75feccf6cef1ac3d05a04/legal/LICENSE"
+source = "apache/poi@4f3c25563919:test-data/integration/stress015.docx"
+producer = "Microsoft Office Word 12.0000"
+features = ["images", "lists", "rtl", "rtl-script", "shapes", "tables", "text-boxes"]
+stats = ["paras:268", "styles:12"]
+tier = "full"
+publish_renders = "review"
+note = "Apache POI test-data: many files are user-supplied bug attachments; Apache-2.0 asserted by the ASF repository, authorship unverified; review content before publishing renders"
+
+[[file]]
+id = "docx-pbisamples-020"
+url = "https://raw.githubusercontent.com/microsoft/powerbi-desktop-samples/e2f326b09bb7df6890fff0ded9813a0d73677cd6/Performance%20Analyzer/Power%20BI%20Performance%20Analyzer%20Export%20File%20Format.docx"
+sha256 = "e8f723224d4124dc09b650f9406d530da7a94ee67cd599c1e2d5a0c1c4d15fbb"
+size = 198146
+licence = "MIT"
+licence_url = "https://github.com/microsoft/powerbi-desktop-samples/blob/e2f326b09bb7df6890fff0ded9813a0d73677cd6/LICENSE"
+source = "microsoft/powerbi-desktop-samples@e2f326b09bb7:Performance Analyzer/Power BI Performance Analyzer Export File Format.docx"
+producer = "Microsoft Office Word 16.0000"
+features = ["headers-footers", "images", "lists", "tables"]
+stats = ["paras:342", "styles:18"]
+tier = "smoke"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxpt-021"
+url = "https://raw.githubusercontent.com/OfficeDev/Open-Xml-PowerTools/5881422a881f6ccefce2b9801b5dc6a753670d6e/TestFiles/RA001-Tracked-Revisions-01.docx"
+sha256 = "3ad34dd0480f3a2ab2d1affbfa7d3996178fca7fb6132c4cfcdcdc03c7be987d"
+size = 52247
+licence = "MIT"
+licence_url = "https://github.com/OfficeDev/Open-Xml-PowerTools/blob/5881422a881f6ccefce2b9801b5dc6a753670d6e/LICENSE"
+source = "OfficeDev/Open-Xml-PowerTools@5881422a881f:TestFiles/RA001-Tracked-Revisions-01.docx"
+producer = "Microsoft Office Word 15.0000"
+features = ["headers-footers", "lists", "multi-section", "tables", "tracked-changes", "tracked-formatting"]
+stats = ["paras:231", "styles:53"]
+tier = "smoke"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-docx4j-022"
+url = "https://raw.githubusercontent.com/plutext/docx4j/da086de488768dbf296e58fb6f3affab7189146f/docx4j-samples-docx-export-fo/sample-docs/word/FontEmbedded.docx"
+sha256 = "4dd7e8cd2d620d8c406044a6161bed27abf10f48d97ddcfd0fc618515d405f84"
+size = 1212630
+licence = "Apache-2.0"
+licence_url = "https://github.com/plutext/docx4j/blob/da086de488768dbf296e58fb6f3affab7189146f/legals/LICENSE"
+source = "plutext/docx4j@da086de48876:docx4j-samples-docx-export-fo/sample-docs/word/FontEmbedded.docx"
+producer = "Microsoft Office Word 12.0000"
+features = ["embedded-fonts"]
+stats = ["paras:3", "styles:4"]
+tier = "smoke"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxsdk-023"
+url = "https://raw.githubusercontent.com/dotnet/Open-XML-SDK/431ab05cf160248cc3885a4a766026d4f8243792/test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/ForTestCase/comment.docx"
+sha256 = "a4fa38264959e183825ab4fd7bb04b1caa07540f94f29485a1d13f64301cc875"
+size = 71081
+licence = "MIT"
+licence_url = "https://github.com/dotnet/Open-XML-SDK/blob/431ab05cf160248cc3885a4a766026d4f8243792/LICENSE"
+source = "dotnet/Open-XML-SDK@431ab05cf160:test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/ForTestCase/comment.docx"
+producer = "Microsoft Office Word 12.0000"
+features = ["comments", "fields", "footnotes", "images", "lists", "ole", "shapes", "tables", "toc"]
+stats = ["paras:453", "styles:64"]
+tier = "smoke"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-poi-024"
+url = "https://raw.githubusercontent.com/apache/poi/4f3c25563919e7efa4a75feccf6cef1ac3d05a04/test-data/openxml4j/MultipleCoreProperties.docx"
+sha256 = "2ba428c52ae6b34cfbc61a88868d0008571b26ff9ae1f64b7dd7ff732a945be9"
+size = 43853
+licence = "Apache-2.0"
+licence_url = "https://github.com/apache/poi/blob/4f3c25563919e7efa4a75feccf6cef1ac3d05a04/legal/LICENSE"
+source = "apache/poi@4f3c25563919:test-data/openxml4j/MultipleCoreProperties.docx"
+producer = "Microsoft Macintosh Word 12.0000"
+features = ["headers-footers", "lists"]
+stats = ["paras:5", "styles:47"]
+tier = "full"
+publish_renders = "review"
+note = "Apache POI test-data: many files are user-supplied bug attachments; Apache-2.0 asserted by the ASF repository, authorship unverified; review content before publishing renders"
+
+[[file]]
+id = "docx-oxpt-025"
+url = "https://raw.githubusercontent.com/OfficeDev/Open-Xml-PowerTools/5881422a881f6ccefce2b9801b5dc6a753670d6e/TestFiles/RP/RP051-Arabic.docx"
+sha256 = "c03271b7ffe52710d6787297ca159ec857fa300f0f0e408963fec90d03c88676"
+size = 141112
+licence = "MIT"
+licence_url = "https://github.com/OfficeDev/Open-Xml-PowerTools/blob/5881422a881f6ccefce2b9801b5dc6a753670d6e/LICENSE"
+source = "OfficeDev/Open-Xml-PowerTools@5881422a881f:TestFiles/RP/RP051-Arabic.docx"
+producer = "Microsoft Office Word 14.0000"
+features = ["headers-footers", "images", "lists", "rtl", "rtl-script", "tables", "tracked-changes"]
+stats = ["paras:118", "styles:145"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-poi-026"
+url = "https://raw.githubusercontent.com/apache/poi/4f3c25563919e7efa4a75feccf6cef1ac3d05a04/test-data/document/SimpleMacro.docm"
+sha256 = "fd591958fcf5322f72c0a740e9606309c949254bda4c3d9bd966481ddf220563"
+size = 15517
+licence = "Apache-2.0"
+licence_url = "https://github.com/apache/poi/blob/4f3c25563919e7efa4a75feccf6cef1ac3d05a04/legal/LICENSE"
+source = "apache/poi@4f3c25563919:test-data/document/SimpleMacro.docm"
+producer = "Microsoft Office Word 12.0000"
+features = ["macros"]
+stats = ["paras:1", "styles:4"]
+tier = "full"
+publish_renders = "review"
+note = "Apache POI test-data: many files are user-supplied bug attachments; Apache-2.0 asserted by the ASF repository, authorship unverified; review content before publishing renders"
+
+[[file]]
+id = "docx-docx4j-027"
+url = "https://raw.githubusercontent.com/plutext/docx4j/da086de488768dbf296e58fb6f3affab7189146f/docx4j-core-tests/src/test/resources/revisions/core-ts/check54/54-writes-word365.docx"
+sha256 = "4e9b07bf84356c8825f3c78feb959adcb4c71f7c7383c7601c642c3e62082f3d"
+size = 35151
+licence = "Apache-2.0"
+licence_url = "https://github.com/plutext/docx4j/blob/da086de488768dbf296e58fb6f3affab7189146f/legals/LICENSE"
+source = "plutext/docx4j@da086de48876:docx4j-core-tests/src/test/resources/revisions/core-ts/check54/54-writes-word365.docx"
+producer = "Microsoft Office Word 16.0000"
+features = ["comments", "content-controls", "fields", "glossary", "lists", "tables", "tracked-changes", "tracked-formatting"]
+stats = ["paras:210", "styles:33"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxsdk-028"
+url = "https://raw.githubusercontent.com/dotnet/Open-XML-SDK/431ab05cf160248cc3885a4a766026d4f8243792/test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/ForTestCase/endnote.docx"
+sha256 = "156def282ed862727d0e3b45a6ed3e8a5390d63ca43e298d14bfb55d08119271"
+size = 69837
+licence = "MIT"
+licence_url = "https://github.com/dotnet/Open-XML-SDK/blob/431ab05cf160248cc3885a4a766026d4f8243792/LICENSE"
+source = "dotnet/Open-XML-SDK@431ab05cf160:test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/ForTestCase/endnote.docx"
+producer = "Microsoft Office Word 12.0000"
+features = ["endnotes", "fields", "images", "lists", "ole", "shapes", "tables", "toc"]
+stats = ["paras:453", "styles:59"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-pydocx-029"
+url = "https://raw.githubusercontent.com/python-openxml/python-docx/e45454602b53e8e572b179ccf1c91093ec9f4ed7/features/steps/test_files/tbl-props.docx"
+sha256 = "70f6a24488b85609e5d3ceaed653e584d23e6867a7f22bd267827d73fbfc2cad"
+size = 20419
+licence = "MIT"
+licence_url = "https://github.com/python-openxml/python-docx/blob/e45454602b53e8e572b179ccf1c91093ec9f4ed7/LICENSE"
+source = "python-openxml/python-docx@e45454602b53:features/steps/test_files/tbl-props.docx"
+producer = "Microsoft Macintosh Word 14.0000"
+features = ["tables"]
+stats = ["paras:54", "styles:5"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxsdk-030"
+url = "https://raw.githubusercontent.com/dotnet/Open-XML-SDK/431ab05cf160248cc3885a4a766026d4f8243792/test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/ForTestCase/footnote.docx"
+sha256 = "26dc62a5d00e2c3c1df60e0d5bf1cac43b142a090ea595b9ad11ce73e3dab268"
+size = 69706
+licence = "MIT"
+licence_url = "https://github.com/dotnet/Open-XML-SDK/blob/431ab05cf160248cc3885a4a766026d4f8243792/LICENSE"
+source = "dotnet/Open-XML-SDK@431ab05cf160:test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/ForTestCase/footnote.docx"
+producer = "Microsoft Office Word 12.0000"
+features = ["fields", "footnotes", "images", "lists", "ole", "shapes", "tables", "toc"]
+stats = ["paras:453", "styles:59"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxsdk-031"
+url = "https://raw.githubusercontent.com/dotnet/Open-XML-SDK/431ab05cf160248cc3885a4a766026d4f8243792/test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/wordprocessing/table/2007.docx"
+sha256 = "e9ea3aeacaab9b19f683d0fef9c22ae5b4c71056f6e799c3e5c031b30e273134"
+size = 39106
+licence = "MIT"
+licence_url = "https://github.com/dotnet/Open-XML-SDK/blob/431ab05cf160248cc3885a4a766026d4f8243792/LICENSE"
+source = "dotnet/Open-XML-SDK@431ab05cf160:test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/wordprocessing/table/2007.docx"
+producer = "Microsoft Office Word 12.0000"
+features = ["cjk", "multi-section", "tables"]
+stats = ["paras:716", "styles:6"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxpt-032"
+url = "https://raw.githubusercontent.com/OfficeDev/Open-Xml-PowerTools/5881422a881f6ccefce2b9801b5dc6a753670d6e/TestFiles/LIR001-en-US-ordinal.docx"
+sha256 = "6407c99089e5602e5e0538be00febde5c44e9866f825a5a7113869991c98d25e"
+size = 24004
+licence = "MIT"
+licence_url = "https://github.com/OfficeDev/Open-Xml-PowerTools/blob/5881422a881f6ccefce2b9801b5dc6a753670d6e/LICENSE"
+source = "OfficeDev/Open-Xml-PowerTools@5881422a881f:TestFiles/LIR001-en-US-ordinal.docx"
+producer = "Microsoft Office Word 15.0000"
+features = ["lists"]
+stats = ["paras:3501", "styles:22"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-docx4j-033"
+url = "https://raw.githubusercontent.com/plutext/docx4j/da086de488768dbf296e58fb6f3affab7189146f/docx4j-core-tests/src/test/resources/revisions/cr043/cr043-accept-all.docx"
+sha256 = "cd0aa9017896d30ebba0640aeb03ff076b19efdd35bb512a9e6fb99cfee17154"
+size = 36370
+licence = "Apache-2.0"
+licence_url = "https://github.com/plutext/docx4j/blob/da086de488768dbf296e58fb6f3affab7189146f/legals/LICENSE"
+source = "plutext/docx4j@da086de48876:docx4j-core-tests/src/test/resources/revisions/cr043/cr043-accept-all.docx"
+producer = "Microsoft Office Word 16.0000"
+features = ["comments", "content-controls", "endnotes", "fields", "glossary", "headers-footers", "images", "multi-section", "shapes", "tables", "text-boxes"]
+stats = ["paras:51", "styles:34"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxsdk-034"
+url = "https://raw.githubusercontent.com/dotnet/Open-XML-SDK/431ab05cf160248cc3885a4a766026d4f8243792/test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/wordprocessing/footer%20%26%20header/BackgroundReport%20-%20THE%20WORKING%20GROUP%20ON%20INTERNET%20GOVERNANCE.docx"
+sha256 = "a3df751fb47c2725ef76948c65c4424bd0a4ce2b79ea1fae0a1d00c8c28ab5b8"
+size = 204742
+licence = "MIT"
+licence_url = "https://github.com/dotnet/Open-XML-SDK/blob/431ab05cf160248cc3885a4a766026d4f8243792/LICENSE"
+source = "dotnet/Open-XML-SDK@431ab05cf160:test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/wordprocessing/footer & header/BackgroundReport - THE WORKING GROUP ON INTERNET GOVERNANCE.docx"
+producer = "Microsoft Office Word 12.0000"
+features = ["footnotes", "headers-footers", "lists", "multi-section", "tables", "tracked-changes"]
+stats = ["paras:1922", "styles:36"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxpt-035"
+url = "https://raw.githubusercontent.com/OfficeDev/Open-Xml-PowerTools/5881422a881f6ccefce2b9801b5dc6a753670d6e/TestFiles/RP/RP051-Arabic-Accepted.docx"
+sha256 = "fa11a7cb5759c7ec081042071cc41fa1dcb7fa6342cc36d28b54926f38ef9734"
+size = 115342
+licence = "MIT"
+licence_url = "https://github.com/OfficeDev/Open-Xml-PowerTools/blob/5881422a881f6ccefce2b9801b5dc6a753670d6e/LICENSE"
+source = "OfficeDev/Open-Xml-PowerTools@5881422a881f:TestFiles/RP/RP051-Arabic-Accepted.docx"
+producer = "Microsoft Office Word 14.0000"
+features = ["headers-footers", "images", "lists", "rtl", "rtl-script", "tables"]
+stats = ["paras:97", "styles:145"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxsdk-036"
+url = "https://raw.githubusercontent.com/dotnet/Open-XML-SDK/431ab05cf160248cc3885a4a766026d4f8243792/test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/wordprocessing/columns/columns1.docx"
+sha256 = "1c09b1299355a063b5effa6e30ee6869d181097b4b7abba82141c5ea199632c6"
+size = 57733
+licence = "MIT"
+licence_url = "https://github.com/dotnet/Open-XML-SDK/blob/431ab05cf160248cc3885a4a766026d4f8243792/LICENSE"
+source = "dotnet/Open-XML-SDK@431ab05cf160:test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/wordprocessing/columns/columns1.docx"
+producer = "Microsoft Office Word 12.0000"
+features = ["cjk", "columns", "multi-section"]
+stats = ["paras:221", "styles:21"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxsdk-037"
+url = "https://raw.githubusercontent.com/dotnet/Open-XML-SDK/431ab05cf160248cc3885a4a766026d4f8243792/test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/wordprocessing/bookmark/bookmark.docx"
+sha256 = "ccafc9d1ecc611d14adc4ba8d037352e53c7d56e46518903a194ffdd49cfab5f"
+size = 129880
+licence = "MIT"
+licence_url = "https://github.com/dotnet/Open-XML-SDK/blob/431ab05cf160248cc3885a4a766026d4f8243792/LICENSE"
+source = "dotnet/Open-XML-SDK@431ab05cf160:test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/wordprocessing/bookmark/bookmark.docx"
+producer = "Microsoft Office Word 12.0000"
+features = ["fields", "headers-footers", "images", "lists", "multi-section", "toc"]
+stats = ["paras:513", "styles:62"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-poi-038"
+url = "https://raw.githubusercontent.com/apache/poi/4f3c25563919e7efa4a75feccf6cef1ac3d05a04/test-data/document/Bug51170.docx"
+sha256 = "3a5f19e5bfdc7f25ce16cb256bb8bab1a15e900a767b4a4c6b1ea3ee34faaa32"
+size = 239621
+licence = "Apache-2.0"
+licence_url = "https://github.com/apache/poi/blob/4f3c25563919e7efa4a75feccf6cef1ac3d05a04/legal/LICENSE"
+source = "apache/poi@4f3c25563919:test-data/document/Bug51170.docx"
+producer = "Microsoft Word 12.0.0 12.0000"
+features = ["headers-footers", "images", "lists"]
+stats = ["paras:149", "styles:31"]
+tier = "full"
+publish_renders = "review"
+note = "Apache POI test-data: many files are user-supplied bug attachments; Apache-2.0 asserted by the ASF repository, authorship unverified; review content before publishing renders"
+
+[[file]]
+id = "docx-docx4j-039"
+url = "https://raw.githubusercontent.com/plutext/docx4j/da086de488768dbf296e58fb6f3affab7189146f/docs/headers_footers.docx"
+sha256 = "621014619dbaebb287543f123d448059e6a1675a288c20a9ce82af12cbe9a607"
+size = 406287
+licence = "Apache-2.0"
+licence_url = "https://github.com/plutext/docx4j/blob/da086de488768dbf296e58fb6f3affab7189146f/legals/LICENSE"
+source = "plutext/docx4j@da086de48876:docs/headers_footers.docx"
+producer = "Microsoft Office Word 14.0000"
+features = ["fields", "images", "lists", "tables"]
+stats = ["paras:665", "styles:222"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-docx4j-040"
+url = "https://raw.githubusercontent.com/plutext/docx4j/da086de488768dbf296e58fb6f3affab7189146f/docs/docx4j_DigitalSignatures.docx"
+sha256 = "e07d23e9811c45bd741e54038875e10231933492f6816db219277a723692cd4e"
+size = 312172
+licence = "Apache-2.0"
+licence_url = "https://github.com/plutext/docx4j/blob/da086de488768dbf296e58fb6f3affab7189146f/legals/LICENSE"
+source = "plutext/docx4j@da086de48876:docs/docx4j_DigitalSignatures.docx"
+producer = "Microsoft Office Word 16.0000"
+features = ["footnotes", "images", "lists", "tables"]
+stats = ["paras:644", "styles:61"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxpt-041"
+url = "https://raw.githubusercontent.com/OfficeDev/Open-Xml-PowerTools/5881422a881f6ccefce2b9801b5dc6a753670d6e/OpenXmlPowerToolsExamples/HtmlConverter01/Test-02.docx"
+sha256 = "dd83587d9aad3be9b701ad0bf56943f8009f5ba3b5491d3a31aedbe1e7404d6d"
+size = 27286
+licence = "MIT"
+licence_url = "https://github.com/OfficeDev/Open-Xml-PowerTools/blob/5881422a881f6ccefce2b9801b5dc6a753670d6e/LICENSE"
+source = "OfficeDev/Open-Xml-PowerTools@5881422a881f:OpenXmlPowerToolsExamples/HtmlConverter01/Test-02.docx"
+producer = "Microsoft Office Word 15.0000"
+features = ["content-controls", "glossary", "tables"]
+stats = ["paras:210", "styles:17"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxsdk-042"
+url = "https://raw.githubusercontent.com/dotnet/Open-XML-SDK/431ab05cf160248cc3885a4a766026d4f8243792/test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/wordprocessing/footer%20%26%20header/Business%20Plan%20for%20a%20Startup%20Business_July.docx"
+sha256 = "168cd476d909307451aa6bea0295c48e9c69aaf5b6d675b09224ff8a7ead8889"
+size = 51215
+licence = "MIT"
+licence_url = "https://github.com/dotnet/Open-XML-SDK/blob/431ab05cf160248cc3885a4a766026d4f8243792/LICENSE"
+source = "dotnet/Open-XML-SDK@431ab05cf160:test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/wordprocessing/footer & header/Business Plan for a Startup Business_July.docx"
+producer = "Microsoft Office Word 12.0000"
+features = ["fields", "headers-footers", "lists", "tables", "toc"]
+stats = ["paras:543", "styles:35"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-docx4j-043"
+url = "https://raw.githubusercontent.com/plutext/docx4j/da086de488768dbf296e58fb6f3affab7189146f/docx4j-core-tests/src/test/resources/revisions/core-ts/check54/54-writes-word365-rejected.docx"
+sha256 = "6318b70af0b42873a6931b76473256c63445518c14399bada43d740bd913d23f"
+size = 33527
+licence = "Apache-2.0"
+licence_url = "https://github.com/plutext/docx4j/blob/da086de488768dbf296e58fb6f3affab7189146f/legals/LICENSE"
+source = "plutext/docx4j@da086de48876:docx4j-core-tests/src/test/resources/revisions/core-ts/check54/54-writes-word365-rejected.docx"
+producer = "Microsoft Office Word 16.0000"
+features = ["comments", "content-controls", "fields", "glossary", "lists", "tables"]
+stats = ["paras:208", "styles:33"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxsdk-044"
+url = "https://raw.githubusercontent.com/dotnet/Open-XML-SDK/431ab05cf160248cc3885a4a766026d4f8243792/test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/wordprocessing/page%20layout/page%20layout%28big%20file%29/column2.docx"
+sha256 = "724feef71534d947c7374fcb742f577e3edf293716ae3d166086eac358ba42c9"
+size = 80512
+licence = "MIT"
+licence_url = "https://github.com/dotnet/Open-XML-SDK/blob/431ab05cf160248cc3885a4a766026d4f8243792/LICENSE"
+source = "dotnet/Open-XML-SDK@431ab05cf160:test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/wordprocessing/page layout/page layout(big file)/column2.docx"
+producer = "Microsoft Office Word 12.0000"
+features = ["cjk", "columns"]
+stats = ["paras:215", "styles:21"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-docx4j-045"
+url = "https://raw.githubusercontent.com/plutext/docx4j/da086de488768dbf296e58fb6f3affab7189146f/docx4j-core-tests/src/test/resources/revisions/core-ts/check20/13-moveTo-no-ranges.docx"
+sha256 = "4076f35e144389d62b708ce77cf539214918b14b0f25823ff3a1bafe3c7b79e3"
+size = 20978
+licence = "Apache-2.0"
+licence_url = "https://github.com/plutext/docx4j/blob/da086de488768dbf296e58fb6f3affab7189146f/legals/LICENSE"
+source = "plutext/docx4j@da086de48876:docx4j-core-tests/src/test/resources/revisions/core-ts/check20/13-moveTo-no-ranges.docx"
+producer = "Microsoft Office Word 15.0000"
+features = ["comments", "footnotes", "lists", "multi-section", "tables", "tracked-changes", "tracked-formatting"]
+stats = ["paras:74", "styles:33"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-docx4j-046"
+url = "https://raw.githubusercontent.com/plutext/docx4j/da086de488768dbf296e58fb6f3affab7189146f/docx4j-samples-docx4j/sample-docs/ArialUnicodeMS.docx"
+sha256 = "0115732f11677776fac8a1a20b7b0dd8badff306feae64e5ea0b39e3a188b1f4"
+size = 25403
+licence = "Apache-2.0"
+licence_url = "https://github.com/plutext/docx4j/blob/da086de488768dbf296e58fb6f3affab7189146f/legals/LICENSE"
+source = "plutext/docx4j@da086de48876:docx4j-samples-docx4j/sample-docs/ArialUnicodeMS.docx"
+producer = "Microsoft Office Word 14.0000"
+features = ["columns", "rtl-script"]
+stats = ["paras:163", "styles:25"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-docx4j-047"
+url = "https://raw.githubusercontent.com/plutext/docx4j/da086de488768dbf296e58fb6f3affab7189146f/docx4j-samples-docx-export-fo/sample-docs/word/Symbol%20Fonts%20Iteration.docx"
+sha256 = "a94b4fd3b147f3a54f800ee42027d773ef756b99476318b3a486756aa8b76378"
+size = 39617
+licence = "Apache-2.0"
+licence_url = "https://github.com/plutext/docx4j/blob/da086de488768dbf296e58fb6f3affab7189146f/legals/LICENSE"
+source = "plutext/docx4j@da086de48876:docx4j-samples-docx-export-fo/sample-docs/word/Symbol Fonts Iteration.docx"
+producer = "Microsoft Office Word 16.0000"
+features = ["tables"]
+stats = ["paras:1142", "styles:40"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxpt-048"
+url = "https://raw.githubusercontent.com/OfficeDev/Open-Xml-PowerTools/5881422a881f6ccefce2b9801b5dc6a753670d6e/OpenXmlPowerToolsExamples/HtmlConverter01/Hebrew-02.docx"
+sha256 = "ddf1bae403bd61a380a3f775c14acff91803a25b320d968a36ba9ca49e4f12d0"
+size = 30357
+licence = "MIT"
+licence_url = "https://github.com/OfficeDev/Open-Xml-PowerTools/blob/5881422a881f6ccefce2b9801b5dc6a753670d6e/LICENSE"
+source = "OfficeDev/Open-Xml-PowerTools@5881422a881f:OpenXmlPowerToolsExamples/HtmlConverter01/Hebrew-02.docx"
+producer = "Microsoft Office Word 15.0000"
+features = ["images", "lists", "rtl", "rtl-script"]
+stats = ["paras:85", "styles:4"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-docx4j-049"
+url = "https://raw.githubusercontent.com/plutext/docx4j/da086de488768dbf296e58fb6f3affab7189146f/docx4j-samples-docx4j/sample-docs/DOCPROP_builtin.docx"
+sha256 = "4631e53aa06190f94193c66bd11a70356d3b2f2bf7d15f7202c405eb8c8f75ec"
+size = 148128
+licence = "Apache-2.0"
+licence_url = "https://github.com/plutext/docx4j/blob/da086de488768dbf296e58fb6f3affab7189146f/legals/LICENSE"
+source = "plutext/docx4j@da086de48876:docx4j-samples-docx4j/sample-docs/DOCPROP_builtin.docx"
+producer = "Microsoft Office Word 14.0000"
+features = ["content-controls", "fields", "glossary", "images", "tables"]
+stats = ["paras:190", "styles:8"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxsdk-050"
+url = "https://raw.githubusercontent.com/dotnet/Open-XML-SDK/431ab05cf160248cc3885a4a766026d4f8243792/test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/wordprocessing/equation/equation-1.docx"
+sha256 = "be66d24bb632dbdbeda68cd4eaac6d83b991839734c43d5dc0a95b86d82df677"
+size = 195799
+licence = "MIT"
+licence_url = "https://github.com/dotnet/Open-XML-SDK/blob/431ab05cf160248cc3885a4a766026d4f8243792/LICENSE"
+source = "dotnet/Open-XML-SDK@431ab05cf160:test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/wordprocessing/equation/equation-1.docx"
+producer = "Microsoft Office Word 12.0000"
+features = ["cjk", "headers-footers", "images", "lists", "ole", "shapes", "tables"]
+stats = ["paras:120", "styles:10"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-docx4j-051"
+url = "https://raw.githubusercontent.com/plutext/docx4j/da086de488768dbf296e58fb6f3affab7189146f/docx4j-core-tests/src/test/resources/revisions/editor/revisions/revisions-word15.docx"
+sha256 = "50d8fd73c26dad42b3e9a241b2a2c3b53cac2545b4de3df5b077be5e79863c06"
+size = 23620
+licence = "Apache-2.0"
+licence_url = "https://github.com/plutext/docx4j/blob/da086de488768dbf296e58fb6f3affab7189146f/legals/LICENSE"
+source = "plutext/docx4j@da086de48876:docx4j-core-tests/src/test/resources/revisions/editor/revisions/revisions-word15.docx"
+producer = "Microsoft Office Word 15.0000"
+features = ["comments", "footnotes", "lists", "multi-section", "tables", "tracked-changes", "tracked-formatting"]
+stats = ["paras:74", "styles:33"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-poi-052"
+url = "https://raw.githubusercontent.com/apache/poi/4f3c25563919e7efa4a75feccf6cef1ac3d05a04/test-data/document/WordWithAttachments.docx"
+sha256 = "90352263823e6d3d39a4ec88212134b74bcb0f86b603bc3b51d712a3ec3df9f2"
+size = 144959
+licence = "Apache-2.0"
+licence_url = "https://github.com/apache/poi/blob/4f3c25563919e7efa4a75feccf6cef1ac3d05a04/legal/LICENSE"
+source = "apache/poi@4f3c25563919:test-data/document/WordWithAttachments.docx"
+producer = "Microsoft Office Word 12.0000"
+features = ["comments", "headers-footers", "images", "ole", "rtl", "shapes", "tables", "text-boxes"]
+stats = ["paras:54", "styles:18"]
+tier = "full"
+publish_renders = "review"
+note = "Apache POI test-data: many files are user-supplied bug attachments; Apache-2.0 asserted by the ASF repository, authorship unverified; review content before publishing renders"
+
+[[file]]
+id = "docx-oxpt-053"
+url = "https://raw.githubusercontent.com/OfficeDev/Open-Xml-PowerTools/5881422a881f6ccefce2b9801b5dc6a753670d6e/TestFiles/HW002-Table14.docx"
+sha256 = "95ba17d00979c286c567755422aefdbd1cb5f794942a0370efa329460e35a6ee"
+size = 15749
+licence = "MIT"
+licence_url = "https://github.com/OfficeDev/Open-Xml-PowerTools/blob/5881422a881f6ccefce2b9801b5dc6a753670d6e/LICENSE"
+source = "OfficeDev/Open-Xml-PowerTools@5881422a881f:TestFiles/HW002-Table14.docx"
+producer = "Microsoft Office Word 15.0000"
+features = ["tables"]
+stats = ["paras:398", "styles:6"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-docx4j-054"
+url = "https://raw.githubusercontent.com/plutext/docx4j/da086de488768dbf296e58fb6f3affab7189146f/docx4j-core-tests/src/test/resources/revisions/editor/revisions/revisions-word2010.docx"
+sha256 = "a5f29b50ee12ec531e87b30fc83e56026473c69ad98d46aca4e4a987812a03bd"
+size = 24286
+licence = "Apache-2.0"
+licence_url = "https://github.com/plutext/docx4j/blob/da086de488768dbf296e58fb6f3affab7189146f/legals/LICENSE"
+source = "plutext/docx4j@da086de48876:docx4j-core-tests/src/test/resources/revisions/editor/revisions/revisions-word2010.docx"
+producer = "Microsoft Office Word 14.0000"
+features = ["comments", "footnotes", "lists", "multi-section", "tables", "tracked-changes", "tracked-formatting"]
+stats = ["paras:74", "styles:33"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxsdk-055"
+url = "https://raw.githubusercontent.com/dotnet/Open-XML-SDK/431ab05cf160248cc3885a4a766026d4f8243792/test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/wordprocessing/table/2003%20Consumer%20Confidence%20Report.docx"
+sha256 = "7ce1edfb9df8878b8e9f0ee154fb6d9db7104dd6d50469966bfad12a89af3bc5"
+size = 34910
+licence = "MIT"
+licence_url = "https://github.com/dotnet/Open-XML-SDK/blob/431ab05cf160248cc3885a4a766026d4f8243792/LICENSE"
+source = "dotnet/Open-XML-SDK@431ab05cf160:test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/wordprocessing/table/2003 Consumer Confidence Report.docx"
+producer = "Microsoft Office Word 12.0000"
+features = ["headers-footers", "lists", "multi-section", "tables"]
+stats = ["paras:377", "styles:23"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-docx4j-056"
+url = "https://raw.githubusercontent.com/plutext/docx4j/da086de488768dbf296e58fb6f3affab7189146f/docx4j-core-tests/src/test/resources/revisions/cr043/cr043-reject-all.docx"
+sha256 = "2056fde32653bc3befba9654dc9e81189439f7401b5a7f4921b63657ddbac6c3"
+size = 33537
+licence = "Apache-2.0"
+licence_url = "https://github.com/plutext/docx4j/blob/da086de488768dbf296e58fb6f3affab7189146f/legals/LICENSE"
+source = "plutext/docx4j@da086de48876:docx4j-core-tests/src/test/resources/revisions/cr043/cr043-reject-all.docx"
+producer = "Microsoft Office Word 16.0000"
+features = ["comments", "endnotes", "fields", "headers-footers", "images", "multi-section", "shapes", "tables", "text-boxes"]
+stats = ["paras:53", "styles:34"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxpt-057"
+url = "https://raw.githubusercontent.com/OfficeDev/Open-Xml-PowerTools/5881422a881f6ccefce2b9801b5dc6a753670d6e/TestFiles/WC/WC004-Large-Mod.docx"
+sha256 = "ccc835cded2e3ede4e0740d174e3331b281601006e7d150d2b76a56819a4b737"
+size = 33186
+licence = "MIT"
+licence_url = "https://github.com/OfficeDev/Open-Xml-PowerTools/blob/5881422a881f6ccefce2b9801b5dc6a753670d6e/LICENSE"
+source = "OfficeDev/Open-Xml-PowerTools@5881422a881f:TestFiles/WC/WC004-Large-Mod.docx"
+producer = "Microsoft Office Word 16.0000"
+features = ["fields", "headers-footers", "lists"]
+stats = ["paras:266", "styles:42"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxsdk-058"
+url = "https://raw.githubusercontent.com/dotnet/Open-XML-SDK/431ab05cf160248cc3885a4a766026d4f8243792/test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/O15Conformance/WD/CommentExTest/Comments-Sample-15-12-01/Comment001.docx"
+sha256 = "e9efad0ad358200a8e1e0fe4c072d2496177c3698e7e4a3da406141ddfb40c2d"
+size = 16079
+licence = "MIT"
+licence_url = "https://github.com/dotnet/Open-XML-SDK/blob/431ab05cf160248cc3885a4a766026d4f8243792/LICENSE"
+source = "dotnet/Open-XML-SDK@431ab05cf160:test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/O15Conformance/WD/CommentExTest/Comments-Sample-15-12-01/Comment001.docx"
+producer = "Microsoft Office Word 15.0000"
+features = ["lists", "tables"]
+stats = ["paras:371", "styles:9"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxpt-059"
+url = "https://raw.githubusercontent.com/OfficeDev/Open-Xml-PowerTools/5881422a881f6ccefce2b9801b5dc6a753670d6e/OpenXmlPowerToolsExamples/HtmlConverter01/Test-03.docx"
+sha256 = "574e88d6d7f1ab7329d687e79ccd5200d1de489f70656bb5a76088a957e7c8f2"
+size = 91365
+licence = "MIT"
+licence_url = "https://github.com/OfficeDev/Open-Xml-PowerTools/blob/5881422a881f6ccefce2b9801b5dc6a753670d6e/LICENSE"
+source = "OfficeDev/Open-Xml-PowerTools@5881422a881f:OpenXmlPowerToolsExamples/HtmlConverter01/Test-03.docx"
+producer = "Microsoft Office Word 15.0000"
+features = ["content-controls", "fields", "glossary", "images", "tables"]
+stats = ["paras:108", "styles:29"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxsdk-060"
+url = "https://raw.githubusercontent.com/dotnet/Open-XML-SDK/431ab05cf160248cc3885a4a766026d4f8243792/test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/wordprocessing/page%20layout/page%20layout%28big%20file%29/A4.docx"
+sha256 = "6209c6d5a7fc47a652d43d84623bb2e3c96bcd7ad7b5b973c0f8d646082ab732"
+size = 49495
+licence = "MIT"
+licence_url = "https://github.com/dotnet/Open-XML-SDK/blob/431ab05cf160248cc3885a4a766026d4f8243792/LICENSE"
+source = "dotnet/Open-XML-SDK@431ab05cf160:test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/wordprocessing/page layout/page layout(big file)/A4.docx"
+producer = "Microsoft Office Word 12.0000"
+features = ["cjk"]
+stats = ["paras:245", "styles:12"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-docx4j-061"
+url = "https://raw.githubusercontent.com/plutext/docx4j/da086de488768dbf296e58fb6f3affab7189146f/docx4j-core-tests/src/test/resources/revisions/core-ts/check20/01-type-inside-a.docx"
+sha256 = "fd83ae226e93621bccf113363fbf3f4fd92479e43f84707d191764744f784cd5"
+size = 26470
+licence = "Apache-2.0"
+licence_url = "https://github.com/plutext/docx4j/blob/da086de488768dbf296e58fb6f3affab7189146f/legals/LICENSE"
+source = "plutext/docx4j@da086de48876:docx4j-core-tests/src/test/resources/revisions/core-ts/check20/01-type-inside-a.docx"
+producer = "Microsoft Office Word 16.0000"
+features = ["comments", "footnotes", "lists", "multi-section", "tables", "tracked-changes", "tracked-formatting"]
+stats = ["paras:74", "styles:36"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxpt-062"
+url = "https://raw.githubusercontent.com/OfficeDev/Open-Xml-PowerTools/5881422a881f6ccefce2b9801b5dc6a753670d6e/TestFiles/HC014-RTL-Table-01.docx"
+sha256 = "6b3603cd842aee4bd33294e54afed5aab3c99cf518759e5edf8c09187a7ea3de"
+size = 47927
+licence = "MIT"
+licence_url = "https://github.com/OfficeDev/Open-Xml-PowerTools/blob/5881422a881f6ccefce2b9801b5dc6a753670d6e/LICENSE"
+source = "OfficeDev/Open-Xml-PowerTools@5881422a881f:TestFiles/HC014-RTL-Table-01.docx"
+producer = "Microsoft Office Word 15.0000"
+features = ["images", "rtl", "rtl-script", "tables"]
+stats = ["paras:76", "styles:6"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-mammoth-063"
+url = "https://raw.githubusercontent.com/mwilliamson/mammoth.js/5171a9072f8b7343ab1c9ed3a15d6d372cb59b67/test/test-data/tables.docx"
+sha256 = "9f75a82d36530d91989a43fcb8940f2e753051787714cecbf6a1f49a22e58ded"
+size = 13087
+licence = "BSD-2-Clause"
+licence_url = "https://github.com/mwilliamson/mammoth.js/blob/5171a9072f8b7343ab1c9ed3a15d6d372cb59b67/LICENSE"
+source = "mwilliamson/mammoth.js@5171a9072f8b:test/test-data/tables.docx"
+producer = "Microsoft Office Word 14.0000"
+features = ["tables"]
+stats = ["paras:6", "styles:5"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-docx4j-064"
+url = "https://raw.githubusercontent.com/plutext/docx4j/da086de488768dbf296e58fb6f3affab7189146f/docx4j-core-tests/src/test/resources/revisions/core-ts/check21/21a-in-insertion.docx"
+sha256 = "0986564c6a30cd5702404dfc9885d1a67eb04b9c1d6173d2b829fa97a16f5c36"
+size = 26557
+licence = "Apache-2.0"
+licence_url = "https://github.com/plutext/docx4j/blob/da086de488768dbf296e58fb6f3affab7189146f/legals/LICENSE"
+source = "plutext/docx4j@da086de48876:docx4j-core-tests/src/test/resources/revisions/core-ts/check21/21a-in-insertion.docx"
+producer = "Microsoft Office Word 16.0000"
+features = ["comments", "footnotes", "lists", "multi-section", "tables", "tracked-changes", "tracked-formatting"]
+stats = ["paras:74", "styles:36"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxsdk-065"
+url = "https://raw.githubusercontent.com/dotnet/Open-XML-SDK/431ab05cf160248cc3885a4a766026d4f8243792/test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/wordprocessing/table/2006.docx"
+sha256 = "ae0057730fc1b453d2fa496b1a32be80f82dc4efd1bc68b4de782efd54781708"
+size = 18204
+licence = "MIT"
+licence_url = "https://github.com/dotnet/Open-XML-SDK/blob/431ab05cf160248cc3885a4a766026d4f8243792/LICENSE"
+source = "dotnet/Open-XML-SDK@431ab05cf160:test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/wordprocessing/table/2006.docx"
+producer = "Microsoft Office Word 12.0000"
+features = ["cjk", "shapes", "tables", "text-boxes"]
+stats = ["paras:105", "styles:8"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-pydocx-066"
+url = "https://raw.githubusercontent.com/python-openxml/python-docx/e45454602b53e8e572b179ccf1c91093ec9f4ed7/features/steps/test_files/txt-font-props.docx"
+sha256 = "a5de256a9cd1598d4e63ba0883995899ddb72ec9390c04d46474c2b093ffde96"
+size = 37924
+licence = "MIT"
+licence_url = "https://github.com/python-openxml/python-docx/blob/e45454602b53e8e572b179ccf1c91093ec9f4ed7/LICENSE"
+source = "python-openxml/python-docx@e45454602b53:features/steps/test_files/txt-font-props.docx"
+producer = "Microsoft Macintosh Word 14.0000"
+features = ["lists"]
+stats = ["paras:11", "styles:11"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-docx4j-067"
+url = "https://raw.githubusercontent.com/plutext/docx4j/da086de488768dbf296e58fb6f3affab7189146f/docx4j-core-tests/src/test/resources/revisions/core-ts/check18/accept-destination.docx"
+sha256 = "1cbde2888321cf0496bdbb86f4b131fb36eb7e7448fdf3466feb778676ae309d"
+size = 26253
+licence = "Apache-2.0"
+licence_url = "https://github.com/plutext/docx4j/blob/da086de488768dbf296e58fb6f3affab7189146f/legals/LICENSE"
+source = "plutext/docx4j@da086de48876:docx4j-core-tests/src/test/resources/revisions/core-ts/check18/accept-destination.docx"
+producer = "Microsoft Office Word 16.0000"
+features = ["comments", "footnotes", "lists", "multi-section", "tables", "tracked-changes", "tracked-formatting"]
+stats = ["paras:73", "styles:34"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxpt-068"
+url = "https://raw.githubusercontent.com/OfficeDev/Open-Xml-PowerTools/5881422a881f6ccefce2b9801b5dc6a753670d6e/TestFiles/RP/RP001-Tracked-Revisions-01-Accepted.docx"
+sha256 = "3336c53b16040ccbba09b80560d1f0df952dc2e293efc0fa37d9d4dbe5521462"
+size = 47875
+licence = "MIT"
+licence_url = "https://github.com/OfficeDev/Open-Xml-PowerTools/blob/5881422a881f6ccefce2b9801b5dc6a753670d6e/LICENSE"
+source = "OfficeDev/Open-Xml-PowerTools@5881422a881f:TestFiles/RP/RP001-Tracked-Revisions-01-Accepted.docx"
+producer = "Microsoft Office Word 15.0000"
+features = ["headers-footers", "lists", "multi-section", "tables"]
+stats = ["paras:163", "styles:53"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxsdk-069"
+url = "https://raw.githubusercontent.com/dotnet/Open-XML-SDK/431ab05cf160248cc3885a4a766026d4f8243792/test/DocumentFormat.OpenXml.Tests.Assets/assets/TestFiles/May_12_04.docx"
+sha256 = "ec3517121984d86836ad2766c0c4103d2ab2a270fca4e679607351ac25df8948"
+size = 77977
+licence = "MIT"
+licence_url = "https://github.com/dotnet/Open-XML-SDK/blob/431ab05cf160248cc3885a4a766026d4f8243792/LICENSE"
+source = "dotnet/Open-XML-SDK@431ab05cf160:test/DocumentFormat.OpenXml.Tests.Assets/assets/TestFiles/May_12_04.docx"
+producer = "Microsoft Office Word 12.0000"
+features = ["fields", "headers-footers", "images", "lists"]
+stats = ["paras:215", "styles:30"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxpt-070"
+url = "https://raw.githubusercontent.com/OfficeDev/Open-Xml-PowerTools/5881422a881f6ccefce2b9801b5dc6a753670d6e/OpenXmlPowerToolsExamples/HtmlConverter01/Hebrew-01.docx"
+sha256 = "3fa5838eeeeaea20ec56843e8194b62f9dd3805fd9aba3a6cda64869d933f8c4"
+size = 46952
+licence = "MIT"
+licence_url = "https://github.com/OfficeDev/Open-Xml-PowerTools/blob/5881422a881f6ccefce2b9801b5dc6a753670d6e/LICENSE"
+source = "OfficeDev/Open-Xml-PowerTools@5881422a881f:OpenXmlPowerToolsExamples/HtmlConverter01/Hebrew-01.docx"
+producer = "Microsoft Office Word 15.0000"
+features = ["images", "rtl", "rtl-script"]
+stats = ["paras:75", "styles:4"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxpt-071"
+url = "https://raw.githubusercontent.com/OfficeDev/Open-Xml-PowerTools/5881422a881f6ccefce2b9801b5dc6a753670d6e/TestFiles/HC002-Hebrew-01.docx"
+sha256 = "1bc39ce0931b269e3906b0a5382ad2bebcf97aa007da9b76788feed83efdb157"
+size = 46997
+licence = "MIT"
+licence_url = "https://github.com/OfficeDev/Open-Xml-PowerTools/blob/5881422a881f6ccefce2b9801b5dc6a753670d6e/LICENSE"
+source = "OfficeDev/Open-Xml-PowerTools@5881422a881f:TestFiles/HC002-Hebrew-01.docx"
+producer = "Microsoft Office Word 15.0000"
+features = ["images", "rtl", "rtl-script"]
+stats = ["paras:75", "styles:4"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxsdk-072"
+url = "https://raw.githubusercontent.com/dotnet/Open-XML-SDK/431ab05cf160248cc3885a4a766026d4f8243792/test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/O15Conformance/WD/CommentExTest/Comments-Sample-15-12-01/Comment042.docx"
+sha256 = "a8ab72021268c504cca48a1a99ae98032b94bdf664f8e8105aefcdc445024ef0"
+size = 29603
+licence = "MIT"
+licence_url = "https://github.com/dotnet/Open-XML-SDK/blob/431ab05cf160248cc3885a4a766026d4f8243792/LICENSE"
+source = "dotnet/Open-XML-SDK@431ab05cf160:test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/O15Conformance/WD/CommentExTest/Comments-Sample-15-12-01/Comment042.docx"
+producer = "Microsoft Office Word 15.0000"
+features = ["comments", "endnotes", "footnotes", "headers-footers", "shapes", "text-boxes", "tracked-changes", "tracked-formatting"]
+stats = ["paras:22", "styles:22"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxpt-073"
+url = "https://raw.githubusercontent.com/OfficeDev/Open-Xml-PowerTools/5881422a881f6ccefce2b9801b5dc6a753670d6e/OpenXmlPowerToolsExamples/DocumentBuilder04/solar-system.docx"
+sha256 = "523abad1cb51d8f7e4291bff707cd57e2326d296b4cd784ef506b02f37f28693"
+size = 82730
+licence = "MIT"
+licence_url = "https://github.com/OfficeDev/Open-Xml-PowerTools/blob/5881422a881f6ccefce2b9801b5dc6a753670d6e/LICENSE"
+source = "OfficeDev/Open-Xml-PowerTools@5881422a881f:OpenXmlPowerToolsExamples/DocumentBuilder04/solar-system.docx"
+producer = "Microsoft Office Word 12.0000"
+features = ["content-controls", "fields", "glossary", "headers-footers", "images", "lists", "multi-section", "toc"]
+stats = ["paras:33", "styles:60"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxpt-074"
+url = "https://raw.githubusercontent.com/OfficeDev/Open-Xml-PowerTools/5881422a881f6ccefce2b9801b5dc6a753670d6e/OpenXmlPowerToolsExamples/DocumentBuilder04/SolarOverview.docx"
+sha256 = "948fa9bba62453defadfcebc6c593c6f3dc1d186fc7accae7c9a9655688f9026"
+size = 30321
+licence = "MIT"
+licence_url = "https://github.com/OfficeDev/Open-Xml-PowerTools/blob/5881422a881f6ccefce2b9801b5dc6a753670d6e/LICENSE"
+source = "OfficeDev/Open-Xml-PowerTools@5881422a881f:OpenXmlPowerToolsExamples/DocumentBuilder04/SolarOverview.docx"
+producer = "Microsoft Office Word 12.0000"
+features = ["charts", "footnotes", "lists", "ole", "tables"]
+stats = ["paras:61", "styles:55"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxpt-075"
+url = "https://raw.githubusercontent.com/OfficeDev/Open-Xml-PowerTools/5881422a881f6ccefce2b9801b5dc6a753670d6e/TestFiles/DB001-Sections.docx"
+sha256 = "e4175a97187da72a48ee42efc74a16674f9767d687ade34cc6337ae999cd8479"
+size = 16535
+licence = "MIT"
+licence_url = "https://github.com/OfficeDev/Open-Xml-PowerTools/blob/5881422a881f6ccefce2b9801b5dc6a753670d6e/LICENSE"
+source = "OfficeDev/Open-Xml-PowerTools@5881422a881f:TestFiles/DB001-Sections.docx"
+producer = "Microsoft Office Word 15.0000"
+features = ["headers-footers", "multi-section"]
+stats = ["paras:134", "styles:8"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxsdk-076"
+url = "https://raw.githubusercontent.com/dotnet/Open-XML-SDK/431ab05cf160248cc3885a4a766026d4f8243792/test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/wordprocessing/mixed%20features/MSDN%20-%20EULA.docx"
+sha256 = "57a1e3b1b30dc18c9b332da981fb896a57279623f468a38002411add10e46630"
+size = 29141
+licence = "MIT"
+licence_url = "https://github.com/dotnet/Open-XML-SDK/blob/431ab05cf160248cc3885a4a766026d4f8243792/LICENSE"
+source = "dotnet/Open-XML-SDK@431ab05cf160:test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/wordprocessing/mixed features/MSDN - EULA.docx"
+producer = "Microsoft Office Word 12.0000"
+features = ["lists"]
+stats = ["paras:196", "styles:10"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxsdk-077"
+url = "https://raw.githubusercontent.com/dotnet/Open-XML-SDK/431ab05cf160248cc3885a4a766026d4f8243792/test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/wordprocessing/complexDocx/complexity.docx"
+sha256 = "b790e6bc89f916fa2c14e7e10afb582e48a3f8d2d15bbf4073a5ed08437ed531"
+size = 43336
+licence = "MIT"
+licence_url = "https://github.com/dotnet/Open-XML-SDK/blob/431ab05cf160248cc3885a4a766026d4f8243792/LICENSE"
+source = "dotnet/Open-XML-SDK@431ab05cf160:test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/wordprocessing/complexDocx/complexity.docx"
+producer = "Microsoft Office Word 12.0000"
+features = ["images", "lists", "shapes", "tables"]
+stats = ["paras:124", "styles:91"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxpt-078"
+url = "https://raw.githubusercontent.com/OfficeDev/Open-Xml-PowerTools/5881422a881f6ccefce2b9801b5dc6a753670d6e/TestFiles/DB005-Headers-With-Images.docx"
+sha256 = "fe953c455bc2211ddd1ce2bb5ec2c715f84f979253c9e81e6e794df48a83bcbd"
+size = 19303
+licence = "MIT"
+licence_url = "https://github.com/OfficeDev/Open-Xml-PowerTools/blob/5881422a881f6ccefce2b9801b5dc6a753670d6e/LICENSE"
+source = "OfficeDev/Open-Xml-PowerTools@5881422a881f:TestFiles/DB005-Headers-With-Images.docx"
+producer = "Microsoft Office Word 15.0000"
+features = ["headers-footers", "images", "multi-section"]
+stats = ["paras:101", "styles:8"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxsdk-079"
+url = "https://raw.githubusercontent.com/dotnet/Open-XML-SDK/431ab05cf160248cc3885a4a766026d4f8243792/test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/wordprocessing/hyperlink%20for%20splitPara/Hyperlink%20-%20internal.docx"
+sha256 = "9f892ebf1b557eb97f78b0990c8e1dcf8ffa2c4823f60c8932ca9b9a90621b8d"
+size = 38113
+licence = "MIT"
+licence_url = "https://github.com/dotnet/Open-XML-SDK/blob/431ab05cf160248cc3885a4a766026d4f8243792/LICENSE"
+source = "dotnet/Open-XML-SDK@431ab05cf160:test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/wordprocessing/hyperlink for splitPara/Hyperlink - internal.docx"
+producer = "Microsoft Office Word 12.0000"
+features = ["headers-footers", "images", "lists"]
+stats = ["paras:125", "styles:13"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxsdk-080"
+url = "https://raw.githubusercontent.com/dotnet/Open-XML-SDK/431ab05cf160248cc3885a4a766026d4f8243792/test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/wordprocessing/mixed%20features/webappdis.docx"
+sha256 = "2bd5da8548be03fcd170258ac1e7a265c313ca7133b7a70cbaddbcfebee54730"
+size = 18666
+licence = "MIT"
+licence_url = "https://github.com/dotnet/Open-XML-SDK/blob/431ab05cf160248cc3885a4a766026d4f8243792/LICENSE"
+source = "dotnet/Open-XML-SDK@431ab05cf160:test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/wordprocessing/mixed features/webappdis.docx"
+producer = "Microsoft Office Word 12.0000"
+features = []
+stats = ["paras:182", "styles:10"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxpt-081"
+url = "https://raw.githubusercontent.com/OfficeDev/Open-Xml-PowerTools/5881422a881f6ccefce2b9801b5dc6a753670d6e/OpenXmlPowerToolsExamples/FormattingAssembler01/Test03.docx"
+sha256 = "5abfd0ff59068b540870d76ccbf9120ba4eb20582b2a08651806750b55c58c7c"
+size = 13642
+licence = "MIT"
+licence_url = "https://github.com/OfficeDev/Open-Xml-PowerTools/blob/5881422a881f6ccefce2b9801b5dc6a753670d6e/LICENSE"
+source = "OfficeDev/Open-Xml-PowerTools@5881422a881f:OpenXmlPowerToolsExamples/FormattingAssembler01/Test03.docx"
+producer = "Microsoft Office Word 15.0000"
+features = ["tables"]
+stats = ["paras:120", "styles:11"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-pydocx-082"
+url = "https://raw.githubusercontent.com/python-openxml/python-docx/e45454602b53e8e572b179ccf1c91093ec9f4ed7/features/steps/test_files/sct-section-props.docx"
+sha256 = "0d741b9f881f3a1583711f0d85227768b01fa13760ebf972c43e1496b18ab3d5"
+size = 28168
+licence = "MIT"
+licence_url = "https://github.com/python-openxml/python-docx/blob/e45454602b53e8e572b179ccf1c91093ec9f4ed7/LICENSE"
+source = "python-openxml/python-docx@e45454602b53:features/steps/test_files/sct-section-props.docx"
+producer = "Microsoft Macintosh Word 14.0000"
+features = ["multi-section"]
+stats = ["paras:9", "styles:4"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxsdk-083"
+url = "https://raw.githubusercontent.com/dotnet/Open-XML-SDK/431ab05cf160248cc3885a4a766026d4f8243792/test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/wordprocessing/bullet/bullet-complex.docx"
+sha256 = "167d4ecab381d6855601bddfab40daf43dd5ceb0d2aaa449cf24897092138619"
+size = 28831
+licence = "MIT"
+licence_url = "https://github.com/dotnet/Open-XML-SDK/blob/431ab05cf160248cc3885a4a766026d4f8243792/LICENSE"
+source = "dotnet/Open-XML-SDK@431ab05cf160:test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/wordprocessing/bullet/bullet-complex.docx"
+producer = "Microsoft Office Word 12.0000"
+features = ["images", "lists", "multi-section"]
+stats = ["paras:93", "styles:24"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxsdk-084"
+url = "https://raw.githubusercontent.com/dotnet/Open-XML-SDK/431ab05cf160248cc3885a4a766026d4f8243792/test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/wordprocessing/complexDocx/complex%20table3.docx"
+sha256 = "392222566643416dfa31b573d76796fff73368b17bddc2bebd7d9a80f5e3afdf"
+size = 12806
+licence = "MIT"
+licence_url = "https://github.com/dotnet/Open-XML-SDK/blob/431ab05cf160248cc3885a4a766026d4f8243792/LICENSE"
+source = "dotnet/Open-XML-SDK@431ab05cf160:test/DocumentFormat.OpenXml.Tests.Assets/assets/TestDataStorage/v2FxTestFiles/wordprocessing/complexDocx/complex table3.docx"
+producer = "Microsoft Office Word 12.0000"
+features = ["fields", "tables"]
+stats = ["paras:104", "styles:5"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxpt-085"
+url = "https://raw.githubusercontent.com/OfficeDev/Open-Xml-PowerTools/5881422a881f6ccefce2b9801b5dc6a753670d6e/OpenXmlPowerToolsExamples/DocumentBuilder02/Spec.docx"
+sha256 = "f6089ac8e87d2b40322b90480a938b5151c842f16513e78ab84948732206e7d6"
+size = 19242
+licence = "MIT"
+licence_url = "https://github.com/OfficeDev/Open-Xml-PowerTools/blob/5881422a881f6ccefce2b9801b5dc6a753670d6e/LICENSE"
+source = "OfficeDev/Open-Xml-PowerTools@5881422a881f:OpenXmlPowerToolsExamples/DocumentBuilder02/Spec.docx"
+producer = "Microsoft Office Word 14.0000"
+features = ["lists"]
+stats = ["paras:75", "styles:10"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxpt-086"
+url = "https://raw.githubusercontent.com/OfficeDev/Open-Xml-PowerTools/5881422a881f6ccefce2b9801b5dc6a753670d6e/OpenXmlPowerToolsExamples/DocumentBuilder01/Source1.docx"
+sha256 = "625024224042334f715136f7fa5a6c55ac98c81a4d7350f479dbcdd85273f961"
+size = 24527
+licence = "MIT"
+licence_url = "https://github.com/OfficeDev/Open-Xml-PowerTools/blob/5881422a881f6ccefce2b9801b5dc6a753670d6e/LICENSE"
+source = "OfficeDev/Open-Xml-PowerTools@5881422a881f:OpenXmlPowerToolsExamples/DocumentBuilder01/Source1.docx"
+producer = "Microsoft Office Word 14.0000"
+features = ["headers-footers", "lists", "tables", "text-boxes"]
+stats = ["paras:38", "styles:22"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxpt-087"
+url = "https://raw.githubusercontent.com/OfficeDev/Open-Xml-PowerTools/5881422a881f6ccefce2b9801b5dc6a753670d6e/TestFiles/CA/CA014-Complex-Table.docx"
+sha256 = "b862488d85774cf9fe42e508a45b812d90acd0edea5e89adbd1c6303271bd767"
+size = 12855
+licence = "MIT"
+licence_url = "https://github.com/OfficeDev/Open-Xml-PowerTools/blob/5881422a881f6ccefce2b9801b5dc6a753670d6e/LICENSE"
+source = "OfficeDev/Open-Xml-PowerTools@5881422a881f:TestFiles/CA/CA014-Complex-Table.docx"
+producer = "Microsoft Office Word 16.0000"
+features = ["tables"]
+stats = ["paras:80", "styles:6"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxpt-088"
+url = "https://raw.githubusercontent.com/OfficeDev/Open-Xml-PowerTools/5881422a881f6ccefce2b9801b5dc6a753670d6e/TestFiles/DB/HeadersFooters/Dest/Letter%20%28content%20control%29.docx"
+sha256 = "3a0c7fabc0195e16f50eb337c65965d382f8290300c68178c04c76a023ba5fcf"
+size = 27601
+licence = "MIT"
+licence_url = "https://github.com/OfficeDev/Open-Xml-PowerTools/blob/5881422a881f6ccefce2b9801b5dc6a753670d6e/LICENSE"
+source = "OfficeDev/Open-Xml-PowerTools@5881422a881f:TestFiles/DB/HeadersFooters/Dest/Letter (content control).docx"
+producer = "Microsoft Office Word 16.0000"
+features = ["fields", "glossary", "headers-footers", "lists", "tables"]
+stats = ["paras:34", "styles:28"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxpt-089"
+url = "https://raw.githubusercontent.com/OfficeDev/Open-Xml-PowerTools/5881422a881f6ccefce2b9801b5dc6a753670d6e/TestFiles/WC/WC023-Table-4-Row-Image-Before.docx"
+sha256 = "0415a167c3655257f723728d241ec411276d3ed1068b0e21ae486d1f85bb5139"
+size = 137481
+licence = "MIT"
+licence_url = "https://github.com/OfficeDev/Open-Xml-PowerTools/blob/5881422a881f6ccefce2b9801b5dc6a753670d6e/LICENSE"
+source = "OfficeDev/Open-Xml-PowerTools@5881422a881f:TestFiles/WC/WC023-Table-4-Row-Image-Before.docx"
+producer = "Microsoft Office Word 15.0000"
+features = ["equations", "images", "tables"]
+stats = ["paras:30", "styles:5"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxpt-090"
+url = "https://raw.githubusercontent.com/OfficeDev/Open-Xml-PowerTools/5881422a881f6ccefce2b9801b5dc6a753670d6e/OpenXmlPowerToolsExamples/ReferenceAdder01/Test04.docx"
+sha256 = "c58a12d4a52adcfaa4376d0c04a4bc2f2ca765ecc2a178e43dfe381f0aba42e1"
+size = 14922
+licence = "MIT"
+licence_url = "https://github.com/OfficeDev/Open-Xml-PowerTools/blob/5881422a881f6ccefce2b9801b5dc6a753670d6e/LICENSE"
+source = "OfficeDev/Open-Xml-PowerTools@5881422a881f:OpenXmlPowerToolsExamples/ReferenceAdder01/Test04.docx"
+producer = "Microsoft Office Word 14.0000"
+features = []
+stats = ["paras:57", "styles:12"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxpt-091"
+url = "https://raw.githubusercontent.com/OfficeDev/Open-Xml-PowerTools/5881422a881f6ccefce2b9801b5dc6a753670d6e/TestFiles/WC/WC051-Table-in-Text-Box-Mod.docx"
+sha256 = "a7e3fcac8da704b26c483bcaba3eaa67b1e0f71109b395c2d1c3f0ca2d86db7a"
+size = 16743
+licence = "MIT"
+licence_url = "https://github.com/OfficeDev/Open-Xml-PowerTools/blob/5881422a881f6ccefce2b9801b5dc6a753670d6e/LICENSE"
+source = "OfficeDev/Open-Xml-PowerTools@5881422a881f:TestFiles/WC/WC051-Table-in-Text-Box-Mod.docx"
+producer = "Microsoft Office Word 16.0000"
+features = ["shapes", "tables", "text-boxes"]
+stats = ["paras:29", "styles:5"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxpt-092"
+url = "https://raw.githubusercontent.com/OfficeDev/Open-Xml-PowerTools/5881422a881f6ccefce2b9801b5dc6a753670d6e/OpenXmlPowerToolsExamples/DocumentAssembler/TemplateDocument.docx"
+sha256 = "201925dfd6b7148b0f0dfc1861333fe30bc334e1d9f6536b261dd9e5fff559f4"
+size = 20407
+licence = "MIT"
+licence_url = "https://github.com/OfficeDev/Open-Xml-PowerTools/blob/5881422a881f6ccefce2b9801b5dc6a753670d6e/LICENSE"
+source = "OfficeDev/Open-Xml-PowerTools@5881422a881f:OpenXmlPowerToolsExamples/DocumentAssembler/TemplateDocument.docx"
+producer = "Microsoft Office Word 15.0000"
+features = ["content-controls", "glossary", "tables"]
+stats = ["paras:26", "styles:9"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-pydocx-093"
+url = "https://raw.githubusercontent.com/python-openxml/python-docx/e45454602b53e8e572b179ccf1c91093ec9f4ed7/tests/test_files/having-images.docx"
+sha256 = "72f40baa1b89e4849e817121dbbf148ed78e51be9bf04d8e6f4bc1494aa517b7"
+size = 132875
+licence = "MIT"
+licence_url = "https://github.com/python-openxml/python-docx/blob/e45454602b53e8e572b179ccf1c91093ec9f4ed7/LICENSE"
+source = "python-openxml/python-docx@e45454602b53:tests/test_files/having-images.docx"
+producer = "Microsoft Macintosh Word 14.0000"
+features = ["headers-footers", "images"]
+stats = ["paras:5", "styles:10"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-mammoth-094"
+url = "https://raw.githubusercontent.com/mwilliamson/mammoth.js/5171a9072f8b7343ab1c9ed3a15d6d372cb59b67/test/test-data/text-box.docx"
+sha256 = "a94f4c516bec29b7c2e2e219ad1799700f0eecd0ebf25ef7f8fc59c14db8fdc9"
+size = 15850
+licence = "BSD-2-Clause"
+licence_url = "https://github.com/mwilliamson/mammoth.js/blob/5171a9072f8b7343ab1c9ed3a15d6d372cb59b67/LICENSE"
+source = "mwilliamson/mammoth.js@5171a9072f8b:test/test-data/text-box.docx"
+producer = "Microsoft Office Word 14.0000"
+features = ["shapes", "text-boxes"]
+stats = ["paras:3", "styles:6"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxpt-095"
+url = "https://raw.githubusercontent.com/OfficeDev/Open-Xml-PowerTools/5881422a881f6ccefce2b9801b5dc6a753670d6e/TestFiles/DB/GlossaryDocuments/ContentControlsWithDanishEnglishAndMixedProofingLanguages-built.docx"
+sha256 = "a8e412e64b1dfd4c5b7265f35db089322fcc68a6017a956bcb572a71f1af6857"
+size = 23706
+licence = "MIT"
+licence_url = "https://github.com/OfficeDev/Open-Xml-PowerTools/blob/5881422a881f6ccefce2b9801b5dc6a753670d6e/LICENSE"
+source = "OfficeDev/Open-Xml-PowerTools@5881422a881f:TestFiles/DB/GlossaryDocuments/ContentControlsWithDanishEnglishAndMixedProofingLanguages-built.docx"
+producer = "Microsoft Office Word 16.0000"
+features = ["content-controls", "glossary"]
+stats = ["paras:26", "styles:6"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxpt-096"
+url = "https://raw.githubusercontent.com/OfficeDev/Open-Xml-PowerTools/5881422a881f6ccefce2b9801b5dc6a753670d6e/OpenXmlPowerToolsExamples/DocumentBuilder01/Source2.docx"
+sha256 = "26139ce18ef6dca115bfe2ad780cfb83125997505fcc0e20e2bf0b848017f33b"
+size = 488595
+licence = "MIT"
+licence_url = "https://github.com/OfficeDev/Open-Xml-PowerTools/blob/5881422a881f6ccefce2b9801b5dc6a753670d6e/LICENSE"
+source = "OfficeDev/Open-Xml-PowerTools@5881422a881f:OpenXmlPowerToolsExamples/DocumentBuilder01/Source2.docx"
+producer = "Microsoft Office Word 14.0000"
+features = ["headers-footers", "images", "lists"]
+stats = ["paras:29", "styles:17"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxpt-097"
+url = "https://raw.githubusercontent.com/OfficeDev/Open-Xml-PowerTools/5881422a881f6ccefce2b9801b5dc6a753670d6e/OpenXmlPowerToolsExamples/DocumentBuilder04/Saturn.docx"
+sha256 = "711d4bd8a1faba93ef00f4c68623c9d83ac2bbc478f81af02f8dba22280ebda1"
+size = 26704
+licence = "MIT"
+licence_url = "https://github.com/OfficeDev/Open-Xml-PowerTools/blob/5881422a881f6ccefce2b9801b5dc6a753670d6e/LICENSE"
+source = "OfficeDev/Open-Xml-PowerTools@5881422a881f:OpenXmlPowerToolsExamples/DocumentBuilder04/Saturn.docx"
+producer = "Microsoft Office Word 12.0000"
+features = ["comments", "endnotes", "fields", "images", "lists"]
+stats = ["paras:17", "styles:44"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxpt-098"
+url = "https://raw.githubusercontent.com/OfficeDev/Open-Xml-PowerTools/5881422a881f6ccefce2b9801b5dc6a753670d6e/TestFiles/DB/GlossaryDocuments/RowLevelContentControl-built.docx"
+sha256 = "88d3665cec8760caec93547106f67b02619359fa5b0e356a0bfeb9b318643afe"
+size = 21550
+licence = "MIT"
+licence_url = "https://github.com/OfficeDev/Open-Xml-PowerTools/blob/5881422a881f6ccefce2b9801b5dc6a753670d6e/LICENSE"
+source = "OfficeDev/Open-Xml-PowerTools@5881422a881f:TestFiles/DB/GlossaryDocuments/RowLevelContentControl-built.docx"
+producer = "Microsoft Office Word 16.0000"
+features = ["content-controls", "glossary", "tables"]
+stats = ["paras:23", "styles:5"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxpt-099"
+url = "https://raw.githubusercontent.com/OfficeDev/Open-Xml-PowerTools/5881422a881f6ccefce2b9801b5dc6a753670d6e/OpenXmlPowerToolsExamples/DocumentBuilder04/Jupiter.docx"
+sha256 = "f22bc56f94f5da0f0d83e6d33b7240944de9603c44c3b32e4b3de2eb2f3640b8"
+size = 25231
+licence = "MIT"
+licence_url = "https://github.com/OfficeDev/Open-Xml-PowerTools/blob/5881422a881f6ccefce2b9801b5dc6a753670d6e/LICENSE"
+source = "OfficeDev/Open-Xml-PowerTools@5881422a881f:OpenXmlPowerToolsExamples/DocumentBuilder04/Jupiter.docx"
+producer = "Microsoft Office Word 12.0000"
+features = ["fields", "images", "lists", "tracked-changes", "tracked-formatting"]
+stats = ["paras:16", "styles:31"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxpt-100"
+url = "https://raw.githubusercontent.com/OfficeDev/Open-Xml-PowerTools/5881422a881f6ccefce2b9801b5dc6a753670d6e/OpenXmlPowerToolsExamples/DocumentAssembler02/AssembledDoc.docx"
+sha256 = "5193bf1f7219151bb4891742d7cf0a4d2257e519909992e9787259e3d06b2fd2"
+size = 19823
+licence = "MIT"
+licence_url = "https://github.com/OfficeDev/Open-Xml-PowerTools/blob/5881422a881f6ccefce2b9801b5dc6a753670d6e/LICENSE"
+source = "OfficeDev/Open-Xml-PowerTools@5881422a881f:OpenXmlPowerToolsExamples/DocumentAssembler02/AssembledDoc.docx"
+producer = "Microsoft Office Word 15.0000"
+features = ["glossary", "tables"]
+stats = ["paras:26", "styles:9"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-oxpt-101"
+url = "https://raw.githubusercontent.com/OfficeDev/Open-Xml-PowerTools/5881422a881f6ccefce2b9801b5dc6a753670d6e/OpenXmlPowerToolsExamples/FormattingAssembler01/Test02.docx"
+sha256 = "42339e68173d477d472ca72ff6a8326097bb312fa36d4c7719c10ec18c411b81"
+size = 14855
+licence = "MIT"
+licence_url = "https://github.com/OfficeDev/Open-Xml-PowerTools/blob/5881422a881f6ccefce2b9801b5dc6a753670d6e/LICENSE"
+source = "OfficeDev/Open-Xml-PowerTools@5881422a881f:OpenXmlPowerToolsExamples/FormattingAssembler01/Test02.docx"
+producer = "Microsoft Office Word 15.0000"
+features = ["lists"]
+stats = ["paras:33", "styles:23"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-poi-102"
+url = "https://raw.githubusercontent.com/apache/poi/4f3c25563919e7efa4a75feccf6cef1ac3d05a04/test-data/integration/testPDFEmbeddingAndEmbedded.docx"
+sha256 = "908d3fdd5b961c3bb2c837acee609b5e4396e97945d1f5bd993619df1bf7ca53"
+size = 34139
+licence = "Apache-2.0"
+licence_url = "https://github.com/apache/poi/blob/4f3c25563919e7efa4a75feccf6cef1ac3d05a04/legal/LICENSE"
+source = "apache/poi@4f3c25563919:test-data/integration/testPDFEmbeddingAndEmbedded.docx"
+producer = "Microsoft Office Word 14.0000"
+features = ["headers-footers", "images", "ole", "shapes"]
+stats = ["paras:9", "styles:8"]
+tier = "full"
+publish_renders = "review"
+note = "Apache POI test-data: many files are user-supplied bug attachments; Apache-2.0 asserted by the ASF repository, authorship unverified; review content before publishing renders"
+
+[[file]]
+id = "docx-poi-103"
+url = "https://raw.githubusercontent.com/apache/poi/4f3c25563919e7efa4a75feccf6cef1ac3d05a04/test-data/openxml4j/TestPackageCommon.docx"
+sha256 = "e711bd73d1fd7e67126f93b2684fbe1cdfdf55d8ea2c8b2ed9cc90159102c587"
+size = 24745
+licence = "Apache-2.0"
+licence_url = "https://github.com/apache/poi/blob/4f3c25563919e7efa4a75feccf6cef1ac3d05a04/legal/LICENSE"
+source = "apache/poi@4f3c25563919:test-data/openxml4j/TestPackageCommon.docx"
+producer = "Microsoft Office Word 12.0000"
+features = ["images"]
+stats = ["paras:11", "styles:6"]
+tier = "full"
+publish_renders = "review"
+note = "Apache POI test-data: many files are user-supplied bug attachments; Apache-2.0 asserted by the ASF repository, authorship unverified; review content before publishing renders"
+
+[[file]]
+id = "docx-pydocx-104"
+url = "https://raw.githubusercontent.com/python-openxml/python-docx/e45454602b53e8e572b179ccf1c91093ec9f4ed7/tests/test_files/blk-inner-content.docx"
+sha256 = "16243dd05f686d6d5fab331843691492ad78ae3eb4f13cc8686077b44718c0ba"
+size = 11949
+licence = "MIT"
+licence_url = "https://github.com/python-openxml/python-docx/blob/e45454602b53e8e572b179ccf1c91093ec9f4ed7/LICENSE"
+source = "python-openxml/python-docx@e45454602b53:tests/test_files/blk-inner-content.docx"
+producer = "Microsoft Office Word 16.0000"
+features = ["tables"]
+stats = ["paras:6", "styles:5"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-mammoth-105"
+url = "https://raw.githubusercontent.com/mwilliamson/mammoth.js/5171a9072f8b7343ab1c9ed3a15d6d372cb59b67/test/test-data/simple-list.docx"
+sha256 = "ed3c015cf411d07b08bf34264ff709363740b0747af355479088079d0796dfb3"
+size = 13887
+licence = "BSD-2-Clause"
+licence_url = "https://github.com/mwilliamson/mammoth.js/blob/5171a9072f8b7343ab1c9ed3a15d6d372cb59b67/LICENSE"
+source = "mwilliamson/mammoth.js@5171a9072f8b:test/test-data/simple-list.docx"
+producer = "Microsoft Office Word 14.0000"
+features = ["lists"]
+stats = ["paras:2", "styles:5"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-mammoth-106"
+url = "https://raw.githubusercontent.com/mwilliamson/mammoth.js/5171a9072f8b7343ab1c9ed3a15d6d372cb59b67/test/test-data/footnote-hyperlink.docx"
+sha256 = "1024a9054d06dc14d69a59f3b0d9d98361f755d5aff93f7b4f27b4af27fa8295"
+size = 16271
+licence = "BSD-2-Clause"
+licence_url = "https://github.com/mwilliamson/mammoth.js/blob/5171a9072f8b7343ab1c9ed3a15d6d372cb59b67/LICENSE"
+source = "mwilliamson/mammoth.js@5171a9072f8b:test/test-data/footnote-hyperlink.docx"
+producer = "Microsoft Office Word 14.0000"
+features = ["footnotes"]
+stats = ["paras:1", "styles:8"]
+tier = "full"
+publish_renders = "yes"
+
+[[file]]
+id = "docx-gov-000"
+url = "https://www.fedramp.gov/resources/templates/FedRAMP-High-Moderate-Low-LI-SaaS-Baseline-System-Security-Plan-(SSP).docx"
+sha256 = "e05d7fb0021cf42f7fe15eed5c21362e99a0182ccb6f428b1015babc59226c48"
+size = 220001
+licence = "US federal government work, not subject to copyright in the US (17 U.S.C. 105)"
+licence_url = "https://www.usa.gov/government-copyright"
+source = "FedRAMP (GSA) Rev5 SSP template, fedramp.gov"
+producer = "Microsoft Office Word 16.0000"
+features = ["content-controls", "fields", "glossary", "headers-footers", "images", "lists", "multi-section", "tables", "toc"]
+stats = ["paras:965", "styles:95"]
+tier = "full"
+publish_renders = "review"
+mirror = "required: origin URL is not content-stable; keep a copy in the corpus bucket (licence permits redistribution)"
+note = "FedRAMP name and logo are GSA trademarks (shown in the document)"
+
+[[file]]
+id = "docx-gov-001"
+url = "https://daten.transparenz.hamburg.de/Dataport.HmbTG.ZS.Webservice.GetRessource100/GetRessource100.svc/20ed925f-e8d9-459a-8dc9-82b25e547ade/Upload__Gleichstellungsplan_BWFGB_2025_-_2028.DOCX"
+sha256 = "46a40ab8103412b41cb4b2ee687cb50da3198a5caa91112bf237babe63896cfc"
+size = 178699
+licence = "dl-de/by-2-0 (Datenlizenz Deutschland Namensnennung 2.0)"
+licence_url = "https://www.govdata.de/dl-de/by-2-0"
+source = "Transparenzportal Hamburg via data.europa.eu (licence from the portal record; verify on transparenz.hamburg.de)"
+producer = "Microsoft Office Word 16.0000"
+features = ["charts", "content-controls", "fields", "lists", "multi-section", "ole", "shapes", "tables", "text-boxes", "toc"]
+stats = ["paras:1432", "styles:110"]
+tier = "full"
+publish_renders = "review"
+mirror = "required: origin URL is not content-stable; keep a copy in the corpus bucket (licence permits redistribution)"
+note = "German; charts, content controls, OLE, text boxes, TOC"
+
+[[file]]
+id = "docx-gov-002"
+url = "https://static.data.gouv.fr/resources/programme-denseignement-des-classes-preparatoires-au-baccalaureat-professionnel/20200701-161730/normene2003003a-annexe-2-mathematiques-tle-pro-bo.docx"
+sha256 = "612f498dccf8307dd98b230ca6f20e15f7ef418476d39aaea18438e94fdfb723"
+size = 221826
+licence = "Licence Ouverte / Open Licence (Etalab)"
+licence_url = "https://www.etalab.gouv.fr/licence-ouverte-open-licence"
+source = "data.gouv.fr dataset 'Programme d'enseignement des classes preparatoires au baccalaureat professionnel' (licence from the portal record)"
+producer = "Microsoft Office Word 14.0000"
+features = ["endnotes", "equations", "footnotes", "headers-footers", "images", "lists", "tables"]
+stats = ["paras:511", "styles:202"]
+tier = "full"
+publish_renders = "review"
+mirror = "required: origin URL is not content-stable; keep a copy in the corpus bucket (licence permits redistribution)"
+note = "French; equations, footnotes, endnotes; 202 styles"
+
+[[file]]
+id = "docx-gov-003"
+url = "https://www.gov.uk/government/uploads/system/uploads/attachment_data/file/304663/ukceps-guidance-note-data-tables.docx"
+sha256 = "eac3f63dd367e1f933051522eb3461a71cbddeda229410ccee49fa19095b9a60"
+size = 69364
+licence = "Open Government Licence v3.0"
+licence_url = "https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/"
+source = "GOV.UK, UKCES Employer Perspectives Survey"
+producer = "Microsoft Office Word 14.0000"
+features = ["headers-footers", "images", "lists"]
+stats = ["paras:57", "styles:61"]
+tier = "full"
+publish_renders = "yes"
+mirror = "required: origin URL is not content-stable; keep a copy in the corpus bucket (licence permits redistribution)"
