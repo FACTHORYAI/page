@@ -19,6 +19,13 @@ repository = "https://github.com/storytold/wordcraft"
 svg = "page.svg"
 base = "facthorypage"
 
+# Facthory's other asset files, credited in ATTRIBUTION.md's Facthory block (render.py).
+[[asset]]
+path = "dmg/background.svg"
+author = "@XusBadia (WordCraft contributors); recoloured and retitled by Bandpey GmbH"
+source = "derived from WordCraft's `packaging/macos/dmg/background.svg`; title outlined from Inter SemiBold (OFL-1.1)"
+licence = "MIT OR Apache-2.0"
+
 [files]
 # Never touched: upstream's licences and notices stay exactly as written (Apache-2.0 §4).
 skip = ["LICENSE-APACHE", "LICENSE-MIT", "NOTICE", ".github"]
@@ -283,12 +290,68 @@ find = '^(\| `assets/app-icon/[^`]+` \|).*$'
 replace = '\1 Bandpey GmbH | original artwork (`facthory/icons/page.svg`), rendered by `facthory/icons/render.py` | MIT OR Apache-2.0 | Facthory Page app icon |'
 regex = true
 
+# The updater (facthory/update/facthory_update.rs, copied below): its module and its calls from
+# main.rs. It needs no dependency the app lacks.
+[[rule]]
+phase = "after"
+why = "The updater's module"
+files = "apps/facthorypage/src/main.rs"
+find = "mod default_apps;\n"
+replace = "mod default_apps;\nmod facthory_update;\n"
+count = 1
+
+[[rule]]
+phase = "after"
+why = "The updater starts with the window, in runs that keep preferences"
+files = "apps/facthorypage/src/main.rs"
+find = "            app.watch_desktop_theme(&cc.egui_ctx);\n"
+replace = "            app.watch_desktop_theme(&cc.egui_ctx);\n            facthory_update::start(\"Facthory Page\", facthorypage_control_key::settings_dir().filter(|_| prefs_enabled()));\n"
+count = 1
+
+[[rule]]
+phase = "after"
+why = "The updater's notice"
+files = "apps/facthorypage/src/main.rs"
+find = "        self.0.ui(ui);\n"
+replace = "        self.0.ui(ui);\n        facthory_update::ui(ui.ctx());\n"
+count = 1
+
+[[rule]]
+phase = "after"
+why = "A downloaded update installs as the app quits"
+files = "apps/facthorypage/src/main.rs"
+find = "        save_prefs(&self.0);\n"
+replace = "        save_prefs(&self.0);\n        facthory_update::on_exit();\n"
+count = 1
+
+[[rule]]
+phase = "after"
+why = "... and as macOS quits it, which skips on_exit"
+files = "apps/facthorypage/src/main.rs"
+find = "    save_prefs(app);\n"
+replace = "    save_prefs(app);\n    facthory_update::on_exit();\n"
+count = 1
+
 # ---------------------------------------------------------------------------------------------
+
+[[copy]]
+from = "update/facthory_update.rs"
+to = "apps/facthorypage/src/facthory_update.rs"
 
 [[copy]]
 from = "icons/app-icon"
 to = "assets/app-icon"
 replace = true
+
+[[copy]]
+# The DMG window: our colours, title and icon (the release workflow renders it with generate.py).
+from = "dmg/background.svg"
+to = "packaging/macos/dmg/background.svg"
+
+[[copy]]
+# Packages carry README.md (packaging/env.sh copy_docs): ours, not upstream's.
+from = "../.github/README.md"
+to = "README.md"
 
 # ---------------------------------------------------------------------------------------------
 # `rebrand.py check`: no upstream mark in what ships, except the credits above.
