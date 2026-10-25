@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Render the app icon set from facthory/icons/<svg> into facthory/icons/app-icon/, in the
 layout of upstream's assets/app-icon/ after the rebrand renames it (rebrand.py copies it over).
+[icon] in brand.toml names the SVG and the file base; macos_512 and svg_copy (default true) say
+whether upstream's layout has <base>-macos-512.png and <base>.svg.
 
 Needs resvg (cargo install resvg). The outputs are committed, so builds never need it. Writes
 the .ico and .icns containers itself (PNG entries), so no macOS or Windows tool is needed.
@@ -71,12 +73,14 @@ def main() -> int:
         mac.write_text(text.replace('viewBox="0 0 512 512"', 'viewBox="-62.136 -62.136 636.272 636.272"'), encoding="utf-8")
 
         render(svg, 1024, out / f"{base}-1024.png")
-        render(mac, 512, out / f"{base}-macos-512.png")
+        if icon.get("macos_512", True):
+            render(mac, 512, out / f"{base}-macos-512.png")
         for s in HICOLOR:
             render(svg, s, out / "hicolor" / f"{s}x{s}" / "apps" / f"{app_id}.png")
         (out / "hicolor" / "scalable" / "apps").mkdir(parents=True)
         shutil.copyfile(svg, out / "hicolor" / "scalable" / "apps" / f"{app_id}.svg")
-        shutil.copyfile(svg, out / f"{base}.svg")
+        if icon.get("svg_copy", True):
+            shutil.copyfile(svg, out / f"{base}.svg")
         (out / f"{base}.ico").write_bytes(ico({s: render(svg, s, tmp / f"ico-{s}.png") for s in ICO}))
         mac_pngs = {s: render(mac, s, tmp / f"mac-{s}.png") for s in sorted({s for _, s in ICNS})}
         (out / f"{base}.icns").write_bytes(icns(mac_pngs))
