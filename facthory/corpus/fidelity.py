@@ -151,6 +151,9 @@ class Steps:
                 step("roundtrip", same, detail)
         outcome, p = run([self.cli, "convert", str(f), str(pdf)], self.timeout)
         detail = "" if outcome == "ok" else why(p)
+        if outcome == "fail" and "no slides" in detail:
+            step("render", "skip", "no slides to render")
+            return out
         if outcome == "ok" and not (pdf.exists() and pdf.stat().st_size > 0):
             outcome, detail = "fail", "no PDF written"
         if step("render", outcome, detail):
@@ -199,13 +202,16 @@ def one(entry: dict, args, app: str, ext: str) -> dict:
 
 
 def passed(r: dict) -> bool:
-    return bool(r["steps"]) and all(s["outcome"] == "ok" for s in r["steps"].values())
+    # A skipped step had nothing to check (a deck without slides has nothing to render).
+    return bool(r["steps"]) and all(s["outcome"] in ("ok", "skip") for s in r["steps"].values())
 
 
 def report(manifest: dict, results: list[dict], args, seconds: float) -> tuple[dict, str]:
     steps: dict[str, list[int]] = {}
     for r in results:
         for name, s in r["steps"].items():
+            if s["outcome"] == "skip":
+                continue
             ok, total = steps.setdefault(name, [0, 0])
             steps[name] = [ok + (s["outcome"] == "ok"), total + 1]
     crashes = sorted(r["id"] for r in results if any(s["outcome"] == "crash" for s in r["steps"].values()))
@@ -234,7 +240,7 @@ def report(manifest: dict, results: list[dict], args, seconds: float) -> tuple[d
         *[f"| {k} | {v[0]} | {v[1]} | {pct(v[0], v[1])} |" for k, v in steps.items()],
         "",
     ]
-    failures = [(r["id"], name, s) for r in results for name, s in r["steps"].items() if s["outcome"] != "ok"]
+    failures = [(r["id"], name, s) for r in results for name, s in r["steps"].items() if s["outcome"] not in ("ok", "skip")]
     if failures:
         lines += ["## Not passing", "", "| File | Step | Outcome | Detail |", "| ---- | ---- | ------- | ------ |"]
         lines += [f"| `{i}` | {name} | {s['outcome']} | {s.get('detail', '').replace('|', '/')[:200]} |" for i, name, s in failures]
