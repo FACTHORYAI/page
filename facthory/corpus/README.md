@@ -41,7 +41,8 @@ summary; `report.json` and `report.md` are its artifact.
 | pages | with `--reference`: our PDF has as many pages as Word's |
 
 A crash (a panic or a signal) or a step over the time limit fails the file. A file passes when
-every step it ran passed.
+every step it ran passed. A step with nothing to check (a presentation without slides has
+nothing to render) is skipped and counts neither way.
 
 ## Microsoft's renders
 
