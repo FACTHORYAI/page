@@ -28,6 +28,8 @@ Files Facthory adds to upstream's tree, and nothing else:
 | `.github/workflows/facthory-packages.yml` | Publishes those repositories on GitHub Pages when a release is published |
 | `facthory/dmg/background.svg` | The disk image window, from upstream's, in our colours and with our name |
 | `facthory/update/facthory_update.rs` | The updater, copied into the app at build time (see Updates) |
+| `.github/workflows/facthory-fidelity.yml` | The fidelity corpus run: weekly, by hand, and on corpus changes; pass rates as the job summary |
+| `facthory/corpus/` | The fidelity corpus (W6): `corpus.toml` (real Office files, pinned, never committed), `fidelity.py` (the runner), `scan.py` (checks a candidate file), and its README |
 
 And two upstream files changed:
 
