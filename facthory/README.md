@@ -19,6 +19,9 @@ Files Facthory adds to upstream's tree, and nothing else:
 | `facthory/README.md` | This list |
 | `.github/README.md` | The repository's front page |
 | `.github/workflows/facthory.yml` | The branded build: apply, upstream's gate on the branded tree, release build, mark check |
+| `facthory/store/listing.md` | The Microsoft Store listing (W9): every field ready to paste, with what must happen before it is submitted |
+| `facthory/guide/switching.md` | The switching guide (W7): install, open your files, what is the same, what is missing |
+| `facthory/launch/` | Launch material for all three apps: the launch and Store checklists, the privacy policy, the age rating, the MSI requirements, the downloads copy |
 
 And two upstream files changed:
 
