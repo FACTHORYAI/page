@@ -123,6 +123,13 @@ replace = 'c("Help and feedback", "ui.discord")'
 count = 1
 
 [[rule]]
+why = "A catalog comment (compiled into the binary) names a sibling ArtCraft app"
+files = "crates/ui-egui/src/i18n/ro.tsv"
+find = ', like the PdfCraft catalog.'
+replace = '.'
+count = 1
+
+[[rule]]
 why = "The spelling list knows our name instead of upstream's"
 files = "assets/spelling/en-extra.txt"
 find = '^artcraft$'
