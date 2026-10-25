@@ -1,0 +1,128 @@
+name: Upstream sync
+
+# Every WordCraft release lands in main without a person. `merge` takes the next release
+# (facthory/sync.py), pushes sync/<tag> and opens its pull request; the Facthory Page build
+# runs on it as on any pull request, and `land` merges it when that build passes. A conflict
+# or a red build opens an issue instead, for a person or a Claude session.
+#
+# Runs as the GitHub App facthory-office-sync (bandpey-hq/github-infra, apps/office-sync.json):
+# merges carry upstream's workflow changes, which the Actions token may not push, and its pull
+# requests start the checks. Its key is a secret of the environment upstream-sync, which only
+# main may use; until the App exists (SYNC_APP_CLIENT_ID unset) nothing runs.
+on:
+  schedule:
+    - cron: "41 */3 * * *"
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["Facthory Page"]
+    types: [completed]
+
+permissions:
+  contents: read
+
+jobs:
+  merge:
+    if: github.event_name != 'workflow_run' && vars.SYNC_APP_CLIENT_ID != ''
+    runs-on: ubuntu-24.04
+    environment: upstream-sync
+    timeout-minutes: 15
+    concurrency:
+      group: upstream-sync-merge
+      cancel-in-progress: false
+    steps:
+      - id: app
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ vars.SYNC_APP_CLIENT_ID }}
+          private-key: ${{ secrets.SYNC_APP_PRIVATE_KEY }}
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          token: ${{ steps.app.outputs.token }}
+          fetch-depth: 0
+
+      - name: Merge the next upstream release
+        id: sync
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+          APP_SLUG: ${{ steps.app.outputs.app-slug }}
+        run: |
+          open=$(gh pr list --state open --json headRefName --jq '[.[] | select(.headRefName | startswith("sync/"))] | length')
+          if [ "$open" != 0 ]; then
+            echo "::notice::An upstream sync pull request is still open; it lands first."
+            exit 0
+          fi
+          id=$(gh api "users/${APP_SLUG}%5Bbot%5D" --jq .id)
+          git config user.name "${APP_SLUG}[bot]"
+          git config user.email "${id}+${APP_SLUG}[bot]@users.noreply.github.com"
+          python3 facthory/sync.py merge
+
+      - name: Open the pull request
+        if: steps.sync.outputs.tag != ''
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+          TAG: ${{ steps.sync.outputs.tag }}
+        run: |
+          git push origin "HEAD:refs/heads/sync/${TAG}"
+          gh pr create --base main --head "sync/${TAG}" --title "Merge upstream WordCraft ${TAG}" --body \
+            "WordCraft ${TAG}, merged by the upstream sync (facthory/sync.py). It merges itself once the Facthory Page build passes on this branch."
+
+      - name: Report a conflict
+        if: failure() && steps.sync.outputs.conflicts != ''
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+          TAG: ${{ steps.sync.outputs.tag }}
+          FILES: ${{ steps.sync.outputs.conflicts }}
+        run: |
+          title="Upstream WordCraft ${TAG} does not merge cleanly"
+          if [ "$(gh issue list --state open --search "in:title \"${title}\"" --json number --jq length)" = 0 ]; then
+            gh issue create --title "$title" --body \
+              "Merging WordCraft ${TAG} into main conflicts in: ${FILES}. Merge it on a branch sync/${TAG}, keep upstream's change and re-apply ours (facthory/README.md lists the patch set), and open a pull request; the sync waits until one lands."
+          fi
+
+  land:
+    if: >-
+      github.event_name == 'workflow_run' && vars.SYNC_APP_CLIENT_ID != '' &&
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      startsWith(github.event.workflow_run.head_branch, 'sync/')
+    runs-on: ubuntu-24.04
+    environment: upstream-sync
+    timeout-minutes: 10
+    steps:
+      - id: app
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ vars.SYNC_APP_CLIENT_ID }}
+          private-key: ${{ secrets.SYNC_APP_PRIVATE_KEY }}
+
+      - name: Merge when the build passed, report when it failed
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+          GH_REPO: ${{ github.repository }}
+          APP_SLUG: ${{ steps.app.outputs.app-slug }}
+          BRANCH: ${{ github.event.workflow_run.head_branch }}
+          SHA: ${{ github.event.workflow_run.head_sha }}
+          CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          RUN: ${{ github.event.workflow_run.html_url }}
+        run: |
+          pr=$(gh pr list --state open --head "$BRANCH" --json number,author,headRefOid --jq '.[0] // empty')
+          if [ -z "$pr" ]; then echo "No open pull request from ${BRANCH}."; exit 0; fi
+          number=$(jq -r .number <<<"$pr")
+          author=$(jq -r .author.login <<<"$pr")
+          head=$(jq -r .headRefOid <<<"$pr")
+          # Only the sync's own pull requests, and only the commit the build tested.
+          if [ "$author" != "app/${APP_SLUG}" ] && [ "$author" != "${APP_SLUG}[bot]" ]; then
+            echo "::warning::${BRANCH} is not the sync's pull request (author ${author}); leaving it."
+            exit 0
+          fi
+          if [ "$head" != "$SHA" ]; then echo "The branch moved on since this build; its own build decides."; exit 0; fi
+          case "$CONCLUSION" in
+            success)
+              gh pr merge "$number" --merge --delete-branch --match-head-commit "$SHA" ;;
+            failure|timed_out)
+              gh pr comment "$number" --body \
+                "The Facthory Page build ended ${CONCLUSION}: ${RUN}. Usually a rule in facthory/brand.toml no longer matches what upstream changed: fix the rule on this branch, and the sync merges it once the build passes." ;;
+            *)
+              echo "Build ${CONCLUSION}; nothing to do." ;;
+          esac
