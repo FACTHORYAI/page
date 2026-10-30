@@ -73,9 +73,9 @@ Policy 10.2.9: the MSI and every PE file in it must be signed "with a code signi
 Order of work:
 1. **Owner**: confirm which "Windows signing account" §14.5 refers to. For A: create the Artifact Signing account, the Public organization identity validation (with the Seller ID from step 1) and a Public Trust certificate profile; create a service principal with the "Artifact Signing Certificate Profile Signer" role. For B: buy the certificate on a cloud HSM.
 2. **Owner**: put the secrets into the `release` environment (`bandpey-hq/github-infra`): `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`, `AZURE_SIGNING_ENDPOINT` (the region's endpoint, for example `https://weu.codesigning.azure.net`), `AZURE_SIGNING_ACCOUNT`, `AZURE_CERT_PROFILE`; or `WINDOWS_CERTIFICATE` and `WINDOWS_CERTIFICATE_PASSWORD` for B.
-3. **Claude**: pin the signing client package that `sign.ps1` downloads (done 2026-10-30: `brand.toml` pins `Microsoft.ArtifactSigning.Client` 1.0.146 by SHA-256; see `signing-day.md`), add the Store preflight job (signature of every PE inside the MSI), and run Partner Center's package pre-check result back into this checklist (`msi-requirements.md`, rows 4–6).
+3. **Claude**: the signing client package that `sign.ps1` downloads is pinned by upstream itself since WordCraft v0.11.0 (`Microsoft.Trusted.Signing.Client` 1.0.95, by SHA-256; see `signing-day.md`); add the Store preflight job (signature of every PE inside the MSI), and run Partner Center's package pre-check result back into this checklist (`msi-requirements.md`, rows 4–6).
 
-SmartScreen reputation builds over time with either option; the Store install itself shows no SmartScreen prompt, though UAC still appears for our per-machine MSI.
+SmartScreen reputation builds over time with either option; the Store install itself shows no SmartScreen prompt, and since the upstream catch-up (WordCraft v0.12.0) the MSI installs for the current account without UAC unless the person chooses an installation for everyone.
 
 ## Step 5. Reserve the three names (Owner, after counsel)
 

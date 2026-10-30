@@ -54,7 +54,7 @@ What each run requires:
 - **Publishing a release** runs `facthory-packages.yml`, which fails without `PACKAGES_GPG_KEY`.
 - Not W4: `SYNC_APP_PRIVATE_KEY` in the environment `upstream-sync` (W3, runbook L).
 
-The Windows signing client is pinned by upstream's `sign.ps1` itself since WordCraft v0.12.0:
+The Windows signing client is pinned by upstream's `sign.ps1` itself since WordCraft v0.11.0:
 `Microsoft.Trusted.Signing.Client` 1.0.95, checked by SHA-256. (Microsoft renamed the package
 `Microsoft.ArtifactSigning.Client`, whose 1.0.139 and later also check the endpoint before they send
 credentials; our brand rule that switched to it is retired, since we follow upstream's packaging.)
@@ -94,8 +94,10 @@ credentials; our brand rule that switched to it is retired, since we follow upst
 2. **Claude**: a manual run as above; the owner approves it.
 3. **Claude**: the Windows jobs' logs show `signtool verify /pa` passing on the `.exe` files and the
    MSI (`sign.ps1` verifies what it signs). Download `release-windows-x64` and `-arm64`, check
-   the MSI's signer, then install it silently and remove it on a Windows runner or machine, in an
-   elevated PowerShell (the MSI installs for all users, and `/qn` can't show the UAC prompt).
+   the MSI's signer, then install it silently and remove it on a Windows runner or machine, in
+   PowerShell (the MSI installs for the current account by default, without UAC; to test the
+   installation for everyone, add `'ALLUSERS=1'` in an elevated PowerShell, since `/qn` can't
+   show the UAC prompt).
    `msiexec` is a windowed program, so PowerShell waits for it only through `Start-Process -Wait`:
 
    ```powershell
