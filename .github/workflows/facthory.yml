@@ -39,7 +39,7 @@ jobs:
     needs: pins
     # Pinned to a commit, not @main: this workflow builds what we ship. Bumped with upstream syncs
     # (with the gate's craft-fonts default above).
-    uses: storytold/craft-common-actions/.github/workflows/gate.yml@13491f8120782bf106fb7859332929bf6c1cdb5d
+    uses: storytold/craft-common-actions/.github/workflows/gate.yml@2b3fb9dc05036f73c77d18f753a3aa9da55fa386
     with:
       craft-fonts-ref: ${{ needs.pins.outputs.craft-fonts }}
       packages: >-

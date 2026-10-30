@@ -35,7 +35,7 @@ env:
   CARGO_INCREMENTAL: 0
   # The craft-fonts commit upstream's CI builds with, as a literal as there: a checkout whose ref
   # is computed at run time is untrusted to code scanning. The step below warns when they part.
-  CRAFT_FONTS_REF: 8dcdacd5153e64560d109541a47d806f26f048c0
+  CRAFT_FONTS_REF: b076417b5880bd4154bd22f00695b1d28c6bea83
 
 jobs:
   fidelity:
