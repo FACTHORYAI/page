@@ -166,6 +166,83 @@ replace = ""
 regex = true
 count = 1
 
+# The interface catalogs (craft-i18n, [i18n] below): the same changes as the code's rules above,
+# so each new English string keeps a row, and the shared catalog's ArtCraft rows, which Facthory
+# Page never shows, name us.
+
+[[rule]]
+why = "Catalogs: the About link"
+files = "craft-i18n/locales/*/wordcraft.tsv"
+kind = "tsv"
+i18n = true
+key = "Join us on Discord: discord.gg/artcraft"
+new_key = "Report a problem: github.com/FACTHORYAI/page/issues"
+
+[[rule]]
+files = "craft-i18n/locales/*/wordcraft.tsv"
+kind = "tsv"
+i18n = true
+key = "Join the ArtCraft community on Discord"
+new_key = "Get help or report a problem"
+
+[[rule]]
+files = "craft-i18n/locales/*/wordcraft.tsv"
+kind = "tsv"
+i18n = true
+key = 'Community\nDiscord'
+new_key = 'Help and\nFeedback'
+
+[[rule]]
+files = "craft-i18n/locales/*/wordcraft.tsv"
+kind = "tsv"
+i18n = true
+key = "Discord community"
+new_key = "Help and feedback"
+
+[[rule]]
+why = "The shared catalog's rows that name upstream"
+files = "craft-i18n/locales/*/common.tsv"
+kind = "tsv"
+i18n = true
+key = "ArtCraft website"
+new_key = "Facthory website"
+
+[[rule]]
+files = "craft-i18n/locales/*/common.tsv"
+kind = "tsv"
+i18n = true
+key = "ArtCraft Website"
+new_key = "Facthory Website"
+
+[[rule]]
+files = "craft-i18n/locales/*/common.tsv"
+kind = "tsv"
+i18n = true
+key = "ArtCraft"
+new_key = "Facthory"
+
+[[rule]]
+files = "craft-i18n/locales/*/common.tsv"
+kind = "tsv"
+i18n = true
+key = "Join the ArtCraft Discord"
+new_key = "Get help or report a problem"
+
+[[rule]]
+files = "craft-i18n/locales/*/common.tsv"
+kind = "tsv"
+i18n = true
+key = "Join the ArtCraft Discord…"
+new_key = "Get Help or Report a Problem…"
+
+[[rule]]
+why = "... and a translation of this row that names upstream (English until translated)"
+files = "craft-i18n/locales/*/common.tsv"
+kind = "tsv"
+i18n = true
+key = "Join us on Discord"
+new_key = "Join us on Discord"
+
 # ---------------------------------------------------------------------------------------------
 # Tokens, in order, over every text file. credits = true: also in the credit files.
 
@@ -241,7 +318,8 @@ credits = true
 
 [guids]
 namespace = "https://facthory.com/page/windows-installer"
-files = ["packaging/windows/*.wxs"]
+# The installer's own policy check records the upgrade identity: the same GUIDs, mapped alike.
+files = ["packaging/windows/*.wxs", "packaging/windows/install-policy.json"]
 
 # ---------------------------------------------------------------------------------------------
 # Rules after the tokens and renames: the credits, which name upstream on purpose.
@@ -322,6 +400,23 @@ count = 1
 
 # ---------------------------------------------------------------------------------------------
 
+[[rule]]
+phase = "after"
+why = "Catalogs: the About credit, as in the code"
+files = "craft-i18n/locales/*/facthorypage.tsv"
+kind = "tsv"
+i18n = true
+key = 'A free, open-source word processor written from scratch in Rust.\nPart of the Crafting Apps from the ArtCraft team.'
+new_key = 'A free, open-source word processor from Facthory.\nBased on WordCraft by the ArtCraft team.'
+
+[[rule]]
+phase = "after"
+files = "craft-i18n/locales/*/facthorypage.tsv"
+kind = "tsv"
+i18n = true
+key = "MIT OR Apache-2.0. Copyright (c) 2026 ArtCraft Team and the Facthory Page contributors."
+new_key = "MIT OR Apache-2.0. Copyright (c) 2026 Bandpey GmbH. Based on WordCraft, copyright (c) 2026 ArtCraft Team and the WordCraft contributors."
+
 [[copy]]
 # Upstream's update window, without its updater (facthory/update/updates_ui.rs).
 from = "update/updates_ui.rs"
@@ -345,6 +440,12 @@ to = "packaging/macos/dmg/background.svg"
 # Packages carry README.md (packaging/env.sh copy_docs): ours, not upstream's.
 from = "../.github/README.md"
 to = "README.md"
+
+[i18n]
+# The interface catalogs: storytold/craft-i18n at craft-i18n.rev, which the build checks out here
+# (CRAFT_I18N_DIR); the tables Facthory Page embeds are branded with the tree.
+dir = "craft-i18n"
+tables = ["common.tsv", "wordcraft.tsv"]
 
 # ---------------------------------------------------------------------------------------------
 # `rebrand.py check`: no upstream mark in what ships, except the credits above.

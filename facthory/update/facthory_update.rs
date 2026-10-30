@@ -121,7 +121,7 @@ pub fn ui(ctx: &egui::Context) {
     let name = s.name;
     let mut action = None;
     egui::Window::new("updates")
-        .id(egui::Id::new("facthory-update"))
+        .id(egui::Id::unique("facthory-update"))
         .title_bar(false)
         .resizable(false)
         .collapsible(false)

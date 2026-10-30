@@ -23,6 +23,11 @@ facthory/brand.toml, applied in this order:
   [[copy]]                   brand files (icons) replace upstream's.
   [files].delete             upstream-only files (the ArtCraft marks) are removed.
 
+The interface catalogs are not in the tree: the build checks out craft-i18n beside it ([i18n].dir,
+at the commit craft-i18n.rev names), and the steps above brand the tables the build embeds
+([i18n].tables) as part of the tree. Rules with `i18n = true` edit those tables and are skipped in a
+build without the checkout, which is English only.
+
 Then cargo puts Cargo.lock back in its own order (renamed packages sort elsewhere; the packages,
 versions and checksums stay the same), so a later `git diff Cargo.lock` stays empty, and
 `git add -A` records the result, so tools that read the index see the branded tree.
@@ -98,6 +103,9 @@ def apply_rules(brand: dict, files: list[str], phase: str) -> None:
             continue
         label = rule.get("why") or f"rule {i + 1}"
         targets = [p for p in files if matches(p, rule["files"])]
+        if not targets and rule.get("i18n") and not i18n_files(brand):
+            # A rule on the interface catalogs, in a build without them (English only).
+            continue
         if not targets:
             raise BrandError(f"{label}: no file matches {rule['files']!r}")
         found = 0
@@ -240,11 +248,21 @@ def apply_deletes(brand: dict) -> None:
         shutil.rmtree(path) if path.is_dir() else path.unlink()
 
 
+def i18n_files(brand: dict) -> list[str]:
+    """The interface catalogs the build embeds, from the craft-i18n checkout ([i18n].dir) the
+    build made beside the tree; none when there is no checkout (an English-only build)."""
+    conf = brand.get("i18n")
+    if not conf or not (ROOT / conf["dir"]).is_dir():
+        return []
+    locales = ROOT / conf["dir"] / "locales"
+    return sorted(str(p.relative_to(ROOT)) for t in conf["tables"] for p in locales.glob(f"*/{t}"))
+
+
 def apply() -> None:
     if STAMP.exists():
         raise BrandError(f"this tree is already branded ({STAMP.name} exists); start from a fresh checkout")
     brand = load()
-    files = [p for p in tracked() if not p.startswith("facthory/")]
+    files = [p for p in tracked() if not p.startswith("facthory/")] + i18n_files(brand)
     apply_rules(brand, files, "before")
     apply_tokens(brand, files)
     apply_guids(brand, files)
@@ -258,7 +276,9 @@ def apply() -> None:
         subprocess.run(["cargo", "metadata", "--format-version", "1"], cwd=ROOT, check=True, stdout=subprocess.DEVNULL)
     STAMP.write_text(f"{brand['brand']['name']}\n", encoding="utf-8")
     if (ROOT / ".git").exists():
-        subprocess.run(["git", "add", "-A", "--", "."], cwd=ROOT, check=True)
+        # The craft-i18n checkout is a repository of its own, not part of this tree's index.
+        outside = [f":(exclude){brand['i18n']['dir']}"] if brand.get("i18n") else []
+        subprocess.run(["git", "add", "-A", "--", ".", *outside], cwd=ROOT, check=True)
     print(f"branded as {brand['brand']['name']}")
 
 
