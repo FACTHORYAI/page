@@ -27,7 +27,7 @@ SHA-256 checksum for every file; the downloads page explains how to check one.
 | System | File | How |
 | ------ | ---- | --- |
 | **macOS** 11 or later, Apple silicon or Intel | `facthorypage-<version>-macos-universal.dmg` | Open the DMG and drag Facthory Page to Applications. Signed and notarized by Bandpey GmbH; macOS only asks the usual first-launch question for downloaded apps. |
-| **Windows** 10 or later (x64), Windows 11 on ARM | `facthorypage-<version>-windows-x64.msi` or `…-windows-arm64.msi` | Run the installer (it needs administrator rights and installs for all users). Signed by Bandpey GmbH. |
+| **Windows** 10 or later (x64), Windows 11 on ARM | `facthorypage-<version>-windows-x64.msi` or `…-windows-arm64.msi` | Run the installer. It installs for you alone without administrator rights; its first page also offers an installation for everyone on the computer, which asks for them. Signed by Bandpey GmbH. |
 | **Linux** x86_64 or ARM64 | `.AppImage`, `.deb`, `.rpm` or `.tar.gz` | See below. |
 
 On Linux:

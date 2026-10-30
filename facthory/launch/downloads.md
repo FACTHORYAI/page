@@ -47,7 +47,8 @@ the website URLs the apps' About boxes already link to), plus the shared section
 Installed names: the apps are **Facthory Page**, **Facthory Grid** and **Facthory Deck**; the
 programs are `facthorypage`, `facthorygrid`, `facthorydeck` with `facthorypage-cli` and so on; the
 app ids are `com.facthory.page`, `com.facthory.grid`, `com.facthory.deck`. On Windows they install
-into `C:\Program Files\Facthory Page\` (and Grid, Deck).
+for the current account into `%LOCALAPPDATA%\Programs\Facthory\Facthory Page\` (and Grid, Deck),
+or, installed for everyone, into `C:\Program Files\Facthory\Facthory Page\`.
 
 ---
 
@@ -155,7 +156,7 @@ ArtCraft team (copyright © 2026 the ArtCraft Team and its contributors).
 | | Requirement |
 | - | ----------- |
 | **macOS** | macOS 11 Big Sur or later, on Apple silicon or Intel (one universal download). |
-| **Windows** | Windows 10 or later, 64-bit (x64), or Windows 11 on ARM. A graphics card with DirectX 12 is used when present; otherwise the app switches to OpenGL by itself. Installing needs administrator rights. No extra runtime to install. |
+| **Windows** | Windows 10 or later, 64-bit (x64), or Windows 11 on ARM. A graphics card with DirectX 12 is used when present; otherwise the app switches to OpenGL by itself. Installing needs no administrator rights, except to install for everyone. No extra runtime to install. |
 | **Linux** | x86_64 or ARM64 with glibc 2.35 or newer (Ubuntu 22.04, Debian 12, Fedora 36 or newer); X11 or Wayland; a Vulkan or OpenGL (EGL) graphics driver, such as Mesa. Facthory Deck also needs ALSA (`libasound2`) for sound. |
 | **Fonts** | Microsoft's fonts are not included. Installed fonts are used; open fonts with the same measurements (Carlito, Caladea, Liberation) stand in for the common Office fonts. Each app's guide has the details. |
 
@@ -221,7 +222,7 @@ others):
 
 ```powershell
 $env:WGPU_BACKEND = "gl"        # or "vulkan", or "dx12"
-& "C:\Program Files\Facthory Page\facthorypage.exe"
+& "$env:LOCALAPPDATA\Programs\Facthory\Facthory Page\facthorypage.exe"
 Remove-Item Env:WGPU_BACKEND    # back to the default afterwards
 ```
 
