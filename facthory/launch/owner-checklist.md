@@ -73,7 +73,7 @@ Policy 10.2.9: the MSI and every PE file in it must be signed "with a code signi
 Order of work:
 1. **Owner**: confirm which "Windows signing account" §14.5 refers to. For A: create the Artifact Signing account, the Public organization identity validation (with the Seller ID from step 1) and a Public Trust certificate profile; create a service principal with the "Artifact Signing Certificate Profile Signer" role. For B: buy the certificate on a cloud HSM.
 2. **Owner**: put the secrets into the `release` environment (`bandpey-hq/github-infra`): `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`, `AZURE_SIGNING_ENDPOINT` (the region's endpoint, for example `https://weu.codesigning.azure.net`), `AZURE_SIGNING_ACCOUNT`, `AZURE_CERT_PROFILE`; or `WINDOWS_CERTIFICATE` and `WINDOWS_CERTIFICATE_PASSWORD` for B.
-3. **Claude**: pin the signing client package that `sign.ps1` downloads unpinned today, add the Store preflight job (signature of every PE inside the MSI), and run Partner Center's package pre-check result back into this checklist (`msi-requirements.md`, rows 4–6).
+3. **Claude**: pin the signing client package that `sign.ps1` downloads (done 2026-10-30: `brand.toml` pins `Microsoft.ArtifactSigning.Client` 1.0.146 by SHA-256; see `signing-day.md`), add the Store preflight job (signature of every PE inside the MSI), and run Partner Center's package pre-check result back into this checklist (`msi-requirements.md`, rows 4–6).
 
 SmartScreen reputation builds over time with either option; the Store install itself shows no SmartScreen prompt, though UAC still appears for our per-machine MSI.
 
@@ -90,7 +90,7 @@ Partner Center → Apps and games → **New product** → **EXE or MSI app** →
 
 - Each signed release is drafted by `facthory-release.yml` as a GitHub release `v<version>` and published by a person after checking it (that workflow's own rule). The Store URL is `https://github.com/FACTHORYAI/<app>/releases/download/v<version>/facthory<app>-<version>-windows-<x64|arm64>.msi`.
 - **Claude**: prepare the change that turns on GitHub **immutable releases** for the three repositories through `bandpey-hq/github-infra`, so a published installer can never be replaced (Policy 10.2.9: "The binary associated with that URL must not change after submission").
-- **Claude**: add release workflows to Grid and Deck (only Page has one in the local checkouts).
+- **Claude**: add release workflows to Grid and Deck (done: #5 in each, 2026-10-25).
 - Never delete a release whose URL is in a live or pending submission.
 
 ## Step 7. Web pages (Owner publishes; Claude drafts)
