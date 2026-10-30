@@ -210,10 +210,11 @@ Every button in Facthory Page is a command that scripts and AI agents can run.
   and name it with `--author "…"` so its tracked changes are labelled.
 
 Where the CLI is: on Linux the `.deb` and `.rpm` install `facthorypage-cli` on your `PATH` (the
-`.tar.gz` has it in `bin/`); on Windows it is in `C:\Program Files\Facthory Page\` (add that folder
-to `PATH` to call it by name); on macOS it is inside the app,
-`/Applications/Facthory Page.app/Contents/MacOS/facthorypage-cli`, and also a separate download,
-`facthorypage-cli-<version>-macos-universal.zip`. Details:
+`.tar.gz` has it in `bin/`); on Windows it is in the app's folder,
+`%LOCALAPPDATA%\Programs\Facthory\Facthory Page\`, or `C:\Program Files\Facthory\Facthory Page\`
+when installed for everyone (add that folder to `PATH` to call it by name); on macOS it is inside
+the app, `/Applications/Facthory Page.app/Contents/MacOS/facthorypage-cli`, and also a separate
+download, `facthorypage-cli-<version>-macos-universal.zip`. Details:
 [docs/mcp.md](https://github.com/FACTHORYAI/page/blob/main/docs/mcp.md).
 
 ## 9. Getting help
