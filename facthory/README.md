@@ -28,6 +28,7 @@ Files Facthory adds to upstream's tree, and nothing else:
 | `.github/workflows/facthory-packages.yml` | Publishes those repositories on GitHub Pages when a release is published |
 | `facthory/dmg/background.svg` | The disk image window, from upstream's, in our colours and with our name |
 | `facthory/update/facthory_update.rs` | The updater, copied into the app at build time (see Updates) |
+| `facthory/update/updates_ui.rs` | Replaces upstream's update window (`crates/ui-egui/src/updates_ui.rs`): Help's Check for Updates opens our latest release; upstream's updater is left out (see Updates) |
 | `.github/workflows/facthory-fidelity.yml` | The fidelity corpus run: weekly, by hand, and on corpus changes; pass rates as the job summary |
 | `facthory/corpus/` | The fidelity corpus (W6): `corpus.toml` (real Office files, pinned, never committed), `fidelity.py` (the runner), `scan.py` (checks a candidate file), and its README |
 | `facthory/store/listing.md` | The Microsoft Store listing (W9): every field ready to paste, with what must happen before it is submitted |
@@ -63,7 +64,9 @@ And two upstream files changed:
   keeps every upstream credit and lists our icon as ours.
 
 Telemetry and crash reporting: WordCraft has none, so there is nothing to turn off. Updates:
-WordCraft has no built-in updater; ours reads the update feed of our releases (see Updates).
+WordCraft has its own updater (craft-update), which checks and installs upstream's releases by
+upstream's repositories and ids; our builds leave it out, and ours reads the update feed of our
+releases (see Updates).
 
 ## Releases
 
@@ -103,7 +106,7 @@ with "Restart now":
 | Copy | How it updates |
 | ---- | -------------- |
 | macOS app in a writable folder | The new bundle takes the old one's place after the app quits |
-| Windows, installed with the MSI | The MSI upgrades it after the app quits (with the administrator prompt) |
+| Windows, installed with the MSI | The MSI upgrades it after the app quits: a copy for the current account (the installer's default) without asking, one for everyone with the administrator prompt |
 | Linux AppImage in a writable folder | The new AppImage takes the old one's name |
 | `.deb`, `.rpm` | The system's updates, from our repositories; the notice says so |
 | Portable zips, tarballs, unsigned builds | A notice with a link to the release |

@@ -54,12 +54,10 @@ What each run requires:
 - **Publishing a release** runs `facthory-packages.yml`, which fails without `PACKAGES_GPG_KEY`.
 - Not W4: `SYNC_APP_PRIVATE_KEY` in the environment `upstream-sync` (W3, runbook L).
 
-The Windows signing client is pinned: `brand.toml` makes `sign.ps1` fetch
-`Microsoft.ArtifactSigning.Client` 1.0.146 and check its SHA-256. Upstream's script fetched the
-unversioned `Microsoft.Trusted.Signing.Client`, which Microsoft renamed and stopped at 1.0.95
-(every version unlisted); the new package has the same `bin/x64/Azure.CodeSigning.Dlib.dll` and
-metadata format, and since 1.0.139 checks the endpoint before it sends credentials. To move to a
-newer client, change the version and the hash in that rule together.
+The Windows signing client is pinned by upstream's `sign.ps1` itself since WordCraft v0.12.0:
+`Microsoft.Trusted.Signing.Client` 1.0.95, checked by SHA-256. (Microsoft renamed the package
+`Microsoft.ArtifactSigning.Client`, whose 1.0.139 and later also check the endpoint before they send
+credentials; our brand rule that switched to it is retired, since we follow upstream's packaging.)
 
 ## The day R3 lands (Apple)
 
