@@ -105,6 +105,10 @@ jobs:
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           key: facthory-release-macos
+      - name: Check out craft-i18n
+        # The interface catalogs at craft-i18n.rev (sets CRAFT_I18N_DIR and requires them), which the
+        # brand edits with the tree (facthory/rebrand.py, [i18n]).
+        uses: storytold/craft-common-actions/actions/checkout-craft-i18n@2b3fb9dc05036f73c77d18f753a3aa9da55fa386
       - name: Apply the Facthory brand
         run: python3 facthory/rebrand.py apply
       - name: Check out craft-fonts
@@ -198,6 +202,10 @@ jobs:
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           key: facthory-release-windows-${{ matrix.arch }}
+      - name: Check out craft-i18n
+        # The interface catalogs at craft-i18n.rev (sets CRAFT_I18N_DIR and requires them), which the
+        # brand edits with the tree (facthory/rebrand.py, [i18n]).
+        uses: storytold/craft-common-actions/actions/checkout-craft-i18n@2b3fb9dc05036f73c77d18f753a3aa9da55fa386
       - name: Apply the Facthory brand
         shell: bash
         run: python facthory/rebrand.py apply
@@ -270,6 +278,10 @@ jobs:
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           key: facthory-release-linux-${{ matrix.arch }}
+      - name: Check out craft-i18n
+        # The interface catalogs at craft-i18n.rev (sets CRAFT_I18N_DIR and requires them), which the
+        # brand edits with the tree (facthory/rebrand.py, [i18n]).
+        uses: storytold/craft-common-actions/actions/checkout-craft-i18n@2b3fb9dc05036f73c77d18f753a3aa9da55fa386
       - name: Apply the Facthory brand
         run: python3 facthory/rebrand.py apply
       - name: Check out craft-fonts
@@ -286,13 +298,13 @@ jobs:
         run: packaging/linux/package.sh
       - name: No upstream mark in what ships
         # The binaries, and every text file inside the .deb (desktop entry, AppStream metadata,
-        # docs). Left out: licences and notices, which keep upstream's copyright, and README.md,
-        # our front page, which credits upstream by name.
+        # docs). Left out: licences, notices and ATTRIBUTION.md, which keep upstream's copyright and
+        # credits, and README.md, our front page, which credits upstream by name.
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/deb"
           dpkg-deb -x dist/release/*.deb "$RUNNER_TEMP/deb"
-          mapfile -t files < <(find "$RUNNER_TEMP/deb" -type f ! -name '*.png' ! -name '*.svg' ! -name 'LICENSE*' ! -name 'NOTICE*' ! -name 'OFL-*' ! -name 'README*')
+          mapfile -t files < <(find "$RUNNER_TEMP/deb" -type f ! -name '*.png' ! -name '*.svg' ! -name 'LICENSE*' ! -name 'NOTICE*' ! -name 'OFL-*' ! -name 'README*' ! -name 'ATTRIBUTION*')
           python3 facthory/rebrand.py check "${files[@]}"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:

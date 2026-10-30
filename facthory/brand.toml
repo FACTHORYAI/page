@@ -57,16 +57,10 @@ count = 2
 
 [[rule]]
 why = "The ArtCraft Discord becomes our issue tracker: About link"
-files = "crates/ui-egui/src/dialogs.rs"
+files = "crates/ui-egui/src/dialogs/dispatch.rs"
 find = 'tl!("Join us on Discord: discord.gg/artcraft")'
 replace = 'tl!("Report a problem: github.com/FACTHORYAI/page/issues")'
 count = 1
-
-[[rule]]
-files = "crates/ui-egui/src/i18n/*.tsv"
-kind = "tsv"
-key = "Join us on Discord: discord.gg/artcraft"
-new_key = "Report a problem: github.com/FACTHORYAI/page/issues"
 
 [[rule]]
 why = "The title-bar community pill: help, hidden by default"
@@ -74,12 +68,6 @@ files = "crates/ui-egui/src/chrome.rs"
 find = 'tl!("Join the ArtCraft community on Discord")'
 replace = 'tl!("Get help or report a problem")'
 count = 1
-
-[[rule]]
-files = "crates/ui-egui/src/i18n/*.tsv"
-kind = "tsv"
-key = "Join the ArtCraft community on Discord"
-new_key = "Get help or report a problem"
 
 [[rule]]
 files = "crates/ui-egui/src/chrome.rs"
@@ -102,16 +90,10 @@ count = 1
 
 [[rule]]
 why = "Help tab: the Community Discord button"
-files = "crates/ui-egui/src/ribbon.rs"
+files = "crates/ui-egui/src/ribbon/review.rs"
 find = '"discord", "Community\nDiscord", "ui.discord"'
 replace = '"help", "Help and\nFeedback", "ui.discord"'
 count = 1
-
-[[rule]]
-files = "crates/ui-egui/src/i18n/*.tsv"
-kind = "tsv"
-key = 'Community\nDiscord'
-new_key = 'Help and\nFeedback'
 
 [[rule]]
 why = "File backstage: the Discord community entry"
@@ -121,22 +103,9 @@ replace = '("Help and feedback", "discord")'
 count = 1
 
 [[rule]]
-files = "crates/ui-egui/src/i18n/*.tsv"
-kind = "tsv"
-key = "Discord community"
-new_key = "Help and feedback"
-
-[[rule]]
 files = "crates/ui-egui/src/keytips.rs"
 find = 'c("Community Discord", "ui.discord")'
 replace = 'c("Help and feedback", "ui.discord")'
-count = 1
-
-[[rule]]
-why = "A catalog comment (compiled into the binary) names a sibling ArtCraft app"
-files = "crates/ui-egui/src/i18n/ro.tsv"
-find = ', like the PdfCraft catalog.'
-replace = '.'
 count = 1
 
 # The spelling list (sorted; a test checks the order) knows our name in its place, not upstream's.
@@ -187,6 +156,116 @@ sign --options runtime "$APP/Contents/MacOS/wordcraft-cli"
 sign --options runtime --entitlements "$HERE/entitlements.plist" "$APP/Contents/MacOS/WordCraft"
 '''
 count = 1
+
+[[rule]]
+why = "Windows: the installer's suite folder (Programs\\ArtCraft\\<app>, Program Files\\ArtCraft\\<app>) is ours, and the installer's own policy check expects the same name"
+files = ["packaging/windows/*.wxs", "packaging/windows/*.wxi", "packaging/windows/*.ps1", "packaging/windows/*.md"]
+find = "ArtCraft"
+replace = "Facthory"
+
+# Upstream's own updater (craft-update, from craft-libs) checks and installs the upstream apps'
+# releases, by their repositories and ai.storyteller.* ids, and carries their names into the binary.
+# It is left out: facthory/update/ is the updater that runs, and facthory/update/updates_ui.rs
+# stands in for upstream's update window ([[copy]] below).
+
+[[rule]]
+why = "No self-update helper of upstream's flow at start"
+files = "apps/wordcraft/src/main.rs"
+find = "    // Windows: the update helper is a copy of this program started with `--finish-update`.\n    #[cfg(windows)]\n    if let Some(result) = craft_update::self_update::finish(&craft_update::suite::WORDCRAFT, &std::env::args_os().skip(1).collect::<Vec<_>>()) {\n        std::process::exit(i32::from(result.is_err()));\n    }\n"
+replace = ""
+count = 1
+
+[[rule]]
+why = "... and no craft-update dependency"
+files = ["apps/wordcraft/Cargo.toml", "crates/ui-egui/Cargo.toml"]
+find = "craft-update = { workspace = true }\n"
+replace = ""
+count = 2
+
+[[rule]]
+why = "... in the workspace either"
+files = "Cargo.toml"
+find = '^craft-update = \{ git = "https://github.com/storytold/craft-libs".*\n'
+replace = ""
+regex = true
+count = 1
+
+# The interface catalogs (craft-i18n, [i18n] below): the same changes as the code's rules above,
+# so each new English string keeps a row, and the shared catalog's ArtCraft rows, which Facthory
+# Page never shows, name us.
+
+[[rule]]
+why = "Catalogs: the About link"
+files = "craft-i18n/locales/*/wordcraft.tsv"
+kind = "tsv"
+i18n = true
+key = "Join us on Discord: discord.gg/artcraft"
+new_key = "Report a problem: github.com/FACTHORYAI/page/issues"
+
+[[rule]]
+files = "craft-i18n/locales/*/wordcraft.tsv"
+kind = "tsv"
+i18n = true
+key = "Join the ArtCraft community on Discord"
+new_key = "Get help or report a problem"
+
+[[rule]]
+files = "craft-i18n/locales/*/wordcraft.tsv"
+kind = "tsv"
+i18n = true
+key = 'Community\nDiscord'
+new_key = 'Help and\nFeedback'
+
+[[rule]]
+files = "craft-i18n/locales/*/wordcraft.tsv"
+kind = "tsv"
+i18n = true
+key = "Discord community"
+new_key = "Help and feedback"
+
+[[rule]]
+why = "The shared catalog's rows that name upstream"
+files = "craft-i18n/locales/*/common.tsv"
+kind = "tsv"
+i18n = true
+key = "ArtCraft website"
+new_key = "Facthory website"
+
+[[rule]]
+files = "craft-i18n/locales/*/common.tsv"
+kind = "tsv"
+i18n = true
+key = "ArtCraft Website"
+new_key = "Facthory Website"
+
+[[rule]]
+files = "craft-i18n/locales/*/common.tsv"
+kind = "tsv"
+i18n = true
+key = "ArtCraft"
+new_key = "Facthory"
+
+[[rule]]
+files = "craft-i18n/locales/*/common.tsv"
+kind = "tsv"
+i18n = true
+key = "Join the ArtCraft Discord"
+new_key = "Get help or report a problem"
+
+[[rule]]
+files = "craft-i18n/locales/*/common.tsv"
+kind = "tsv"
+i18n = true
+key = "Join the ArtCraft Discord…"
+new_key = "Get Help or Report a Problem…"
+
+[[rule]]
+why = "... and a translation of this row that names upstream (English until translated)"
+files = "craft-i18n/locales/*/common.tsv"
+kind = "tsv"
+i18n = true
+key = "Join us on Discord"
+new_key = "Join us on Discord"
 
 # ---------------------------------------------------------------------------------------------
 # Tokens, in order, over every text file. credits = true: also in the credit files.
@@ -263,7 +342,8 @@ credits = true
 
 [guids]
 namespace = "https://facthory.com/page/windows-installer"
-files = ["packaging/windows/*.wxs"]
+# The installer's own policy check records the upgrade identity: the same GUIDs, mapped alike.
+files = ["packaging/windows/*.wxs", "packaging/windows/install-policy.json"]
 
 # ---------------------------------------------------------------------------------------------
 # Rules after the tokens and renames: the credits, which name upstream on purpose.
@@ -271,32 +351,18 @@ files = ["packaging/windows/*.wxs"]
 [[rule]]
 phase = "after"
 why = "About: who makes it and what it is based on (brand licence: plain-text credit allowed)"
-files = "crates/ui-egui/src/dialogs.rs"
+files = "crates/ui-egui/src/dialogs/dispatch.rs"
 find = 'A free, open-source word processor written from scratch in Rust.\nPart of the Crafting Apps from the ArtCraft team.'
 replace = 'A free, open-source word processor from Facthory.\nBased on WordCraft by the ArtCraft team.'
 count = 1
 
 [[rule]]
 phase = "after"
-files = "crates/ui-egui/src/i18n/*.tsv"
-kind = "tsv"
-key = 'A free, open-source word processor written from scratch in Rust.\nPart of the Crafting Apps from the ArtCraft team.'
-new_key = 'A free, open-source word processor from Facthory.\nBased on WordCraft by the ArtCraft team.'
-
-[[rule]]
-phase = "after"
 why = "About: our copyright, then upstream's, which the licence requires us to keep"
-files = "crates/ui-egui/src/dialogs.rs"
+files = "crates/ui-egui/src/dialogs/dispatch.rs"
 find = "MIT OR Apache-2.0. Copyright (c) 2026 ArtCraft Team and the Facthory Page contributors."
 replace = "MIT OR Apache-2.0. Copyright (c) 2026 Bandpey GmbH. Based on WordCraft, copyright (c) 2026 ArtCraft Team and the WordCraft contributors."
 count = 1
-
-[[rule]]
-phase = "after"
-files = "crates/ui-egui/src/i18n/*.tsv"
-kind = "tsv"
-key = "MIT OR Apache-2.0. Copyright (c) 2026 ArtCraft Team and the Facthory Page contributors."
-new_key = "MIT OR Apache-2.0. Copyright (c) 2026 Bandpey GmbH. Based on WordCraft, copyright (c) 2026 ArtCraft Team and the WordCraft contributors."
 
 [[rule]]
 phase = "after"
@@ -358,6 +424,28 @@ count = 1
 
 # ---------------------------------------------------------------------------------------------
 
+[[rule]]
+phase = "after"
+why = "Catalogs: the About credit, as in the code"
+files = "craft-i18n/locales/*/facthorypage.tsv"
+kind = "tsv"
+i18n = true
+key = 'A free, open-source word processor written from scratch in Rust.\nPart of the Crafting Apps from the ArtCraft team.'
+new_key = 'A free, open-source word processor from Facthory.\nBased on WordCraft by the ArtCraft team.'
+
+[[rule]]
+phase = "after"
+files = "craft-i18n/locales/*/facthorypage.tsv"
+kind = "tsv"
+i18n = true
+key = "MIT OR Apache-2.0. Copyright (c) 2026 ArtCraft Team and the Facthory Page contributors."
+new_key = "MIT OR Apache-2.0. Copyright (c) 2026 Bandpey GmbH. Based on WordCraft, copyright (c) 2026 ArtCraft Team and the WordCraft contributors."
+
+[[copy]]
+# Upstream's update window, without its updater (facthory/update/updates_ui.rs).
+from = "update/updates_ui.rs"
+to = "crates/ui-egui/src/updates_ui.rs"
+
 [[copy]]
 from = "update/facthory_update.rs"
 to = "apps/facthorypage/src/facthory_update.rs"
@@ -377,6 +465,12 @@ to = "packaging/macos/dmg/background.svg"
 from = "../.github/README.md"
 to = "README.md"
 
+[i18n]
+# The interface catalogs: storytold/craft-i18n at craft-i18n.rev, which the build checks out here
+# (CRAFT_I18N_DIR); the tables Facthory Page embeds are branded with the tree.
+dir = "craft-i18n"
+tables = ["common.tsv", "wordcraft.tsv"]
+
 # ---------------------------------------------------------------------------------------------
 # `rebrand.py check`: no upstream mark in what ships, except the credits above.
 
@@ -384,6 +478,9 @@ to = "README.md"
 paths = ["packaging", "assets", "apps/*/build.rs", "apps/*/index.html", "Cargo.toml"]
 # Developer notes and scripts under packaging/ do not ship.
 exclude = ["*/tests/*", "*.png", "*.ico", "*.icns", "*.md", "*.py"]
+# These also keep upstream's updater out: its feeds are its repositories (storytold/<app>) and
+# its ids ai.storyteller.<app>, and it names the ArtCraft Launcher, so a build that links it
+# again fails here (it did: craft-update, upstream releases of 2026-10).
 forbid = [
   "artcraft", "wordcraft", "storytold", "storyteller", "getartcraft", "learning machines",
   "crafting apps", "photocraft", "vectorcraft", "filmcraft", "lightcraft", "pdfcraft",
@@ -400,6 +497,13 @@ allow = [
   'Released into the public domain (CC0-1.0) by the DesignCraft contributors.',
   # Build input used unmodified (Cargo git dependency), not a product surface.
   'https://github.com/storytold/craft-libs',
+  # Upstream's forks of egui and winit (Cargo git dependencies), and the translations the
+  # Flatpak recipe checks out: build inputs used unmodified.
+  'https://github.com/storytold/egui.git',
+  'https://github.com/storytold/winit.git',
+  'https://github.com/storytold/craft-i18n',
+  # The installer's policy check, shared by upstream's apps, names its siblings' ids (build time).
+  "$policy.id -in 'deckcraft','filmcraft','soundcraft'",
 ]
 
 # ---------------------------------------------------------------------------------------------

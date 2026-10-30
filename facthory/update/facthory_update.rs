@@ -8,7 +8,8 @@
 //! as this app. The new version then installs when the app quits; "Restart now" quits and opens it:
 //!
 //! - macOS: the new app bundle replaces this one, when its folder is writable.
-//! - Windows: the MSI upgrades the app installed in Program Files.
+//! - Windows: the MSI upgrades the app it installed, for the current account (its default,
+//!   under `%LOCALAPPDATA%\Programs`) or for everyone (under Program Files).
 //! - Linux: the new AppImage replaces this one (`$APPIMAGE`), when its folder is writable.
 //!
 //! A .deb or .rpm install gets a notice that the system's updates install the new version (from
@@ -58,8 +59,9 @@ enum Phase {
 enum Install {
     /// Put the app bundle `staged` in the place of `bundle` (macOS).
     Bundle { staged: PathBuf, bundle: PathBuf },
-    /// Run the MSI, which upgrades the installed app `exe` (Windows).
-    Msi { msi: PathBuf, exe: PathBuf },
+    /// Run the MSI, which upgrades the installed app `exe` (Windows); `machine`: installed for
+    /// everyone, not only for the current account.
+    Msi { msi: PathBuf, exe: PathBuf, machine: bool },
     /// Put the AppImage `staged` in the place of `target` (Linux).
     AppImage { staged: PathBuf, target: PathBuf },
 }
@@ -68,7 +70,7 @@ enum Install {
 #[derive(Clone, Debug, PartialEq)]
 enum Method {
     Bundle(PathBuf),
-    Msi(PathBuf),
+    Msi { exe: PathBuf, machine: bool },
     AppImage(PathBuf),
 }
 
@@ -119,7 +121,7 @@ pub fn ui(ctx: &egui::Context) {
     let name = s.name;
     let mut action = None;
     egui::Window::new("updates")
-        .id(egui::Id::new("facthory-update"))
+        .id(egui::Id::unique("facthory-update"))
         .title_bar(false)
         .resizable(false)
         .collapsible(false)
@@ -167,7 +169,7 @@ pub fn ui(ctx: &egui::Context) {
             s.restart = true;
             ctx.send_viewport_cmd(egui::ViewportCommand::Close);
         }
-        Action::Open(url) => ctx.open_url(egui::OpenUrl::new_tab(url)),
+        Action::Open(url) => open_link(&url),
         Action::Skip(version) => Saved::update(&s.settings, |saved| saved.skip = Some(version)),
     }
 }
@@ -196,7 +198,7 @@ fn run(name: &str, feed: &str, settings: &Path) {
     let downloads = settings.join("updates");
     // What an earlier run downloaded or staged: installed by now, or abandoned.
     let _ = std::fs::remove_dir_all(&downloads);
-    match Method::for_this_copy() {
+    match Method::for_this_copy(name) {
         Some(Method::Bundle(bundle)) => remove_any(&staged_beside(&bundle)),
         Some(Method::AppImage(target)) => remove_any(&staged_beside(&target)),
         _ => {}
@@ -237,7 +239,7 @@ fn check(name: &str, feed_url: &str, settings: &Path, downloads: &Path) -> Resul
     }
     log::info!("updates: {name} {} is available", feed.version);
     let available = Phase::Available { version: feed.version.clone(), page: feed.page.clone(), packaged: packaged() };
-    let (Some(asset), Some(method)) = (feed.asset, Method::for_this_copy()) else { return Ok(available) };
+    let (Some(asset), Some(method)) = (feed.asset, Method::for_this_copy(name)) else { return Ok(available) };
     std::fs::create_dir_all(downloads).map_err(|e| format!("{}: {e}", downloads.display()))?;
     let file = downloads.join(&asset.name);
     download(&asset, &file, "=https")?;
@@ -524,7 +526,7 @@ impl Sha256 {
 // Installing, per platform.
 
 impl Method {
-    fn for_this_copy() -> Option<Method> {
+    fn for_this_copy(name: &str) -> Option<Method> {
         let exe = std::env::current_exe().ok()?;
         match std::env::consts::OS {
             "macos" => {
@@ -535,9 +537,15 @@ impl Method {
                 ok.then_some(Method::Bundle(bundle))
             }
             "windows" => {
-                // The MSI installs into Program Files; a portable copy elsewhere isn't its to upgrade.
-                let installed = ["ProgramFiles", "ProgramW6432"].into_iter().filter_map(std::env::var_os).any(|d| exe.starts_with(d));
-                installed.then_some(Method::Msi(exe))
+                // The installer's own record decides: it writes the folder under HKLM for a copy
+                // installed for everyone, under HKCU for the current account's, wherever it is.
+                let recorded = [("HKLM", true), ("HKCU", false)]
+                    .into_iter()
+                    .find(|(hive, _)| recorded_install_dir(hive, name).is_some_and(|dir| exe.starts_with(dir)))
+                    .map(|(_, machine)| machine);
+                let program_files: Vec<PathBuf> = ["ProgramFiles", "ProgramW6432"].into_iter().filter_map(std::env::var_os).map(PathBuf::from).collect();
+                let local = std::env::var_os("LOCALAPPDATA").map(PathBuf::from);
+                recorded.or_else(|| msi_scope(&exe, &program_files, local.as_deref())).map(|machine| Method::Msi { exe, machine })
             }
             "linux" => {
                 let target = PathBuf::from(std::env::var_os("APPIMAGE")?);
@@ -551,9 +559,9 @@ impl Method {
     fn prepare(&self, file: &Path, downloads: &Path) -> Result<Install, String> {
         match self {
             Method::Bundle(bundle) => prepare_bundle(file, bundle, downloads),
-            Method::Msi(exe) => {
+            Method::Msi { exe, machine } => {
                 windows_same_signer(file, exe)?;
-                Ok(Install::Msi { msi: file.to_path_buf(), exe: exe.clone() })
+                Ok(Install::Msi { msi: file.to_path_buf(), exe: exe.clone(), machine: *machine })
             }
             Method::AppImage(target) => {
                 let staged = staged_beside(target);
@@ -563,6 +571,53 @@ impl Method {
             }
         }
     }
+}
+
+/// The folder the installer recorded for `product` (`Software\<product>`, value `InstallDir`) in
+/// `hive`: `HKLM` for a copy installed for everyone, `HKCU` for the current account's.
+fn recorded_install_dir(hive: &str, product: &str) -> Option<PathBuf> {
+    let key = format!(r"{hive}\Software\{product}");
+    let out = output(Command::new(windows_tool("reg.exe")).args(["query", &key, "/v", "InstallDir"])).ok()?;
+    reg_value(&String::from_utf8_lossy(&out.stdout), "InstallDir").map(PathBuf::from)
+}
+
+/// A string value in `reg query`'s output, whose line reads `    <name>    REG_SZ    <value>`.
+fn reg_value(text: &str, name: &str) -> Option<String> {
+    text.lines().find_map(|line| {
+        let rest = line.trim_start().strip_prefix(name)?.trim_start();
+        let value = rest.strip_prefix("REG_EXPAND_SZ").or_else(|| rest.strip_prefix("REG_SZ"))?.trim();
+        (!value.is_empty()).then(|| value.to_owned())
+    })
+}
+
+/// Opens a web page in the person's browser through the system, which works in every app (egui's
+/// own link opening needs a feature not every app is built with). Only https addresses.
+fn open_link(url: &str) {
+    if !url.starts_with("https://") {
+        return;
+    }
+    let mut cmd = match std::env::consts::OS {
+        "macos" => Command::new(tool("open")),
+        "windows" => {
+            let mut c = Command::new(windows_tool("rundll32.exe"));
+            c.arg("url.dll,FileProtocolHandler");
+            c
+        }
+        _ => Command::new("xdg-open"),
+    };
+    if let Err(e) = detach(cmd.arg(url)) {
+        log::warn!("updates: {e}");
+    }
+}
+
+/// How the MSI installed `exe` by where it is, when the installer's record does not say: for everyone (`Some(true)`, under Program Files) or for the current
+/// account (`Some(false)`, under `%LOCALAPPDATA%\Programs`, the installer's default). Any other copy,
+/// a portable zip, isn't the MSI's to upgrade (`None`).
+fn msi_scope(exe: &Path, program_files: &[PathBuf], local_app_data: Option<&Path>) -> Option<bool> {
+    if program_files.iter().any(|d| exe.starts_with(d)) {
+        return Some(true);
+    }
+    local_app_data.filter(|d| exe.starts_with(d.join("Programs"))).map(|_| false)
 }
 
 /// Where the new version waits, hidden beside the one it replaces, so the swap is a rename.
@@ -654,12 +709,16 @@ if [ "$FACTHORY_RESTART" = 1 ]; then /usr/bin/open "$FACTHORY_BUNDLE"; fi"#;
                 .env("FACTHORY_RESTART", restart);
             detach(&mut cmd)
         }
-        Install::Msi { msi, exe } => {
-            // msiexec asks to run as administrator (the app is installed for all users), upgrades
-            // in place and keeps the app's files until this process has ended.
+        Install::Msi { msi, exe, machine } => {
+            // msiexec upgrades in place and keeps the app's files until this process has ended. A
+            // copy installed for everyone asks for an administrator and needs ALLUSERS=1, without
+            // which the installer refuses a silent update of it; one installed for the current
+            // account (the default) updates without asking.
             const SCRIPT: &str = "Wait-Process -Id $env:FACTHORY_PID -ErrorAction SilentlyContinue
 $msi = '\"' + $env:FACTHORY_MSI + '\"'
-$p = Start-Process -FilePath $env:FACTHORY_MSIEXEC -ArgumentList '/i', $msi, '/passive', '/norestart' -Wait -PassThru
+$list = @('/i', $msi, '/passive', '/norestart')
+if ($env:FACTHORY_ALLUSERS -eq '1') { $list += 'ALLUSERS=1' }
+$p = Start-Process -FilePath $env:FACTHORY_MSIEXEC -ArgumentList $list -Wait -PassThru
 if ($env:FACTHORY_RESTART -eq '1' -and ($p.ExitCode -eq 0 -or $p.ExitCode -eq 3010)) { Start-Process -FilePath $env:FACTHORY_EXE }";
             let mut cmd = Command::new(windows_tool(r"WindowsPowerShell\v1.0\powershell.exe"));
             cmd.args(["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-WindowStyle", "Hidden", "-EncodedCommand"])
@@ -668,6 +727,7 @@ if ($env:FACTHORY_RESTART -eq '1' -and ($p.ExitCode -eq 0 -or $p.ExitCode -eq 30
                 .env("FACTHORY_MSI", msi)
                 .env("FACTHORY_MSIEXEC", windows_tool("msiexec.exe"))
                 .env("FACTHORY_EXE", exe)
+                .env("FACTHORY_ALLUSERS", if *machine { "1" } else { "0" })
                 .env("FACTHORY_RESTART", restart);
             detach(&mut cmd)
         }
@@ -900,6 +960,27 @@ mod tests {
         assert_eq!(encoded_command("A"), "QQA=");
         assert_eq!(encoded_command("AB"), "QQBCAA==");
         assert_eq!(encoded_command(""), "");
+    }
+
+    #[test]
+    fn the_msi_upgrades_only_the_copies_it_installed_in_their_own_scope() {
+        let pf = [PathBuf::from("/pf"), PathBuf::from("/pf64")];
+        let local = Some(Path::new("/users/a/local"));
+        assert_eq!(msi_scope(Path::new("/pf64/Facthory/Facthory Page/facthorypage.exe"), &pf, local), Some(true));
+        assert_eq!(msi_scope(Path::new("/users/a/local/Programs/Facthory/Facthory Page/facthorypage.exe"), &pf, local), Some(false));
+        // A portable zip, unpacked anywhere else, or beside Programs rather than under it.
+        assert_eq!(msi_scope(Path::new("/users/a/Downloads/facthorypage/facthorypage.exe"), &pf, local), None);
+        assert_eq!(msi_scope(Path::new("/users/a/local/ProgramsOld/facthorypage.exe"), &pf, local), None);
+        assert_eq!(msi_scope(Path::new("/users/a/local/Programs/x.exe"), &pf, None), None);
+    }
+
+    #[test]
+    fn the_installers_record_is_read_from_reg_query() {
+        let out = "\r\nHKEY_CURRENT_USER\\Software\\Facthory Page\r\n    InstallDir    REG_SZ    C:\\Users\\a\\AppData\\Local\\Programs\\Facthory\\Facthory Page\\\r\n\r\n";
+        assert_eq!(reg_value(out, "InstallDir").as_deref(), Some(r"C:\Users\a\AppData\Local\Programs\Facthory\Facthory Page\"));
+        assert_eq!(reg_value("    InstallDir    REG_EXPAND_SZ    %LOCALAPPDATA%\\X\r\n", "InstallDir").as_deref(), Some(r"%LOCALAPPDATA%\X"));
+        assert_eq!(reg_value("ERROR: The system was unable to find the specified registry key or value.\r\n", "InstallDir"), None);
+        assert_eq!(reg_value("    InstallDirOld    REG_SZ    C:\\x\r\n", "InstallDir"), None);
     }
 
     #[test]

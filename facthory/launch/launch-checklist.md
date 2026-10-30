@@ -68,6 +68,9 @@ Per repository (`FACTHORYAI/page`, `grid`, `deck`):
 
 ## Gate 3: W4, signed installers verified on each OS
 
+The order of work for the days the owner's identities land, and every secret by name:
+[`signing-day.md`](signing-day.md).
+
 Accounts and secrets:
 
 - [ ] **Owner**: Apple Developer ID Application certificate and notarization credentials for
@@ -76,18 +79,18 @@ Accounts and secrets:
 
 Release pipeline, per repository:
 
-- [ ] **Claude**: `facthory-release.yml` and `facthory/release.py` finished and merged (Page has a
-  WIP version), then ported to Grid and Deck: macOS universal DMG and CLI zip; Windows MSI and
+- [x] **Claude**: `facthory-release.yml` and `facthory/release.py` finished and merged in all three
+  (#5 in each, 2026-10-25): macOS universal DMG and CLI zip; Windows MSI and
   portable zip for x64 and arm64; Linux AppImage (+ `.zsync`), `.deb`, `.rpm`, `.tar.gz` for
   x86_64 and aarch64; `SHA256SUMS`; `latest.json`.
 - [ ] **Claude**, then **Owner**: Flatpak bundle: add it to the release workflow (the plan lists it)
   or drop it from the launch copy. The current drafts say "add only if it ships".
 - [ ] **Claude**: release files follow `facthory<app>-<version>-<os>-<arch>.<ext>`, matching
   `downloads.md`; the AppImage update information points at `FACTHORYAI/<app>`.
-- [ ] **Claude**: release builds embed the craft-fonts the upstream release uses (`CRAFT_FONTS_DIR`).
+- [x] **Claude**: release builds embed the craft-fonts the upstream release uses (`CRAFT_FONTS_DIR`).
   Deck's metric-compatible fonts (Carlito, Caladea, Liberation) and the interface fonts for
   Chinese, Japanese and Arabic depend on it.
-- [ ] **Claude**: the in-app updater built (it doesn't exist upstream; W4's exit and W9 both need
+- [x] **Claude**: the in-app updater built (it doesn't exist upstream; W4's exit and W9 both need
   it), reading `latest.json`; the privacy copy updated to mention the update check.
 
 Verified on clean machines, per app (Page, Grid, Deck):
