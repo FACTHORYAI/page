@@ -111,7 +111,10 @@ credentials; our brand rule that switched to it is retired, since we follow upst
 1. **Owner**: runbook M4: `scripts/release-secrets.sh packages-key`, `copy` (13 of 13), then in
    each repository GitHub Pages from GitHub Actions and release immutability on.
 2. **Claude**: tag the version in `Cargo.toml` on `main` (`v0.12.0` for page and deck, `v0.13.0`
-   for grid today) and push the tag. **Owner**: approve the macOS and Windows deployments.
+   for grid today) and push the tag. Upstream tags its releases with the same names: tag in a
+   clone that keeps upstream's tags under `refs/upstream-tags/`, as `facthory/sync.py` fetches them,
+   never one that fetched them into `refs/tags/`, and push only our tag. **Owner**: approve the
+   macOS and Windows deployments.
 3. **Claude**: check the draft release: the checks of the two days above on its files, every
    installer in `SHA256SUMS` (which doesn't list `latest.json`, written after it), and
    `latest.json` naming the version and a file for each platform.
