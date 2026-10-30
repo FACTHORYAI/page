@@ -90,7 +90,7 @@ Partner Center → Apps and games → **New product** → **EXE or MSI app** →
 
 - Each signed release is drafted by `facthory-release.yml` as a GitHub release `v<version>` and published by a person after checking it (that workflow's own rule). The Store URL is `https://github.com/FACTHORYAI/<app>/releases/download/v<version>/facthory<app>-<version>-windows-<x64|arm64>.msi`.
 - **Claude**: prepare the change that turns on GitHub **immutable releases** for the three repositories through `bandpey-hq/github-infra`, so a published installer can never be replaced (Policy 10.2.9: "The binary associated with that URL must not change after submission").
-- **Claude**: add release workflows to Grid and Deck (only Page has one in the local checkouts).
+- **Claude**: add release workflows to Grid and Deck (done: #5 in each, 2026-10-25).
 - Never delete a release whose URL is in a live or pending submission.
 
 ## Step 7. Web pages (Owner publishes; Claude drafts)

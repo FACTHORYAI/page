@@ -24,7 +24,9 @@ Claude. The owner's account steps themselves are runbook M in `bandpey-hq/github
 
 Thirteen, in Secret Manager (`signing/office-release.json` in github-infra), copied by
 `scripts/release-secrets.sh copy` into the environment `release` of page, grid and deck. Only tags
-`v*` and `main` deploy from it, and every run waits for the owner's approval.
+`v*` and `main` deploy from it, and every job that uses it waits for the owner's approval: the
+macOS and Windows jobs of `facthory-release.yml` (the Linux and publish jobs use no environment)
+and `facthory-packages.yml`.
 
 | Secret | What it is | From | Read by |
 | ------ | ---------- | ---- | ------- |
@@ -73,7 +75,7 @@ newer client, change the version and the hash in that rule together.
 4. **Claude**: download `release-macos` and check, on a Mac:
 
    ```sh
-   spctl --assess --type install -vvv facthorypage-<v>-macos-universal.dmg   # source=Notarized Developer ID
+   spctl --assess --type open --context context:primary-signature -vvv facthorypage-<v>-macos-universal.dmg   # source=Notarized Developer ID
    xcrun stapler validate facthorypage-<v>-macos-universal.dmg
    hdiutil attach -readonly -nobrowse facthorypage-<v>-macos-universal.dmg
    codesign -dv --verbose=2 "/Volumes/Facthory Page/Facthory Page.app" # Authority=Developer ID Application: Bandpey GmbH; TeamIdentifier set
@@ -85,22 +87,24 @@ newer client, change the version and the hash in that rule together.
    `.docx` (`.xlsx`, `.pptx`) by double-click. Unzip the CLI zip and run `facthorypage-cli --version`;
    a bare executable can't carry a stapled ticket, so Gatekeeper checks it online.
 
+   (The DMG check is the one `package.sh` itself runs on a notarized image; `--type install` is
+   for installer packages. github-infra's runbook M5 still names `--type install`.)
+
 ## The day R4 lands (Microsoft)
 
 1. **Owner**: runbook M3, then `status` and `copy`.
 2. **Claude**: a manual run as above; the owner approves it.
 3. **Claude**: the Windows jobs' logs show `signtool verify /pa` passing on the `.exe` files and the
    MSI (`sign.ps1` verifies what it signs). Download `release-windows-x64` and `-arm64`, check
-   the MSI's signer, then install it silently and remove it on a Windows runner or machine:
+   the MSI's signer, then install it silently and remove it on a Windows runner or machine, in an
+   elevated PowerShell (the MSI installs for all users, and `/qn` can't show the UAC prompt).
+   `msiexec` is a windowed program, so PowerShell waits for it only through `Start-Process -Wait`:
 
    ```powershell
    Get-AuthenticodeSignature .\facthorypage-<v>-windows-x64.msi | Format-List Status, SignerCertificate   # Valid; CN=Bandpey GmbH
-   msiexec /i facthorypage-<v>-windows-x64.msi /qn /l*v install.log
-   msiexec /x facthorypage-<v>-windows-x64.msi /qn
+   (Start-Process msiexec -ArgumentList '/i', 'facthorypage-<v>-windows-x64.msi', '/qn', '/l*v', 'install.log' -Wait -PassThru).ExitCode   # 0
+   (Start-Process msiexec -ArgumentList '/x', 'facthorypage-<v>-windows-x64.msi', '/qn' -Wait -PassThru).ExitCode                         # 0
    ```
-
-4. **Owner**: Partner Center's package check on the first signed MSI confirms the Store accepts
-   an Artifact Signing certificate (`owner-checklist.md`, step 4).
 
 ## The first tagged release (R3 and R4 both in)
 
@@ -109,11 +113,15 @@ newer client, change the version and the hash in that rule together.
 2. **Claude**: tag the version in `Cargo.toml` on `main` (`v0.10.0` for page and deck, `v0.11.1`
    for grid today) and push the tag. **Owner**: approve the macOS and Windows deployments.
 3. **Claude**: check the draft release: the checks of the two days above on its files, every
-   file in `SHA256SUMS`, `latest.json` naming the version and a file for each platform.
-4. **Owner**: publish it. `facthory-packages.yml` then builds the apt and dnf repositories at
-   `https://facthoryai.github.io/<app>/`.
+   installer in `SHA256SUMS` (which doesn't list `latest.json`, written after it), and
+   `latest.json` naming the version and a file for each platform.
+4. **Owner**: publish it, then approve `facthory-packages.yml`'s deployment, which builds the apt
+   and dnf repositories at `https://facthoryai.github.io/<app>/`.
 5. **Claude**: install from each channel: the DMG, the MSI (x64 and arm64), the AppImage, the
    `.deb` from the apt repository on Ubuntu, the `.rpm` from the dnf repository on Fedora.
+6. **Owner**: Partner Center's package check on the published MSI's URL (it needs a public one,
+   `msi-requirements.md`) confirms the Store accepts an Artifact Signing certificate
+   (`owner-checklist.md`, step 4).
 
 ## The update test
 
@@ -121,11 +129,14 @@ The other half of the exit criterion. The updater reads the feed compiled into r
 (`releases/latest/download/latest.json` of the same repository) and refuses a file from anywhere
 else, so updates can only be tested between two **published** releases:
 
-1. Install the first release from each channel and start it once (the first check runs at start,
-   then once a day).
+1. Install the first release from each channel and start it once.
 2. Publish the next release. The natural one is the next upstream release merged by the sync
    (W3): upstream is at WordCraft v0.12.0, GridCraft v0.13.0 and DeckCraft v0.12.0 on 30 October.
-3. Start each installed app. Expected:
+3. The app reads the feed at most once a day, across restarts: `last_check` in `update.json` in
+   its settings folder (on macOS `~/Library/Application Support/Facthory Page/`) holds the time of
+   the last read. Wait a day after step 1, or set `"last_check": 0` there, before step 4; a
+   restart within the day shows no notice, and the updater only looks broken.
+4. Start each installed app. Expected:
    - **macOS**, app in `/Applications`: the notice says the update installs when the app quits;
      after quitting, the new bundle is in place, still `Notarized Developer ID`, and opens.
    - **Windows**, MSI install: the notice, then on quit an administrator prompt and the MSI
@@ -134,7 +145,7 @@ else, so updates can only be tested between two **published** releases:
    - **`.deb`, `.rpm`**: the notice says the system updates it; `apt upgrade` and `dnf upgrade`
      install the new version from our repositories.
    - Portable zips and tarballs: a notice linking to the release.
-4. Settings (`update.json`, recent files) survive the update on every platform.
+5. Settings (`update.json`, recent files) survive the update on every platform.
 
 Without the sync App the next release can still be merged by hand (`python3 facthory/sync.py merge`
 on a branch, then a pull request), but W3's own exit criterion counts only automatic merges.
@@ -143,9 +154,10 @@ on a branch, then a pull request), but W3's own exit criterion counts only autom
 
 Cold release builds (empty `target/`, crates already downloaded) of the branded tree on an Apple M4
 Max (16 cores, 128 GB), macOS 27.0.1, Xcode 27.2 (macOS 27.2 SDK), Rust 1.99.1, with craft-fonts
-at each app's pinned commit, exactly the command the release job runs, one target at a time. Then
-`packaging/macos/dmg/generate.py` and `packaging/macos/package.sh --arch universal --skip-build`, as
-the release job runs them, ad-hoc signed:
+at each app's pinned commit: the release job's `cargo build` command, but one target at a time,
+to time each (the job builds both in one run). Then `packaging/macos/dmg/generate.py` and
+`packaging/macos/package.sh --arch universal --skip-build` (the job runs it without
+`--skip-build`), ad-hoc signed:
 
 | App | arm64 | x86_64 | Package (`lipo`, sign, DMG, CLI zip) | DMG | CLI zip |
 | --- | ----- | ------ | ------------------------------------ | --- | ------- |
