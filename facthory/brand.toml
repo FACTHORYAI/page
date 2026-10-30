@@ -164,6 +164,17 @@ replace = "facebook\nfacthory\n"
 regex = true
 count = 1
 
+[[rule]]
+why = "Windows signing: Microsoft's current Artifact Signing client at a pinned version and checksum, instead of whatever NuGet serves for the old package name (Microsoft.Trusted.Signing.Client stopped at 1.0.95 and is unlisted)"
+files = "packaging/windows/sign.ps1"
+find = "    Invoke-WebRequest -Uri 'https://www.nuget.org/api/v2/package/Microsoft.Trusted.Signing.Client' -OutFile $pkg\n"
+replace = """
+    Invoke-WebRequest -Uri 'https://www.nuget.org/api/v2/package/Microsoft.ArtifactSigning.Client/1.0.146' -OutFile $pkg
+    $sha = (Get-FileHash -Algorithm SHA256 -LiteralPath $pkg).Hash.ToLowerInvariant()
+    if ($sha -ne '7761e5d8f31e54b764da21d33cd8b0a2940e1b05526c7dfcb5e94b0431426f70') { throw "Microsoft.ArtifactSigning.Client 1.0.146 has SHA-256 $sha, not the pinned one" }
+"""
+count = 1
+
 # ---------------------------------------------------------------------------------------------
 # Tokens, in order, over every text file. credits = true: also in the credit files.
 
