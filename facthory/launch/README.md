@@ -8,6 +8,7 @@ owner or counsel decides before it is used.
 | File | What it is | For |
 | ---- | ---------- | --- |
 | `launch-checklist.md` | W7's gates in order (names, brand, releases, fidelity, Store, website, announcement, support), each step marked Owner or Claude | Owner |
+| `signing-day.md` | W4: every release secret by name, and the order of work the days the Apple (R3) and Microsoft (R4) identities land, through the first tagged release and the update test | Owner, Claude |
 | `owner-checklist.md` | The Microsoft Store steps: account and business verification, DSA trader details, name reservation, submission, with the decisions that come first | Owner |
 | `privacy-policy.md` | One privacy policy for the three apps (GDPR; Bandpey GmbH as controller), for `facthory.com/privacy/apps` and the Store listings | Counsel |
 | `age-rating.md` | The answers for the Store's age rating questionnaire (IARC), with reasons | Owner |
