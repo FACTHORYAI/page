@@ -95,9 +95,10 @@ credentials; our brand rule that switched to it is retired, since we follow upst
 
 How the Windows jobs sign: they sign in to Azure with GitHub's OIDC token (`azure/login`), fetch
 the signing token at once, and only then run `package.ps1 -SkipBuild` on the binaries an unsigned
-run built first, so the token cannot run out during a long build. If the signing library refuses
-`ExcludeCredentials` in its metadata (the brand rule's way of making it use the Azure CLI's sign-in
-alone), drop that part of the rule: the runner has no other identity it could pick.
+run built first, so the token cannot run out during a long build. The brand rule's
+`ExcludeCredentials` makes the signing library use the Azure CLI's sign-in alone; version 1.0.95
+accepts the setting and all nine names in it (checked in the package, 2026-10-31). A pull request
+never signs in, and a configured `WINDOWS_CERTIFICATE` pair is used instead of Azure.
 
 1. **Owner**, once Microsoft's validation shows Completed: the certificate profile `bandpey-public`
    (owner guide, P3 part 2); the app registration `office-signing` with a federated credential for

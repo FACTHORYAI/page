@@ -176,11 +176,13 @@ jobs:
     steps:
       - name: Signing material
         # Azure Artifact Signing through the app registration's federated credential for this
-        # repository's environment release (no client secret), or a certificate. A tag must sign.
+        # repository's environment release (no client secret), or a certificate, which sign.ps1
+        # prefers. A tag must sign; a pull request has no environment, so it never signs in.
         id: signing
         shell: bash
         env:
           TAGGED: ${{ github.ref_type == 'tag' }}
+          PULL_REQUEST: ${{ github.event_name == 'pull_request' }}
           WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
           WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
@@ -189,14 +191,20 @@ jobs:
           AZURE_SIGNING_ACCOUNT: ${{ secrets.AZURE_SIGNING_ACCOUNT }}
           AZURE_CERT_PROFILE: ${{ secrets.AZURE_CERT_PROFILE }}
         run: |
+          azure=false
           missing=""
           for name in AZURE_TENANT_ID AZURE_CLIENT_ID AZURE_SIGNING_ENDPOINT AZURE_SIGNING_ACCOUNT AZURE_CERT_PROFILE; do
             [ -n "${!name}" ] || missing="$missing $name"
           done
-          if [ -z "$missing" ]; then echo "azure=true" >> "$GITHUB_OUTPUT"; exit 0; fi
-          echo "azure=false" >> "$GITHUB_OUTPUT"
-          if [ -n "$WINDOWS_CERTIFICATE" ] && [ -n "$WINDOWS_CERTIFICATE_PASSWORD" ]; then exit 0; fi
-          if [ "$TAGGED" = true ]; then echo "::error::A release must be signed: no WINDOWS_CERTIFICATE pair, and the environment release lacks:$missing"; exit 1; fi
+          if [ -n "$WINDOWS_CERTIFICATE" ] && [ -n "$WINDOWS_CERTIFICATE_PASSWORD" ]; then
+            :
+          elif [ -z "$missing" ] && [ "$PULL_REQUEST" != true ]; then
+            azure=true
+          elif [ "$TAGGED" = true ]; then
+            echo "::error::A release must be signed: no WINDOWS_CERTIFICATE pair, and the environment release lacks:$missing"
+            exit 1
+          fi
+          echo "azure=$azure" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -231,6 +239,7 @@ jobs:
       - name: Build
         # Upstream's packaging script, unsigned, into a folder that is thrown away, so the build
         # is done before the Azure sign-in below, whose GitHub token must not run out during it.
+        # Its sign.ps1 calls warn that they leave files unsigned: expected here.
         shell: pwsh
         env:
           DIST: ${{ runner.temp }}/unsigned
