@@ -11,11 +11,14 @@
 latest.json is the update feed the apps read (from releases/latest/download/latest.json, which
 GitHub serves for the newest published, non-draft, non-prerelease release):
 
-  {"name", "version", "date", "notes", "rollout",
+  {"name", "version", "date", "published", "notes", "rollout",
    "assets": {"<platform>": {"name", "url", "sha256", "size"}}}
 
-rollout is the percentage of copies the update is offered to: FACTHORY_ROLLOUT from the
-environment (the release workflow starts at 10), 100 without it. facthory/rollout.py raises it.
+published is when the feed was written, in seconds since 1970. With FACTHORY_ROLLOUT=staged in the
+environment (the release workflow), rollout is the schedule STAGED: [hours since published, share
+of copies in percent], which the apps read (facthory/update/facthory_update.rs), so a published
+release, whose files can't change, still reaches 10% of copies first, then 25%, 50% and all of
+them a day apart. Without it there is no rollout, and every copy is offered the update.
 
 with one asset per platform an app can update itself on: macos-universal (DMG),
 windows-x64 and windows-arm64 (MSI), linux-x86_64 and linux-aarch64 (AppImage). The Microsoft
@@ -32,12 +35,15 @@ import os
 import re
 import shutil
 import sys
+import time
 import tomllib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 # Files a release carries, by suffix; anything else in the artifacts is left out.
 SHIPPED = (".dmg", ".msi", ".zip", ".AppImage", ".zsync", ".deb", ".rpm", ".tar.gz", ".flatpak")
+# The staged rollout: [hours since publishing, percentage of copies offered the update].
+STAGED = [[0, 10], [24, 25], [48, 50], [72, 100]]
 PLATFORMS = [
     ("macos-universal", re.compile(r"-macos-universal\.dmg$")),
     ("windows-x64", re.compile(r"-windows-x64\.msi$")),
@@ -93,10 +99,12 @@ def main() -> int:
         "name": name,
         "version": version,
         "date": datetime.date.today().isoformat(),
+        "published": int(time.time()),
         "notes": f"https://github.com/{repo}/releases/tag/v{version}",
-        "rollout": max(0, min(100, int(os.environ.get("FACTHORY_ROLLOUT") or 100))),
         "assets": assets,
     }
+    if os.environ.get("FACTHORY_ROLLOUT") == "staged":
+        feed["rollout"] = STAGED
     (out / "latest.json").write_text(json.dumps(feed, indent=2) + "\n", encoding="utf-8")
 
     upstream_notes = f"{upstream['repository']}/releases/tag/v{version}"

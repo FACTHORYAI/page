@@ -25,7 +25,7 @@ Files Facthory adds to upstream's tree, and nothing else:
 | `.github/workflows/facthory-release.yml` | Releases with no person: on `main`, a version without a release builds, signs, install-checks and publishes `v<version>` |
 | `facthory/release.py` | Collects a release's files and writes `SHA256SUMS`, the update feed `latest.json` (with its rollout) and the notes |
 | `facthory/install_check.py` | Installs a release's files on macOS, Windows or Linux as a user would, over the newest release's, and checks versions and signatures |
-| `facthory/rollout.py`, `.github/workflows/facthory-rollout.yml` | Widens the newest release's update rollout hourly: 10%, then 25%, 50% and 100% a day apart; `FACTHORY_ROLLOUT` halts or finishes it |
+| `.github/workflows/facthory-rollout.yml` | Halts a release's staged rollout (marks it a pre-release, so the one before is the latest again) or resumes it, by hand |
 | `facthory/packages.py` | Builds the apt and dnf repositories from the newest releases' `.deb` and `.rpm` files, signed |
 | `.github/workflows/facthory-packages.yml` | Publishes those repositories on GitHub Pages: called by the release, or when a person publishes one |
 | `facthory/dmg/background.svg` | The disk image window, from upstream's, in our colours and with our name |
@@ -98,13 +98,14 @@ A pull request that touches the release or the packaging builds and install-chec
 unsigned, as does a manual run, which signs on `main` when asked (`sign`); both keep the files as
 workflow artifacts.
 
-`latest.json`, at `releases/latest/download/latest.json`, is the update feed: the version, the
-rollout (the percentage of copies offered the update) and, per platform, the file the app updates
-itself from with its size and SHA-256. A release starts at 10%; `facthory-rollout.yml` raises it
-hourly by the release's age, to 25% after a day, 50% after two and 100% after three. The
-repository variable `FACTHORY_ROLLOUT` set to `halt` offers the update to no copy until it
-changes; `full` offers it to every copy at once. The `.deb` and `.rpm` repositories carry the new
-version at once, since the system's package manager updates those.
+`latest.json`, at `releases/latest/download/latest.json`, is the update feed: the version, when
+it was published, the rollout and, per platform, the file the app updates itself from with its
+size and SHA-256. The rollout is a schedule written once, since a release can't change after it
+is published: 10% of copies at first, 25% after a day, 50% after two and every copy after three.
+The apps work out the share from the release's age. `facthory-rollout.yml` stops a rollout by hand
+(`halt` marks the release a pre-release, so the release before it is the latest again and its feed
+offers no update; copies that took it keep it) and `resume` restores it. The `.deb` and `.rpm`
+repositories carry the new version at once, since the system's package manager updates those.
 
 Publishing a release also runs `.github/workflows/facthory-packages.yml`: the `.deb` and `.rpm`
 files of the two newest releases become a signed apt repository and a dnf repository on this

@@ -12,13 +12,15 @@ name: Facthory Page release
 # change) checks the version in Cargo.toml: when no release has it yet, and it is newer than the
 # newest one, the run is a release. It must sign; each platform's files are installed and checked
 # (facthory/install_check.py, upgrading the newest release's); then the run publishes the GitHub
-# release, which makes the tag v<version>, with SHA256SUMS and the update feed latest.json at a
-# 10% rollout (facthory/rollout.py widens it), and rebuilds the apt and dnf repositories.
+# release, which makes the tag v<version>, with SHA256SUMS and the update feed latest.json, whose
+# staged rollout the apps follow (10% of copies, then 25%, 50% and all a day apart; facthory/
+# release.py), and rebuilds the apt and dnf repositories. facthory-rollout.yml halts or resumes it.
 #
 # A push that changes no version builds nothing. A pull request that changes the release or the
 # packaging builds and checks everything unsigned, outside the environment, as a check; so does a
-# manual run, signed when asked from main. Secrets live in the environment `release`
-# (bandpey-hq/github-infra), which only main may use; only this workflow may create tags v*.
+# manual run, which signs when asked from main (sign) and publishes only when asked (publish).
+# Secrets live in the environment `release` (bandpey-hq/github-infra), which only main may use;
+# only this workflow may create tags v*.
 on:
   push:
     branches: [main]
@@ -32,6 +34,10 @@ on:
     inputs:
       sign:
         description: Sign with the environment release (main only), without publishing
+        type: boolean
+        default: false
+      publish:
+        description: Publish the version in Cargo.toml when it has no release yet (main only), as a push would
         type: boolean
         default: false
 
@@ -70,6 +76,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           EVENT: ${{ github.event_name }}
           SIGN: ${{ inputs.sign }}
+          PUBLISH: ${{ inputs.publish }}
         run: |
           version=$(awk '/^\[/ { p = ($0 == "[workspace.package]"); next } p && $1 == "version" { gsub(/[" ]/, "", $3); print $3; exit }' Cargo.toml)
           if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
@@ -80,11 +87,21 @@ jobs:
           previous=""
           if [ -n "$newest" ] && [ "$newest" != "v${version}" ]; then previous=$newest; fi
           release=false
-          if [ "$EVENT" != pull_request ] && [ "$GITHUB_REF" = refs/heads/main ] && ! gh release view "v${version}" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            if [ -z "$newest" ] || [ "$(printf '%s\n%s\n' "${newest#v}" "$version" | sort -V | tail -1)" = "$version" ]; then
-              release=true
-            else
+          asked=false
+          if [ "$EVENT" = push ] || { [ "$EVENT" = workflow_dispatch ] && [ "$PUBLISH" = true ]; }; then asked=true; fi
+          # A published release only: a draft left by a failed run doesn't count (publish replaces it).
+          if [ "$asked" = true ] && [ "$GITHUB_REF" = refs/heads/main ] && ! gh api "repos/${GITHUB_REPOSITORY}/releases/tags/v${version}" >/dev/null 2>&1; then
+            if [ -n "$newest" ] && [ "$(printf '%s\n%s\n' "${newest#v}" "$version" | sort -V | tail -1)" != "$version" ]; then
               echo "::warning::Cargo.toml's version ${version} is older than the newest release ${newest}: no release."
+            else
+              # A tag v<version> made outside this workflow would carry the release instead of this
+              # commit: GitHub ignores the target when the tag exists.
+              tagged=$(gh api "repos/${GITHUB_REPOSITORY}/commits/v${version}" --jq .sha 2>/dev/null || true)
+              if [ -n "$tagged" ] && [ "$tagged" != "$GITHUB_SHA" ]; then
+                echo "::error::Tag v${version} exists on ${tagged}, not on this commit ${GITHUB_SHA}; delete it or release from that commit."
+                exit 1
+              fi
+              release=true
             fi
           fi
           build=$release
@@ -466,8 +483,8 @@ jobs:
         env:
           VERSION: ${{ needs.version.outputs.version }}
           REPO: ${{ github.repository }}
-          # A new release reaches 10% of copies first (facthory/rollout.py widens it).
-          FACTHORY_ROLLOUT: "10"
+          # The staged rollout the apps follow: 10% of copies first, all of them after three days.
+          FACTHORY_ROLLOUT: staged
         run: python3 facthory/release.py dist "$VERSION" "$REPO"
       - name: Keep the release files
         if: needs.version.outputs.release != 'true'
@@ -479,14 +496,25 @@ jobs:
             dist/NOTES.md
           if-no-files-found: error
       - name: Publish the release
-        # Creates the tag v<version> on the commit this run built.
+        # A draft first with every file, then published, as releases are immutable once published;
+        # publishing creates the tag v<version> on the commit this run built.
         if: needs.version.outputs.release == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ needs.version.outputs.version }}
         run: |
-          gh release create "v${VERSION}" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --latest \
+          tag="v${VERSION}"
+          tagged=$(gh api "repos/${GITHUB_REPOSITORY}/commits/${tag}" --jq .sha 2>/dev/null || true)
+          if [ -n "$tagged" ] && [ "$tagged" != "$GITHUB_SHA" ]; then
+            echo "::error::Tag ${tag} appeared on ${tagged} during this run; nothing published."
+            exit 1
+          fi
+          # Drafts a failed run left for this version.
+          gh api "repos/${GITHUB_REPOSITORY}/releases" --paginate --jq ".[] | select(.draft and .tag_name == \"${tag}\") | .id" |
+            while read -r id; do gh api -X DELETE "repos/${GITHUB_REPOSITORY}/releases/${id}"; done
+          gh release create "$tag" --repo "$GITHUB_REPOSITORY" --draft --target "$GITHUB_SHA" \
             --title "Facthory Page ${VERSION}" --notes-file dist/NOTES.md dist/release-files/*
+          gh release edit "$tag" --repo "$GITHUB_REPOSITORY" --draft=false --latest
 
   packages:
     # The apt and dnf repositories with the new release's .deb and .rpm. Called from here: a

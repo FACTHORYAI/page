@@ -37,7 +37,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SIGNER = "CN=Bandpey GmbH"
-FEDORA = "fedora:42"
+FEDORA = "fedora:44"
 
 
 class Fail(Exception):
@@ -109,7 +109,9 @@ def msiexec(action: str, msi: Path, log: Path) -> None:
     r = subprocess.run(["msiexec", action, str(msi), "/qn", "/norestart", "/l*v", str(log)])
     # 3010: done, a restart would complete it.
     if r.returncode not in (0, 3010):
-        tail = log.read_text(encoding="utf-16", errors="replace")[-4000:] if log.exists() else ""
+        raw = log.read_bytes() if log.exists() else b""
+        # Windows Installer writes its log in UTF-16 with a byte-order mark, or in the ANSI code page.
+        tail = raw.decode("utf-16" if raw[:2] in (b"\xff\xfe", b"\xfe\xff") else "cp1252", errors="replace")[-4000:]
         raise Fail(f"msiexec {action} {msi.name} exited with {r.returncode}\n{tail}")
 
 
@@ -191,6 +193,8 @@ def linux(dist: Path, version: str, arch: str, name: str, previous: Path | None)
     deb = one(dist, f"*-{version}-linux-{arch}.deb")
     package = run(["dpkg-deb", "--field", deb, "Package"]).strip()
     debs = ([one(previous, f"*-linux-{arch}.deb")] if previous is not None else []) + [deb]
+    # The runner image's package lists may be older than the mirrors: a dependency would 404.
+    run(["sudo", "apt-get", "update"])
     for d in debs:
         run(["sudo", "apt-get", "install", "-y", "--no-install-recommends", d.resolve()])
     got = run(["dpkg-query", "--show", "--showformat=${Version}", package]).strip()

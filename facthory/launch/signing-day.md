@@ -131,15 +131,17 @@ a tag ruleset in github-infra), on the commit it built and checked.
 
 1. **Owner**: runbook M4: `scripts/release-secrets.sh packages-key`, `copy` (12 of 12), then in
    each repository GitHub Pages from GitHub Actions and release immutability on.
-2. **Claude**: start it with a manual run from `main` (no input), or let the next push to `main`
+2. **Claude**: start it with a manual run from `main` with `publish` (`gh workflow run
+   facthory-release.yml -R FACTHORYAI/<app> --ref main -f publish=true`), or let the next push to `main`
    start it. The version is the one in `Cargo.toml` (`0.12.0` for page and deck, `0.13.0` for grid
    today). The run builds and signs every platform, installs each platform's files on a machine of
    that platform with every signature checked (`facthory/install_check.py`), publishes the release
-   with `SHA256SUMS` and `latest.json` at a 10% rollout, and builds the apt and dnf repositories at
+   with `SHA256SUMS` and `latest.json` with its staged rollout, and builds the apt and dnf repositories at
    `https://facthoryai.github.io/<app>/`.
 3. **Claude**: check the published release: the checks of the two days above on its files, every
    installer in `SHA256SUMS` (which doesn't list `latest.json`, written after it), and
-   `latest.json` naming the version, a file for each platform, and `"rollout": 10`.
+   `latest.json` naming the version, a file for each platform, `published`, and the rollout
+   `[[0, 10], [24, 25], [48, 50], [72, 100]]`.
 4. **Claude**: install from each channel: the DMG, the MSI (x64 and arm64), the AppImage, the
    `.deb` from the apt repository on Ubuntu, the `.rpm` from the dnf repository on Fedora.
 6. **Owner**: Partner Center's package check on the published MSI's URL (it needs a public one,
@@ -155,9 +157,8 @@ else, so updates can only be tested between two **published** releases:
 1. Install the first release from each channel and start it once.
 2. The next release publishes itself. The natural one is the next upstream release merged by the
    sync (W3): upstream is at WordCraft v0.12.0, GridCraft v0.13.0 and DeckCraft v0.12.0 on
-   30 October. It reaches 10% of copies first: for the test, set the repository variable
-   `FACTHORY_ROLLOUT` to `full` and run `facthory-rollout.yml` by hand (or give the test copies
-   `"bucket": 0` in their `update.json`), and clear the variable afterwards.
+   30 October. It reaches 10% of copies first, every copy after three days: for the test, give
+   the test copies `"bucket": 0` in their `update.json`, which the first step already includes.
 3. The app reads the feed at most once a day, across restarts: `last_check` in `update.json` in
    its settings folder (on macOS `~/Library/Application Support/Facthory Page/`) holds the time of
    the last read. Wait a day after step 1, or set `"last_check": 0` there, before step 4; a

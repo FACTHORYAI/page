@@ -3,8 +3,9 @@
 //!
 //! Once a day it reads the update feed of our releases (`latest.json`, which
 //! `facthory/release.py` writes). A new release reaches a growing share of copies: the feed's
-//! `rollout` (a percentage, raised by `facthory/rollout.py`) against this copy's own lasting
-//! bucket, 0 to 99. When the feed names a newer version for this copy, it downloads this
+//! `rollout` schedule (shares by hours since `published`, fixed when the release is) against
+//! this copy's own lasting bucket, 0 to 99. When the feed names a newer version for this copy,
+//! it downloads this
 //! platform's file in the background and checks its size and SHA-256 against the feed and, on
 //! macOS and Windows, that the system accepts its signature and that the same developer signed it
 //! as this app. The new version then installs when the app quits; "Restart now" quits and opens it:
@@ -205,13 +206,17 @@ fn run(name: &str, feed: &str, settings: &Path) {
         Some(Method::AppImage(target)) => remove_any(&staged_beside(&target)),
         _ => {}
     }
+    // This run's own next read: a day after its last, even where `update.json` can't be written.
+    let mut next: u64 = 0;
     loop {
-        let wait = Saved::load(settings).wait(now());
+        let at = now();
+        let wait = Saved::load(settings).wait(at).max(next.saturating_sub(at));
         if wait > 0 {
             std::thread::sleep(Duration::from_secs(wait));
             continue;
         }
         let checked = check(name, feed, settings, &downloads);
+        next = now().saturating_add(INTERVAL);
         Saved::update(settings, |saved| saved.last_check = now());
         match checked {
             Ok(Phase::Idle) => {}
@@ -239,8 +244,9 @@ fn check(name: &str, feed_url: &str, settings: &Path, downloads: &Path) -> Resul
     if !newer(&feed.version, VERSION) || Saved::load(settings).skip.as_deref() == Some(feed.version.as_str()) {
         return Ok(Phase::Idle);
     }
-    if Saved::bucket(settings) >= feed.rollout {
-        log::info!("updates: {name} {} is rolling out to {}% of copies, not this one yet", feed.version, feed.rollout);
+    let share = feed.rollout.share(now());
+    if Saved::bucket(settings) >= share {
+        log::info!("updates: {name} {} is rolling out to {share}% of copies, not this one yet", feed.version);
         return Ok(Phase::Idle);
     }
     log::info!("updates: {name} {} is available", feed.version);
@@ -284,8 +290,55 @@ struct Feed {
     /// The release's page, for a copy that can't install the update itself.
     page: String,
     asset: Option<Asset>,
-    /// The percentage of copies the update is offered to; copies whose bucket is below it take it.
-    rollout: u8,
+    /// Which copies are offered the update; a copy whose bucket is below the share takes it.
+    rollout: Rollout,
+}
+
+/// The share of copies, in percent, a release is offered to.
+#[derive(Debug, PartialEq)]
+enum Rollout {
+    Fixed(u8),
+    /// `(hours since publishing, share)`, hours rising: the last step reached gives the share.
+    Steps { published: u64, steps: Vec<(u64, u8)> },
+}
+
+impl Rollout {
+    /// The feed's `rollout`: none offers the update to every copy (feeds from before staged
+    /// releases); a whole number is a fixed share; a list of `[hours, share]` steps counts from
+    /// `published` (seconds since 1970). Anything malformed holds the update back, so a broken
+    /// feed never offers it to everyone.
+    fn parse(rollout: Option<&serde_json::Value>, published: Option<&serde_json::Value>) -> Rollout {
+        let Some(rollout) = rollout else { return Rollout::Fixed(100) };
+        if let Some(share) = rollout.as_u64() {
+            return Rollout::Fixed(u8::try_from(share.min(100)).unwrap_or(100));
+        }
+        let steps: Option<Vec<(u64, u8)>> = rollout.as_array().and_then(|list| {
+            list.iter()
+                .map(|step| {
+                    let pair = step.as_array().filter(|p| p.len() == 2)?;
+                    let hours = pair.first()?.as_u64()?;
+                    let share = u8::try_from(pair.get(1)?.as_u64()?).ok().filter(|&s| s <= 100)?;
+                    Some((hours, share))
+                })
+                .collect()
+        });
+        let rising = |s: &[(u64, u8)]| s.windows(2).all(|w| matches!(w, [a, b] if a.0 < b.0 && a.1 <= b.1));
+        match (steps, published.and_then(|p| p.as_u64())) {
+            (Some(steps), Some(published)) if !steps.is_empty() && rising(&steps) => Rollout::Steps { published, steps },
+            _ => Rollout::Fixed(0),
+        }
+    }
+
+    /// The share at `now` (seconds since 1970); before the first step, none.
+    fn share(&self, now: u64) -> u8 {
+        match self {
+            Rollout::Fixed(share) => *share,
+            Rollout::Steps { published, steps } => {
+                let hours = now.saturating_sub(*published) / 3600;
+                steps.iter().take_while(|(after, _)| *after <= hours).last().map_or(0, |&(_, share)| share)
+            }
+        }
+    }
 }
 
 #[derive(Debug, PartialEq)]
@@ -319,12 +372,7 @@ impl Feed {
             let sum = sha256.len() == 64 && sha256.chars().all(|c| c.is_ascii_hexdigit());
             (plain && ours && sum && size > 0 && size <= FILE_MAX).then(|| Asset { name: name.into(), url: url.into(), sha256, size })
         });
-        // A feed without `rollout` (before staged releases) offers the update to every copy; one
-        // that isn't a whole number holds it back, so a broken edit never offers it to everyone.
-        let rollout = match v.get("rollout") {
-            None => 100,
-            Some(r) => r.as_u64().map_or(0, |r| u8::try_from(r.min(100)).unwrap_or(100)),
-        };
+        let rollout = Rollout::parse(v.get("rollout"), v.get("published"));
         Ok(Feed { page: format!("{repo}releases/tag/v{version}"), version, asset, rollout })
     }
 }
@@ -369,20 +417,24 @@ impl Saved {
         }
     }
 
-    /// This copy's rollout bucket: the kept one, or a new one drawn and kept. Drawn from the clock
-    /// and the process, hashed, so copies spread evenly without a random-number dependency.
+    /// This copy's rollout bucket: the kept one, or a new one drawn and kept (the same for the
+    /// whole run where `update.json` can't be written). Drawn from the clock and the process,
+    /// hashed, so copies spread evenly without a random-number dependency.
     fn bucket(settings: &Path) -> u8 {
+        static DRAWN: OnceLock<u8> = OnceLock::new();
         if let Some(bucket) = Saved::load(settings).bucket {
             return bucket;
         }
-        #[allow(clippy::disallowed_methods)]
-        let nanos = SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_nanos()).unwrap_or(0);
-        let mut h = Sha256::new();
-        h.update(&nanos.to_le_bytes());
-        h.update(&std::process::id().to_le_bytes());
-        h.update(settings.as_os_str().as_encoded_bytes());
-        let d = h.finish();
-        let bucket = u8::try_from(u16::from_le_bytes([d[0], d[1]]) % 100).unwrap_or(0);
+        let bucket = *DRAWN.get_or_init(|| {
+            #[allow(clippy::disallowed_methods)]
+            let nanos = SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_nanos()).unwrap_or(0);
+            let mut h = Sha256::new();
+            h.update(&nanos.to_le_bytes());
+            h.update(&std::process::id().to_le_bytes());
+            h.update(settings.as_os_str().as_encoded_bytes());
+            let d = h.finish();
+            u8::try_from(u16::from_le_bytes([d[0], d[1]]) % 100).unwrap_or(0)
+        });
         Saved::update(settings, |saved| saved.bucket = Some(bucket));
         Saved::load(settings).bucket.unwrap_or(bucket)
     }
@@ -931,19 +983,44 @@ mod tests {
 
     #[test]
     fn the_feed_says_how_far_the_rollout_reaches() {
-        let with = |rollout: serde_json::Value| {
+        const PUBLISHED: u64 = 1_800_000_000;
+        const HOUR: u64 = 3600;
+        let with = |rollout: serde_json::Value, published: serde_json::Value| {
             let mut v: serde_json::Value = serde_json::from_slice(&feed("a", "b")).unwrap();
             v["rollout"] = rollout;
+            v["published"] = published;
             Feed::parse(v.to_string().as_bytes(), FEED_URL, None).unwrap().rollout
         };
+        let staged = serde_json::json!([[0, 10], [24, 25], [48, 50], [72, 100]]);
         // A feed from before staged releases offers the update to every copy.
-        assert_eq!(Feed::parse(&feed("a", "b"), FEED_URL, None).unwrap().rollout, 100);
-        assert_eq!(with(serde_json::json!(25)), 25);
-        assert_eq!(with(serde_json::json!(0)), 0);
-        assert_eq!(with(serde_json::json!(250)), 100);
-        // Anything but a whole number holds the update back.
-        for odd in [serde_json::json!(-5), serde_json::json!(12.5), serde_json::json!("50"), serde_json::Value::Null] {
-            assert_eq!(with(odd.clone()), 0, "{odd}");
+        assert_eq!(Feed::parse(&feed("a", "b"), FEED_URL, None).unwrap().rollout.share(PUBLISHED), 100);
+        // The release workflow's schedule, by the release's age.
+        let r = with(staged.clone(), serde_json::json!(PUBLISHED));
+        for (age, share) in [(0, 10), (23 * HOUR, 10), (24 * HOUR, 25), (50 * HOUR, 50), (72 * HOUR, 100), (900 * HOUR, 100)] {
+            assert_eq!(r.share(PUBLISHED + age), share, "{age}");
+        }
+        // A clock behind the publishing time counts from the first step.
+        assert_eq!(r.share(PUBLISHED - 5 * HOUR), 10);
+        // A schedule that starts later offers nothing before its first step.
+        assert_eq!(with(serde_json::json!([[6, 20]]), serde_json::json!(PUBLISHED)).share(PUBLISHED + HOUR), 0);
+        // A fixed share.
+        assert_eq!(with(serde_json::json!(25), serde_json::Value::Null).share(PUBLISHED), 25);
+        assert_eq!(with(serde_json::json!(250), serde_json::Value::Null).share(PUBLISHED), 100);
+        // Anything malformed holds the update back.
+        for (odd, published) in [
+            (serde_json::json!(-5), serde_json::json!(PUBLISHED)),
+            (serde_json::json!(12.5), serde_json::json!(PUBLISHED)),
+            (serde_json::json!("50"), serde_json::json!(PUBLISHED)),
+            (serde_json::Value::Null, serde_json::json!(PUBLISHED)),
+            (staged.clone(), serde_json::Value::Null),
+            (staged.clone(), serde_json::json!("2026-11-01")),
+            (serde_json::json!([]), serde_json::json!(PUBLISHED)),
+            (serde_json::json!([[24, 25], [0, 10]]), serde_json::json!(PUBLISHED)),
+            (serde_json::json!([[0, 50], [24, 25]]), serde_json::json!(PUBLISHED)),
+            (serde_json::json!([[0, 101]]), serde_json::json!(PUBLISHED)),
+            (serde_json::json!([[0, 10, 5]]), serde_json::json!(PUBLISHED)),
+        ] {
+            assert_eq!(with(odd.clone(), published).share(PUBLISHED + 900 * HOUR), 0, "{odd}");
         }
     }
 
