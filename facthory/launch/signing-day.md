@@ -54,7 +54,7 @@ What each run requires:
 - **Publishing a release** runs `facthory-packages.yml`, which fails without `PACKAGES_GPG_KEY`.
 - Not W4: `SYNC_APP_PRIVATE_KEY` in the environment `upstream-sync` (W3, runbook L).
 
-The Windows signing client is pinned by upstream's `sign.ps1` itself since WordCraft v0.12.0:
+The Windows signing client is pinned by upstream's `sign.ps1` itself since WordCraft v0.11.0:
 `Microsoft.Trusted.Signing.Client` 1.0.95, checked by SHA-256. (Microsoft renamed the package
 `Microsoft.ArtifactSigning.Client`, whose 1.0.139 and later also check the endpoint before they send
 credentials; our brand rule that switched to it is retired, since we follow upstream's packaging.)
@@ -94,8 +94,10 @@ credentials; our brand rule that switched to it is retired, since we follow upst
 2. **Claude**: a manual run as above; the owner approves it.
 3. **Claude**: the Windows jobs' logs show `signtool verify /pa` passing on the `.exe` files and the
    MSI (`sign.ps1` verifies what it signs). Download `release-windows-x64` and `-arm64`, check
-   the MSI's signer, then install it silently and remove it on a Windows runner or machine, in an
-   elevated PowerShell (the MSI installs for all users, and `/qn` can't show the UAC prompt).
+   the MSI's signer, then install it silently and remove it on a Windows runner or machine, in
+   PowerShell (the MSI installs for the current account by default, without UAC; to test the
+   installation for everyone, add `'ALLUSERS=1'` in an elevated PowerShell, since `/qn` can't
+   show the UAC prompt).
    `msiexec` is a windowed program, so PowerShell waits for it only through `Start-Process -Wait`:
 
    ```powershell
@@ -108,8 +110,11 @@ credentials; our brand rule that switched to it is retired, since we follow upst
 
 1. **Owner**: runbook M4: `scripts/release-secrets.sh packages-key`, `copy` (13 of 13), then in
    each repository GitHub Pages from GitHub Actions and release immutability on.
-2. **Claude**: tag the version in `Cargo.toml` on `main` (`v0.10.0` for page and deck, `v0.11.1`
-   for grid today) and push the tag. **Owner**: approve the macOS and Windows deployments.
+2. **Claude**: tag the version in `Cargo.toml` on `main` (`v0.12.0` for page and deck, `v0.13.0`
+   for grid today) and push the tag. Upstream tags its releases with the same names: tag in a
+   clone that keeps upstream's tags under `refs/upstream-tags/`, as `facthory/sync.py` fetches them,
+   never one that fetched them into `refs/tags/`, and push only our tag. **Owner**: approve the
+   macOS and Windows deployments.
 3. **Claude**: check the draft release: the checks of the two days above on its files, every
    installer in `SHA256SUMS` (which doesn't list `latest.json`, written after it), and
    `latest.json` naming the version and a file for each platform.
@@ -137,8 +142,9 @@ else, so updates can only be tested between two **published** releases:
 4. Start each installed app. Expected:
    - **macOS**, app in `/Applications`: the notice says the update installs when the app quits;
      after quitting, the new bundle is in place, still `Notarized Developer ID`, and opens.
-   - **Windows**, MSI install: the notice, then on quit an administrator prompt and the MSI
-     upgrade; Apps & features lists one Facthory Page with the new version.
+   - **Windows**, MSI install: the notice, then on quit the MSI upgrade (no prompt for a copy
+     installed for the current account; an administrator prompt for one installed for everyone);
+     Apps & features lists one Facthory Page with the new version.
    - **Linux AppImage**: the new AppImage takes the old one's name.
    - **`.deb`, `.rpm`**: the notice says the system updates it; `apt upgrade` and `dnf upgrade`
      install the new version from our repositories.

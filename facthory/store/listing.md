@@ -243,11 +243,11 @@ Sizes from the [MSIX screenshots and images page](https://learn.microsoft.com/en
 
 Declare more languages only together with a translated listing for each (Policy 10.7). German is the natural second listing.
 
-## Notes for certification (<!--n:notes-->1,340<!--/--> characters; limit 2,000)
+## Notes for certification (<!--n:notes-->1,440<!--/--> characters; limit 2,000)
 
 <!-- block:notes -->
 ```text
-Facthory Page is a desktop word processor delivered as a per-machine MSI; a UAC prompt during install is expected. No account, sign-in or server is needed and the app works fully offline.
+Facthory Page is a desktop word processor delivered as an MSI that installs for the current user by default (no UAC prompt); an installation for all users is offered in its interactive setup and asks for elevation. No account, sign-in or server is needed and the app works fully offline.
 
 How to test: start Facthory Page from the Start menu. On the File start page choose a template (for example the sample handbook) or Blank document. Type and format text, insert a table, then use File > Save As to save a .docx and File > Export to create a PDF. The Review tab shows track changes and comments.
 

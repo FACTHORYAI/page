@@ -27,7 +27,7 @@ SHA-256 checksum for every file; the downloads page explains how to check one.
 | System | File | How |
 | ------ | ---- | --- |
 | **macOS** 11 or later, Apple silicon or Intel | `facthorypage-<version>-macos-universal.dmg` | Open the DMG and drag Facthory Page to Applications. Signed and notarized by Bandpey GmbH; macOS only asks the usual first-launch question for downloaded apps. |
-| **Windows** 10 or later (x64), Windows 11 on ARM | `facthorypage-<version>-windows-x64.msi` or `…-windows-arm64.msi` | Run the installer (it needs administrator rights and installs for all users). Signed by Bandpey GmbH. |
+| **Windows** 10 or later (x64), Windows 11 on ARM | `facthorypage-<version>-windows-x64.msi` or `…-windows-arm64.msi` | Run the installer. It installs for you alone without administrator rights; its first page also offers an installation for everyone on the computer, which asks for them. Signed by Bandpey GmbH. |
 | **Linux** x86_64 or ARM64 | `.AppImage`, `.deb`, `.rpm` or `.tar.gz` | See below. |
 
 On Linux:
@@ -210,10 +210,11 @@ Every button in Facthory Page is a command that scripts and AI agents can run.
   and name it with `--author "…"` so its tracked changes are labelled.
 
 Where the CLI is: on Linux the `.deb` and `.rpm` install `facthorypage-cli` on your `PATH` (the
-`.tar.gz` has it in `bin/`); on Windows it is in `C:\Program Files\Facthory Page\` (add that folder
-to `PATH` to call it by name); on macOS it is inside the app,
-`/Applications/Facthory Page.app/Contents/MacOS/facthorypage-cli`, and also a separate download,
-`facthorypage-cli-<version>-macos-universal.zip`. Details:
+`.tar.gz` has it in `bin/`); on Windows it is in the app's folder,
+`%LOCALAPPDATA%\Programs\Facthory\Facthory Page\`, or `C:\Program Files\Facthory\Facthory Page\`
+when installed for everyone (add that folder to `PATH` to call it by name); on macOS it is inside
+the app, `/Applications/Facthory Page.app/Contents/MacOS/facthorypage-cli`, and also a separate
+download, `facthorypage-cli-<version>-macos-universal.zip`. Details:
 [docs/mcp.md](https://github.com/FACTHORYAI/page/blob/main/docs/mcp.md).
 
 ## 9. Getting help
