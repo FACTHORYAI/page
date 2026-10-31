@@ -156,6 +156,10 @@ jobs:
     runs-on: windows-latest
     # Pull requests get no signing secrets: no environment.
     environment: ${{ github.event_name != 'pull_request' && 'release' || '' }}
+    permissions:
+      contents: read
+      # Signing signs in to Azure with GitHub's OIDC token: no secret is stored for it.
+      id-token: write
     timeout-minutes: 120
     strategy:
       fail-fast: false
@@ -170,25 +174,29 @@ jobs:
       # The updater's feed (facthory/update/): builds without it never check.
       FACTHORY_UPDATE_FEED: https://github.com/${{ github.repository }}/releases/latest/download/latest.json
     steps:
-      - name: Require signing for a tagged release
-        if: github.ref_type == 'tag'
+      - name: Signing material
+        # Azure Artifact Signing through the app registration's federated credential for this
+        # repository's environment release (no client secret), or a certificate. A tag must sign.
+        id: signing
         shell: bash
         env:
+          TAGGED: ${{ github.ref_type == 'tag' }}
           WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
           WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
           AZURE_SIGNING_ENDPOINT: ${{ secrets.AZURE_SIGNING_ENDPOINT }}
           AZURE_SIGNING_ACCOUNT: ${{ secrets.AZURE_SIGNING_ACCOUNT }}
           AZURE_CERT_PROFILE: ${{ secrets.AZURE_CERT_PROFILE }}
         run: |
-          if [ -n "$WINDOWS_CERTIFICATE" ] && [ -n "$WINDOWS_CERTIFICATE_PASSWORD" ]; then exit 0; fi
           missing=""
-          for name in AZURE_TENANT_ID AZURE_CLIENT_ID AZURE_CLIENT_SECRET AZURE_SIGNING_ENDPOINT AZURE_SIGNING_ACCOUNT AZURE_CERT_PROFILE; do
+          for name in AZURE_TENANT_ID AZURE_CLIENT_ID AZURE_SIGNING_ENDPOINT AZURE_SIGNING_ACCOUNT AZURE_CERT_PROFILE; do
             [ -n "${!name}" ] || missing="$missing $name"
           done
-          if [ -n "$missing" ]; then echo "::error::A release must be signed: no WINDOWS_CERTIFICATE pair, and the environment release lacks:$missing"; exit 1; fi
+          if [ -z "$missing" ]; then echo "azure=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          echo "azure=false" >> "$GITHUB_OUTPUT"
+          if [ -n "$WINDOWS_CERTIFICATE" ] && [ -n "$WINDOWS_CERTIFICATE_PASSWORD" ]; then exit 0; fi
+          if [ "$TAGGED" = true ]; then echo "::error::A release must be signed: no WINDOWS_CERTIFICATE pair, and the environment release lacks:$missing"; exit 1; fi
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -220,20 +228,40 @@ jobs:
         uses: storytold/craft-common-actions/actions/install-wix@13491f8120782bf106fb7859332929bf6c1cdb5d
         with:
           wix-version: "5.0.2"
-      - name: Build, sign, package
+      - name: Build
+        # Upstream's packaging script, unsigned, into a folder that is thrown away, so the build
+        # is done before the Azure sign-in below, whose GitHub token must not run out during it.
+        shell: pwsh
+        env:
+          DIST: ${{ runner.temp }}/unsigned
+          CRAFT_FONTS_DIR: ${{ github.workspace }}/craft-fonts
+          CRAFT_FONTS_REQUIRED: "1"
+        run: ./packaging/windows/package.ps1 -Arch ${{ matrix.arch }}
+      - name: Sign in to Azure
+        if: steps.signing.outputs.azure == 'true'
+        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          allow-no-subscriptions: true
+      - name: Get the signing token
+        # Right after the sign-in, while GitHub's token is fresh; the Azure CLI keeps the token
+        # for the signing below.
+        if: steps.signing.outputs.azure == 'true'
+        shell: pwsh
+        run: az account get-access-token --resource https://codesigning.azure.net --output none
+      - name: Sign, package
         shell: pwsh
         env:
           WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
           WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
-          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          AZURE_SIGNING_OIDC: ${{ steps.signing.outputs.azure == 'true' && '1' || '' }}
           AZURE_SIGNING_ENDPOINT: ${{ secrets.AZURE_SIGNING_ENDPOINT }}
           AZURE_SIGNING_ACCOUNT: ${{ secrets.AZURE_SIGNING_ACCOUNT }}
           AZURE_CERT_PROFILE: ${{ secrets.AZURE_CERT_PROFILE }}
           CRAFT_FONTS_DIR: ${{ github.workspace }}/craft-fonts
           CRAFT_FONTS_REQUIRED: "1"
-        run: ./packaging/windows/package.ps1 -Arch ${{ matrix.arch }}
+        run: ./packaging/windows/package.ps1 -Arch ${{ matrix.arch }} -SkipBuild
       - name: No upstream mark in what ships
         shell: bash
         run: python facthory/rebrand.py check target/${{ matrix.target }}/release/facthorypage.exe target/${{ matrix.target }}/release/facthorypage-cli.exe

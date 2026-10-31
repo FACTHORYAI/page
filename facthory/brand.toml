@@ -163,6 +163,39 @@ files = ["packaging/windows/*.wxs", "packaging/windows/*.wxi", "packaging/window
 find = "ArtCraft"
 replace = "Facthory"
 
+# Windows signing runs in CI only, through GitHub's OIDC token (the owner's rule, 2026-10-31): the
+# release workflow signs in to Azure with azure/login, so no client secret exists anywhere, and
+# Artifact Signing's library takes that sign-in from the Azure CLI. facthory-release.yml says so
+# with AZURE_SIGNING_OIDC=1; without it, upstream's paths are unchanged.
+
+[[rule]]
+why = "Windows signing through OIDC: Artifact Signing needs only its endpoint, account and profile"
+files = "packaging/windows/sign.ps1"
+find = """
+$azureVars = 'AZURE_TENANT_ID', 'AZURE_CLIENT_ID', 'AZURE_CLIENT_SECRET', 'AZURE_SIGNING_ENDPOINT', 'AZURE_SIGNING_ACCOUNT', 'AZURE_CERT_PROFILE'
+"""
+replace = """
+$azureVars = 'AZURE_TENANT_ID', 'AZURE_CLIENT_ID', 'AZURE_CLIENT_SECRET', 'AZURE_SIGNING_ENDPOINT', 'AZURE_SIGNING_ACCOUNT', 'AZURE_CERT_PROFILE'
+if ($env:AZURE_SIGNING_OIDC -eq '1') { $azureVars = 'AZURE_SIGNING_ENDPOINT', 'AZURE_SIGNING_ACCOUNT', 'AZURE_CERT_PROFILE' }
+"""
+count = 1
+
+[[rule]]
+why = "... and the signing library tries the Azure CLI's sign-in alone, not the runner's other identities"
+files = "packaging/windows/sign.ps1"
+find = """
+    } | ConvertTo-Json | Set-Content -Path $metadata -Encoding utf8
+"""
+replace = """
+    } | ForEach-Object {
+      if ($env:AZURE_SIGNING_OIDC -eq '1') {
+        $_.ExcludeCredentials = @('EnvironmentCredential', 'WorkloadIdentityCredential', 'ManagedIdentityCredential', 'SharedTokenCacheCredential', 'VisualStudioCredential', 'VisualStudioCodeCredential', 'AzurePowerShellCredential', 'AzureDeveloperCliCredential', 'InteractiveBrowserCredential')
+      }
+      $_
+    } | ConvertTo-Json | Set-Content -Path $metadata -Encoding utf8
+"""
+count = 1
+
 # Upstream's own updater (craft-update, from craft-libs) checks and installs the upstream apps'
 # releases, by their repositories and ai.storyteller.* ids, and carries their names into the binary.
 # It is left out: facthory/update/ is the updater that runs, and facthory/update/updates_ui.rs

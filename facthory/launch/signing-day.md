@@ -17,12 +17,16 @@ Claude. The owner's account steps themselves are runbook M in `bandpey-hq/github
   (run 41058215053) billed 0 ms.
 - Built on a Mac (M4 Max, macOS 27.0.1, Xcode 27.2), from a branded checkout, as the release job
   builds, ad-hoc signed: see [Local macOS builds](#local-macos-builds).
-- In each repository's environment `release`: **0 of the 13 secrets set**. GitHub Pages is not
+- Windows (R4), 2026-10-31: the Artifact Signing account `bandpey-signing` exists and Bandpey's
+  identity validation is In Progress at Microsoft (1–20 business days); the certificate profile
+  `bandpey-public` follows once it is Completed. Windows signs through GitHub's OIDC token, so no
+  client secret exists (`facthory-release.yml`, and a brand rule on upstream's `sign.ps1`).
+- In each repository's environment `release`: **0 of the 12 secrets set**. GitHub Pages is not
   enabled, release immutability is off, and no release exists yet.
 
 ## The secrets
 
-Thirteen, in Secret Manager (`signing/office-release.json` in github-infra), copied by
+Twelve, in Secret Manager (`signing/office-release.json` in github-infra), copied by
 `scripts/release-secrets.sh copy` into the environment `release` of page, grid and deck. Only tags
 `v*` and `main` deploy from it, and every job that uses it waits for the owner's approval: the
 macOS and Windows jobs of `facthory-release.yml` (the Linux and publish jobs use no environment)
@@ -34,20 +38,19 @@ and `facthory-packages.yml`.
 | `APPLE_CERTIFICATE_PASSWORD` | The `.p12` export's password | R3, M2 | the same |
 | `KEYCHAIN_PASSWORD` | Random; the job's temporary keychain | `release-secrets.sh keychain` | the same |
 | `APPLE_ID` | The Apple Account that notarizes (a member of the Bandpey GmbH team) | R3, M2 | macOS job: `xcrun notarytool` in `package.sh` |
-| `APPLE_PASSWORD` | That account's app-specific password `facthory-notarize` | R3, M2 | the same |
+| `APPLE_PASSWORD` | That account's app-specific password `office-notarize` | R3, M2 | the same |
 | `APPLE_TEAM_ID` | Bandpey GmbH's team id (10 characters) | R3, M2 | the same |
-| `AZURE_TENANT_ID` | The Entra tenant of the signing app registration | R4, M3 | Windows jobs: `packaging/windows/sign.ps1` |
-| `AZURE_CLIENT_ID` | App registration `facthory-office-signing` | R4, M3 | the same |
-| `AZURE_CLIENT_SECRET` | Its client secret (24 months: renew before it lapses) | R4, M3 | the same |
-| `AZURE_SIGNING_ENDPOINT` | The Artifact Signing account's regional endpoint, `https://weu.codesigning.azure.net` for West Europe; a mismatch gives 403 | R4, M3 | the same |
-| `AZURE_SIGNING_ACCOUNT` | The Artifact Signing account's name | R4, M3 | the same |
-| `AZURE_CERT_PROFILE` | The Public Trust certificate profile, `facthory-office` | R4, M3 | the same |
+| `AZURE_TENANT_ID` | The Entra tenant of the signing app registration | R4, M3 | Windows jobs: `azure/login` |
+| `AZURE_CLIENT_ID` | App registration `office-signing`, with a federated credential for each repository's environment `release` and the role Artifact Signing Certificate Profile Signer on `bandpey-public`. Not secret, and it has no client secret: the job signs in with GitHub's OIDC token | R4, M3 | the same |
+| `AZURE_SIGNING_ENDPOINT` | The Artifact Signing account's regional endpoint, `https://weu.codesigning.azure.net`; a mismatch gives 403 | R4, M3 | Windows jobs: `packaging/windows/sign.ps1` |
+| `AZURE_SIGNING_ACCOUNT` | The Artifact Signing account, `bandpey-signing` | R4, M3 | the same |
+| `AZURE_CERT_PROFILE` | The Public Trust certificate profile, `bandpey-public` | R4, M3 | the same |
 | `PACKAGES_GPG_KEY` | The apt and dnf repositories' signing key (RSA 4096, 5 years, no passphrase) | `release-secrets.sh packages-key` | `facthory-packages.yml`, when a release is published |
 
 What each run requires:
 
 - **A tag `v*`** refuses to build unless both platforms can sign: the five `APPLE_*` and
-  `KEYCHAIN_PASSWORD` for macOS, and the six `AZURE_*` (or a `WINDOWS_CERTIFICATE` pair) for
+  `KEYCHAIN_PASSWORD` for macOS, and the five `AZURE_*` (or a `WINDOWS_CERTIFICATE` pair) for
   Windows. So **the first tagged release needs R3 and R4 both**.
 - **A manual run from `main`** signs what it can and builds the rest unsigned, as workflow
   artifacts, without a release. That is how each identity is tested the day it lands.
@@ -90,7 +93,16 @@ credentials; our brand rule that switched to it is retired, since we follow upst
 
 ## The day R4 lands (Microsoft)
 
-1. **Owner**: runbook M3, then `status` and `copy`.
+How the Windows jobs sign: they sign in to Azure with GitHub's OIDC token (`azure/login`), fetch
+the signing token at once, and only then run `package.ps1 -SkipBuild` on the binaries an unsigned
+run built first, so the token cannot run out during a long build. If the signing library refuses
+`ExcludeCredentials` in its metadata (the brand rule's way of making it use the Azure CLI's sign-in
+alone), drop that part of the rule: the runner has no other identity it could pick.
+
+1. **Owner**, once Microsoft's validation shows Completed: the certificate profile `bandpey-public`
+   (owner guide, P3 part 2); the app registration `office-signing` with a federated credential for
+   the environment `release` of page, grid and deck (P11); then runbook M3's `put` of the five
+   `AZURE_*` values, `status` and `copy`.
 2. **Claude**: a manual run as above; the owner approves it.
 3. **Claude**: the Windows jobs' logs show `signtool verify /pa` passing on the `.exe` files and the
    MSI (`sign.ps1` verifies what it signs). Download `release-windows-x64` and `-arm64`, check
@@ -108,7 +120,7 @@ credentials; our brand rule that switched to it is retired, since we follow upst
 
 ## The first tagged release (R3 and R4 both in)
 
-1. **Owner**: runbook M4: `scripts/release-secrets.sh packages-key`, `copy` (13 of 13), then in
+1. **Owner**: runbook M4: `scripts/release-secrets.sh packages-key`, `copy` (12 of 12), then in
    each repository GitHub Pages from GitHub Actions and release immutability on.
 2. **Claude**: tag the version in `Cargo.toml` on `main` (`v0.12.0` for page and deck, `v0.13.0`
    for grid today) and push the tag. Upstream tags its releases with the same names: tag in a
