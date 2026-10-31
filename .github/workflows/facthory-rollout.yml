@@ -1,0 +1,34 @@
+name: Facthory Page rollout
+
+# Widens the newest release's update rollout (facthory/rollout.py): its update feed latest.json
+# offers the update to 10% of copies when the release workflow publishes it, then to 25%, 50% and
+# every copy a day apart. The repository variable FACTHORY_ROLLOUT stops it ("halt": no copy is
+# offered the update until the variable changes) or finishes it at once ("full"); this runs hourly,
+# or by hand to apply a change at once.
+on:
+  schedule:
+    - cron: "23 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: facthory-rollout
+  cancel-in-progress: false
+
+jobs:
+  rollout:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: The schedule
+        run: python3 facthory/rollout.py --self-test
+      - name: Widen the rollout
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FACTHORY_ROLLOUT: ${{ vars.FACTHORY_ROLLOUT }}
+        run: python3 facthory/rollout.py

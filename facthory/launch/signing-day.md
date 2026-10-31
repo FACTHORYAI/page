@@ -27,10 +27,11 @@ Claude. The owner's account steps themselves are runbook M in `bandpey-hq/github
 ## The secrets
 
 Twelve, in Secret Manager (`signing/office-release.json` in github-infra), copied by
-`scripts/release-secrets.sh copy` into the environment `release` of page, grid and deck. Only tags
-`v*` and `main` deploy from it, and every job that uses it waits for the owner's approval: the
-macOS and Windows jobs of `facthory-release.yml` (the Linux and publish jobs use no environment)
-and `facthory-packages.yml`.
+`scripts/release-secrets.sh copy` into the environment `release` of page, grid and deck. Only
+`main` deploys from it, and no job waits for a person (the owner chose full automation on
+1 November 2026): the macOS and Windows jobs of `facthory-release.yml` in a release or a signed
+manual run (the Linux, install-check and publish jobs use no environment), and
+`facthory-packages.yml`.
 
 | Secret | What it is | From | Read by |
 | ------ | ---------- | ---- | ------- |
@@ -49,12 +50,14 @@ and `facthory-packages.yml`.
 
 What each run requires:
 
-- **A tag `v*`** refuses to build unless both platforms can sign: the five `APPLE_*` and
-  `KEYCHAIN_PASSWORD` for macOS, and the five `AZURE_*` (or a `WINDOWS_CERTIFICATE` pair) for
-  Windows. So **the first tagged release needs R3 and R4 both**.
-- **A manual run from `main`** signs what it can and builds the rest unsigned, as workflow
-  artifacts, without a release. That is how each identity is tested the day it lands.
-- **Publishing a release** runs `facthory-packages.yml`, which fails without `PACKAGES_GPG_KEY`.
+- **A release**, which any push to `main` starts when the version in `Cargo.toml` has none yet,
+  refuses to build unless both platforms can sign: the five `APPLE_*` and `KEYCHAIN_PASSWORD` for
+  macOS, and the five `AZURE_*` (or a `WINDOWS_CERTIFICATE` pair) for Windows. So **the first
+  release needs R3 and R4 both**; until then, a push to `main` with a new version fails at that
+  check and publishes nothing.
+- **A manual run from `main` with `sign`** signs what it can and builds the rest unsigned, as
+  workflow artifacts, without a release. That is how each identity is tested the day it lands.
+- **The release's last step** calls `facthory-packages.yml`, which fails without `PACKAGES_GPG_KEY`.
 - Not W4: `SYNC_APP_PRIVATE_KEY` in the environment `upstream-sync` (W3, runbook L).
 
 The Windows signing client is pinned by upstream's `sign.ps1` itself since WordCraft v0.11.0:
@@ -69,10 +72,11 @@ credentials; our brand rule that switched to it is retired, since we follow upst
 2. **Claude**: start a manual run in each repository:
 
    ```sh
-   gh workflow run facthory-release.yml -R FACTHORYAI/page --ref main
+   gh workflow run facthory-release.yml -R FACTHORYAI/page --ref main -f sign=true
    ```
 
-3. **Owner**: approve the run's deployments. The Windows jobs build unsigned in this run.
+3. The Windows jobs build unsigned in this run; its install check on macOS runs unsigned too
+   (only a release checks signatures there).
 4. **Claude**: download `release-macos` and check, on a Mac:
 
    ```sh
@@ -104,7 +108,7 @@ never signs in, and a configured `WINDOWS_CERTIFICATE` pair is used instead of A
    (owner guide, P3 part 2); the app registration `office-signing` with a federated credential for
    the environment `release` of page, grid and deck (P11); then runbook M3's `put` of the five
    `AZURE_*` values, `status` and `copy`.
-2. **Claude**: a manual run as above; the owner approves it.
+2. **Claude**: a manual run as above.
 3. **Claude**: the Windows jobs' logs show `signtool verify /pa` passing on the `.exe` files and the
    MSI (`sign.ps1` verifies what it signs). Download `release-windows-x64` and `-arm64`, check
    the MSI's signer, then install it silently and remove it on a Windows runner or machine, in
@@ -119,21 +123,24 @@ never signs in, and a configured `WINDOWS_CERTIFICATE` pair is used instead of A
    (Start-Process msiexec -ArgumentList '/x', 'facthorypage-<v>-windows-x64.msi', '/qn' -Wait -PassThru).ExitCode                         # 0
    ```
 
-## The first tagged release (R3 and R4 both in)
+## The first release (R3 and R4 both in)
+
+Nobody tags or publishes: a release is a run of `facthory-release.yml` on `main` whose version has
+no release yet. The workflow itself creates the tag `v<version>` when it publishes (only it may:
+a tag ruleset in github-infra), on the commit it built and checked.
 
 1. **Owner**: runbook M4: `scripts/release-secrets.sh packages-key`, `copy` (12 of 12), then in
    each repository GitHub Pages from GitHub Actions and release immutability on.
-2. **Claude**: tag the version in `Cargo.toml` on `main` (`v0.12.0` for page and deck, `v0.13.0`
-   for grid today) and push the tag. Upstream tags its releases with the same names: tag in a
-   clone that keeps upstream's tags under `refs/upstream-tags/`, as `facthory/sync.py` fetches them,
-   never one that fetched them into `refs/tags/`, and push only our tag. **Owner**: approve the
-   macOS and Windows deployments.
-3. **Claude**: check the draft release: the checks of the two days above on its files, every
+2. **Claude**: start it with a manual run from `main` (no input), or let the next push to `main`
+   start it. The version is the one in `Cargo.toml` (`0.12.0` for page and deck, `0.13.0` for grid
+   today). The run builds and signs every platform, installs each platform's files on a machine of
+   that platform with every signature checked (`facthory/install_check.py`), publishes the release
+   with `SHA256SUMS` and `latest.json` at a 10% rollout, and builds the apt and dnf repositories at
+   `https://facthoryai.github.io/<app>/`.
+3. **Claude**: check the published release: the checks of the two days above on its files, every
    installer in `SHA256SUMS` (which doesn't list `latest.json`, written after it), and
-   `latest.json` naming the version and a file for each platform.
-4. **Owner**: publish it, then approve `facthory-packages.yml`'s deployment, which builds the apt
-   and dnf repositories at `https://facthoryai.github.io/<app>/`.
-5. **Claude**: install from each channel: the DMG, the MSI (x64 and arm64), the AppImage, the
+   `latest.json` naming the version, a file for each platform, and `"rollout": 10`.
+4. **Claude**: install from each channel: the DMG, the MSI (x64 and arm64), the AppImage, the
    `.deb` from the apt repository on Ubuntu, the `.rpm` from the dnf repository on Fedora.
 6. **Owner**: Partner Center's package check on the published MSI's URL (it needs a public one,
    `msi-requirements.md`) confirms the Store accepts an Artifact Signing certificate
@@ -146,8 +153,11 @@ The other half of the exit criterion. The updater reads the feed compiled into r
 else, so updates can only be tested between two **published** releases:
 
 1. Install the first release from each channel and start it once.
-2. Publish the next release. The natural one is the next upstream release merged by the sync
-   (W3): upstream is at WordCraft v0.12.0, GridCraft v0.13.0 and DeckCraft v0.12.0 on 30 October.
+2. The next release publishes itself. The natural one is the next upstream release merged by the
+   sync (W3): upstream is at WordCraft v0.12.0, GridCraft v0.13.0 and DeckCraft v0.12.0 on
+   30 October. It reaches 10% of copies first: for the test, set the repository variable
+   `FACTHORY_ROLLOUT` to `full` and run `facthory-rollout.yml` by hand (or give the test copies
+   `"bucket": 0` in their `update.json`), and clear the variable afterwards.
 3. The app reads the feed at most once a day, across restarts: `last_check` in `update.json` in
    its settings folder (on macOS `~/Library/Application Support/Facthory Page/`) holds the time of
    the last read. Wait a day after step 1, or set `"last_check": 0` there, before step 4; a

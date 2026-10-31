@@ -22,10 +22,12 @@ Files Facthory adds to upstream's tree, and nothing else:
 | `.github/README.md` | The repository's front page |
 | `.github/workflows/facthory.yml` | The branded build: apply, upstream's gate on the branded tree, release build, mark check |
 | `.github/workflows/upstream-sync.yml` | Every three hours: merge the next upstream release on `sync/<tag>`, open its pull request, merge it when the branded build passes |
-| `.github/workflows/facthory-release.yml` | Signed installers for macOS, Windows and Linux from a tag `v<version>`, as a draft release |
-| `facthory/release.py` | Collects a release's files and writes `SHA256SUMS`, the update feed `latest.json` and the notes |
+| `.github/workflows/facthory-release.yml` | Releases with no person: on `main`, a version without a release builds, signs, install-checks and publishes `v<version>` |
+| `facthory/release.py` | Collects a release's files and writes `SHA256SUMS`, the update feed `latest.json` (with its rollout) and the notes |
+| `facthory/install_check.py` | Installs a release's files on macOS, Windows or Linux as a user would, over the newest release's, and checks versions and signatures |
+| `facthory/rollout.py`, `.github/workflows/facthory-rollout.yml` | Widens the newest release's update rollout hourly: 10%, then 25%, 50% and 100% a day apart; `FACTHORY_ROLLOUT` halts or finishes it |
 | `facthory/packages.py` | Builds the apt and dnf repositories from the newest releases' `.deb` and `.rpm` files, signed |
-| `.github/workflows/facthory-packages.yml` | Publishes those repositories on GitHub Pages when a release is published |
+| `.github/workflows/facthory-packages.yml` | Publishes those repositories on GitHub Pages: called by the release, or when a person publishes one |
 | `facthory/dmg/background.svg` | The disk image window, from upstream's, in our colours and with our name |
 | `facthory/update/facthory_update.rs` | The updater, copied into the app at build time (see Updates) |
 | `facthory/update/updates_ui.rs` | Replaces upstream's update window (`crates/ui-egui/src/updates_ui.rs`): Help's Check for Updates opens our latest release; upstream's updater is left out (see Updates) |
@@ -70,10 +72,11 @@ releases (see Updates).
 
 ## Releases
 
-A tag `v<version>` (the version in `Cargo.toml`, normally upstream's release it merges) runs
-`.github/workflows/facthory-release.yml`: each platform brands a fresh checkout and runs
-upstream's packaging scripts, which sign with the secrets of the environment `release`
-(`bandpey-hq/github-infra`):
+No person takes part. Every push to `main` runs `.github/workflows/facthory-release.yml`: when
+the version in `Cargo.toml` (normally upstream's release the sync just merged) has no release
+yet and is newer than the newest one, the run is a release. Each platform brands a fresh checkout
+and runs upstream's packaging scripts, which sign with the secrets of the environment `release`
+(`bandpey-hq/github-infra`, which only `main` may use and no person approves):
 
 | Platform | Files | Signing |
 | -------- | ----- | ------- |
@@ -81,12 +84,27 @@ upstream's packaging scripts, which sign with the secrets of the environment `re
 | Windows | `facthorypage-<v>-windows-x64.msi` and `-arm64.msi`, portable zips | Authenticode |
 | Linux | AppImage (with `.zsync`), `.deb`, `.rpm`, `.tar.gz`; x86_64 and aarch64 | SHA-256 sums |
 
-The result is a draft GitHub release with `SHA256SUMS` and `latest.json`; a person checks it and
-publishes it. A manual run of the workflow builds the same files, unsigned when the secrets are
-missing, as workflow artifacts.
+Then `facthory/install_check.py` installs each platform's files on a machine of that platform,
+as a user would: the DMG's app and the CLI on macOS; the MSI for each architecture on Windows,
+over the newest release's MSI, which it must upgrade into one installed copy, then uninstalled;
+the AppImage, and the `.deb` and `.rpm` (over the newest release's) on Linux. Each program must
+report the new version, and a release's signatures must hold (Developer ID and notarization on
+macOS, Authenticode by Bandpey GmbH on Windows). Only when every platform passes does the run
+publish the GitHub release `v<version>`, which also creates the tag (only this workflow may), with
+`SHA256SUMS` and `latest.json`, then call `facthory-packages.yml`. A version older than the newest
+release, or one that is not `major.minor.patch`, is never released.
 
-`latest.json`, at `releases/latest/download/latest.json`, is the update feed: the version and,
-per platform, the file the app updates itself from with its size and SHA-256.
+A pull request that touches the release or the packaging builds and install-checks everything
+unsigned, as does a manual run, which signs on `main` when asked (`sign`); both keep the files as
+workflow artifacts.
+
+`latest.json`, at `releases/latest/download/latest.json`, is the update feed: the version, the
+rollout (the percentage of copies offered the update) and, per platform, the file the app updates
+itself from with its size and SHA-256. A release starts at 10%; `facthory-rollout.yml` raises it
+hourly by the release's age, to 25% after a day, 50% after two and 100% after three. The
+repository variable `FACTHORY_ROLLOUT` set to `halt` offers the update to no copy until it
+changes; `full` offers it to every copy at once. The `.deb` and `.rpm` repositories carry the new
+version at once, since the system's package manager updates those.
 
 Publishing a release also runs `.github/workflows/facthory-packages.yml`: the `.deb` and `.rpm`
 files of the two newest releases become a signed apt repository and a dnf repository on this
@@ -97,7 +115,9 @@ to add them. Installs from there update with the system.
 
 `facthory/update/facthory_update.rs` is copied into the app when the brand is applied, and
 `main.rs` gets four calls to it (`brand.toml`): start, the notice, and the install as the app
-quits. Once a day it reads `latest.json`. When that names a newer version, it downloads this
+quits. Once a day it reads `latest.json`. When that names a newer version and the rollout has
+reached this copy (each copy draws a lasting bucket, 0 to 99, kept as `bucket` in `update.json`,
+and takes the update once the feed's rollout exceeds it), it downloads this
 platform's file in the background and checks its size and SHA-256 against the feed. On macOS
 and Windows it also checks that the system accepts the file's signature and that the signer is
 the one who signed the running app. A notice then says the update installs when the app quits,

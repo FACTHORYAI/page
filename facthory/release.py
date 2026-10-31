@@ -11,8 +11,11 @@
 latest.json is the update feed the apps read (from releases/latest/download/latest.json, which
 GitHub serves for the newest published, non-draft, non-prerelease release):
 
-  {"name", "version", "date", "notes",
+  {"name", "version", "date", "notes", "rollout",
    "assets": {"<platform>": {"name", "url", "sha256", "size"}}}
+
+rollout is the percentage of copies the update is offered to: FACTHORY_ROLLOUT from the
+environment (the release workflow starts at 10), 100 without it. facthory/rollout.py raises it.
 
 with one asset per platform an app can update itself on: macos-universal (DMG),
 windows-x64 and windows-arm64 (MSI), linux-x86_64 and linux-aarch64 (AppImage). The Microsoft
@@ -25,6 +28,7 @@ from __future__ import annotations
 import datetime
 import hashlib
 import json
+import os
 import re
 import shutil
 import sys
@@ -90,6 +94,7 @@ def main() -> int:
         "version": version,
         "date": datetime.date.today().isoformat(),
         "notes": f"https://github.com/{repo}/releases/tag/v{version}",
+        "rollout": max(0, min(100, int(os.environ.get("FACTHORY_ROLLOUT") or 100))),
         "assets": assets,
     }
     (out / "latest.json").write_text(json.dumps(feed, indent=2) + "\n", encoding="utf-8")
