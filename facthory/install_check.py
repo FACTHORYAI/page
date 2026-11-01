@@ -178,7 +178,7 @@ def windows(dist: Path, version: str, arch: str, name: str, product: str, previo
     msiexec("/x", msi, work / "uninstall.log")
     if installed(product):
         raise Fail(f"uninstalling left {installed(product)}")
-    print(f"ok: {msi.name} installs, upgrades and uninstalls")
+    print(f"ok: {msi.name} installs{', upgrading the previous release,' if previous is not None else ''} and uninstalls")
 
 
 # ---- Linux ---------------------------------------------------------------------------------------
