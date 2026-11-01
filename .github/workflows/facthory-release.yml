@@ -523,7 +523,9 @@ jobs:
             # A re-run after this release was published (a later check or job failed): only the
             # tag check below is left to do.
             echo "::notice::${tag} is already published; checking its tag only."
+            rerun=true
           else
+            rerun=false
             check_tag
             # Drafts a failed run left for this version.
             gh api "repos/${GITHUB_REPOSITORY}/releases" --paginate --jq ".[] | select(.draft and .tag_name == \"${tag}\") | .id" |
@@ -543,8 +545,13 @@ jobs:
             sleep 3
           done
           if [ -z "$tagged" ]; then
-            err=$(tail -n 1 "$RUNNER_TEMP/tag-lookup.err")
+            # gh's own line says why (an HTTP status); the script's line otherwise.
+            err=$(grep -v '^::error::' "$RUNNER_TEMP/tag-lookup.err" | tail -n 1 || true)
+            [ -n "$err" ] || err=$(tail -n 1 "$RUNNER_TEMP/tag-lookup.err")
             echo "::warning::${tag} is published, but its tag couldn't be confirmed within 30 s${err:+ (${err#::error::})}; check that it is on ${GITHUB_SHA}."
+          elif [ "$tagged" != "$GITHUB_SHA" ] && [ "$rerun" = true ]; then
+            echo "::error::${tag} was published by another run, from ${tagged}; this re-run of ${GITHUB_SHA} is stale and does nothing."
+            exit 1
           elif [ "$tagged" != "$GITHUB_SHA" ]; then
             echo "::error::${tag} was published on ${tagged}, not on ${GITHUB_SHA}. It can't be changed: halt it (facthory-rollout.yml) and release a new version."
             exit 1
