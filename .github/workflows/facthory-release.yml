@@ -19,8 +19,8 @@ name: Facthory Page release
 # A push that changes no version builds nothing. A pull request that changes the release or the
 # packaging builds and checks everything unsigned, outside the environment, as a check; so does a
 # manual run, which signs when asked from main (sign) and publishes only when asked (publish).
-# Secrets live in the environment `release` (bandpey-hq/github-infra), which only main may use;
-# only this workflow may create tags v*.
+# Secrets live in the environment `release` (bandpey-hq/github-infra), which only main may use.
+# Nobody may move or delete a v* tag; one pushed by hand on another commit stops the release.
 on:
   push:
     branches: [main]
@@ -72,6 +72,8 @@ jobs:
         with:
           persist-credentials: false
       - id: v
+        # pipefail too, so a failed command in a pipe stops the step.
+        shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
           EVENT: ${{ github.event_name }}
@@ -95,11 +97,11 @@ jobs:
               echo "::warning::Cargo.toml's version ${version} is older than the newest release ${newest}: no release."
             else
               # A tag v<version> made outside this workflow would carry the release instead of this
-              # commit: GitHub ignores the target when the tag exists.
-              # gh prints GitHub's error to stdout when the tag is missing: only a success counts.
-              tagged=$(gh api "repos/${GITHUB_REPOSITORY}/commits/v${version}" --jq .sha 2>/dev/null) || tagged=""
+              # commit: GitHub ignores the target when the tag exists. v* tags can't be moved or
+              # deleted, so only a new version gets past one. Any lookup error stops the run.
+              tagged=$(bash facthory/tag_commit.sh "v${version}")
               if [ -n "$tagged" ] && [ "$tagged" != "$GITHUB_SHA" ]; then
-                echo "::error::Tag v${version} exists on ${tagged}, not on this commit ${GITHUB_SHA}; delete it or release from that commit."
+                echo "::error::Tag v${version} exists on ${tagged}, not on this commit ${GITHUB_SHA}; release from that commit, or raise the version in Cargo.toml (v* tags can't be moved or deleted)."
                 exit 1
               fi
               release=true
@@ -500,22 +502,60 @@ jobs:
         # A draft first with every file, then published, as releases are immutable once published;
         # publishing creates the tag v<version> on the commit this run built.
         if: needs.version.outputs.release == 'true'
+        shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ needs.version.outputs.version }}
         run: |
           tag="v${VERSION}"
-          tagged=$(gh api "repos/${GITHUB_REPOSITORY}/commits/${tag}" --jq .sha 2>/dev/null) || tagged=""
-          if [ -n "$tagged" ] && [ "$tagged" != "$GITHUB_SHA" ]; then
-            echo "::error::Tag ${tag} appeared on ${tagged} during this run; nothing published."
+          # Anyone with write access can push a v* tag, and GitHub ignores --target when the tag
+          # exists; a published release and its tag can't change. So a tag on another commit stops
+          # the run before the draft and again just before publishing, which creates the tag.
+          check_tag() {
+            local tagged
+            tagged=$(bash facthory/tag_commit.sh "$tag") || return 1
+            if [ -n "$tagged" ] && [ "$tagged" != "$GITHUB_SHA" ]; then
+              echo "::error::Tag ${tag} appeared on ${tagged} during this run, not on ${GITHUB_SHA}; nothing published. Raise the version in Cargo.toml."
+              return 1
+            fi
+          }
+          if [ "$(gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json isDraft --jq .isDraft 2>/dev/null)" = false ]; then
+            # A re-run after this release was published (a later check or job failed): only the
+            # tag check below is left to do.
+            echo "::notice::${tag} is already published; checking its tag only."
+            rerun=true
+          else
+            rerun=false
+            check_tag
+            # Drafts a failed run left for this version.
+            gh api "repos/${GITHUB_REPOSITORY}/releases" --paginate --jq ".[] | select(.draft and .tag_name == \"${tag}\") | .id" |
+              while read -r id; do gh api -X DELETE "repos/${GITHUB_REPOSITORY}/releases/${id}"; done
+            gh release create "$tag" --repo "$GITHUB_REPOSITORY" --draft --target "$GITHUB_SHA" \
+              --title "Facthory Page ${VERSION}" --notes-file dist/NOTES.md dist/release-files/*
+            check_tag
+            gh release edit "$tag" --repo "$GITHUB_REPOSITORY" --draft=false --latest
+          fi
+          # Published: the tag exists now and must be this commit's (a push in the last moment).
+          # The release can't change any more, so only a tag confirmed on another commit fails the
+          # run; a tag the API doesn't show yet, or a failed lookup, is asked for again, then warned.
+          tagged=""
+          for _ in 1 2 3 4 5 6 7 8 9 10; do
+            if tagged=$(bash facthory/tag_commit.sh "$tag" 2>"$RUNNER_TEMP/tag-lookup.err") && [ -n "$tagged" ]; then break; fi
+            tagged=""
+            sleep 3
+          done
+          if [ -z "$tagged" ]; then
+            # gh's own line says why (an HTTP status); the script's line otherwise.
+            err=$(grep -v '^::error::' "$RUNNER_TEMP/tag-lookup.err" | tail -n 1 || true)
+            [ -n "$err" ] || err=$(tail -n 1 "$RUNNER_TEMP/tag-lookup.err")
+            echo "::warning::${tag} is published, but its tag couldn't be confirmed within 30 s${err:+ (${err#::error::})}; check that it is on ${GITHUB_SHA}."
+          elif [ "$tagged" != "$GITHUB_SHA" ] && [ "$rerun" = true ]; then
+            echo "::error::${tag} was published by another run, from ${tagged}; this re-run of ${GITHUB_SHA} is stale and does nothing."
+            exit 1
+          elif [ "$tagged" != "$GITHUB_SHA" ]; then
+            echo "::error::${tag} was published on ${tagged}, not on ${GITHUB_SHA}. It can't be changed: halt it (facthory-rollout.yml) and release a new version."
             exit 1
           fi
-          # Drafts a failed run left for this version.
-          gh api "repos/${GITHUB_REPOSITORY}/releases" --paginate --jq ".[] | select(.draft and .tag_name == \"${tag}\") | .id" |
-            while read -r id; do gh api -X DELETE "repos/${GITHUB_REPOSITORY}/releases/${id}"; done
-          gh release create "$tag" --repo "$GITHUB_REPOSITORY" --draft --target "$GITHUB_SHA" \
-            --title "Facthory Page ${VERSION}" --notes-file dist/NOTES.md dist/release-files/*
-          gh release edit "$tag" --repo "$GITHUB_REPOSITORY" --draft=false --latest
 
   packages:
     # The apt and dnf repositories with the new release's .deb and .rpm. Called from here: a
