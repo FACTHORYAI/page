@@ -55,10 +55,11 @@ jobs:
 
   branded-check:
     # The required check, under a name we own: the call above reports as "build / gate (<runner>)",
-    # which follows the shared gate workflow's job name and runner. Fails unless it succeeded.
+    # which follows the shared gate workflow's job name and runner. Fails unless it succeeded. It runs
+    # even in a cancelled run, because a skipped required check counts as passing.
     name: branded
     needs: build
-    if: ${{ !cancelled() }}
+    if: ${{ always() }}
     runs-on: ubuntu-24.04
     steps:
       - name: The branded build passed
