@@ -22,7 +22,7 @@ Files Facthory adds to upstream's tree, and nothing else:
 | `facthory/README.md` | This list |
 | `facthory/.gitignore` | Keeps Python's bytecode out of the repository |
 | `.github/README.md` | The repository's front page |
-| `.github/workflows/facthory.yml` | The branded build: apply, upstream's gate on the branded tree, release build, mark check. Its `branded` check, a name we own, is the one `main` requires |
+| `.github/workflows/facthory.yml` | The branded build: apply, upstream's gate on the branded tree, release build, mark check. `main` requires its `branded` check, a name we own, beside upstream's `gate / gate (ubuntu-24.04)` |
 | `.github/workflows/upstream-sync.yml` | Every three hours: merge the next upstream release on `sync/<tag>`, open its pull request, merge it when the branded build passes |
 | `.github/workflows/facthory-release.yml` | Releases with no person: on `main`, a version without a release builds, signs, install-checks and publishes `v<version>` |
 | `facthory/tag_commit.sh` | The commit a release tag points at, for `facthory-release.yml`; any lookup error stops the run instead of reading as no tag |
