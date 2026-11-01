@@ -35,7 +35,7 @@ jobs:
             | grep -o -E '(CRAFT_FONTS_REF|craft-fonts-ref): *"?[0-9a-f]{40}' | head -1 | grep -o -E '[0-9a-f]{40}' || true)
           echo "craft-fonts=${ref:-bfcbf714e45a3ea8e98f88ab2b7971372a576414}" >> "$GITHUB_OUTPUT"
 
-  branded:
+  build:
     needs: pins
     # Pinned to a commit, not @main: this workflow builds what we ship. Bumped with upstream syncs
     # (with the gate's craft-fonts default above).
@@ -54,16 +54,17 @@ jobs:
         python3 facthory/rebrand.py check target/release/facthorypage target/release/facthorypage-cli
 
   branded-check:
-    # The required check, under a name we own: the call above reports as "branded / gate (<runner>)",
-    # which follows the shared gate workflow's job name and runner. Fails unless it succeeded.
+    # The required check, under a name we own: the call above reports as "build / gate (<runner>)",
+    # which follows the shared gate workflow's job name and runner. Fails unless it succeeded. It runs
+    # even in a cancelled run, because a skipped required check counts as passing.
     name: branded
-    needs: branded
-    if: ${{ !cancelled() }}
+    needs: build
+    if: ${{ always() }}
     runs-on: ubuntu-24.04
     steps:
       - name: The branded build passed
         env:
-          RESULT: ${{ needs.branded.result }}
+          RESULT: ${{ needs.build.result }}
         run: |
           if [ "$RESULT" != success ]; then
             echo "::error::The branded build ended with ${RESULT}."
