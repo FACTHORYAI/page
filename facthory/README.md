@@ -22,7 +22,7 @@ Files Facthory adds to upstream's tree, and nothing else:
 | `facthory/README.md` | This list |
 | `facthory/.gitignore` | Keeps Python's bytecode out of the repository |
 | `.github/README.md` | The repository's front page |
-| `.github/workflows/facthory.yml` | The branded build: apply, upstream's gate on the branded tree, release build, mark check |
+| `.github/workflows/facthory.yml` | The branded build: apply, upstream's gate on the branded tree, release build, mark check. Its `branded` check, a name we own, is the one `main` requires |
 | `.github/workflows/upstream-sync.yml` | Every three hours: merge the next upstream release on `sync/<tag>`, open its pull request, merge it when the branded build passes |
 | `.github/workflows/facthory-release.yml` | Releases with no person: on `main`, a version without a release builds, signs, install-checks and publishes `v<version>` |
 | `facthory/release.py` | Collects a release's files and writes `SHA256SUMS`, the update feed `latest.json` (with its rollout) and the notes |
