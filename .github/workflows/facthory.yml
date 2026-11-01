@@ -52,3 +52,20 @@ jobs:
         cargo xtask ci
         cargo build --release --locked -p facthorypage -p facthorypage-cli
         python3 facthory/rebrand.py check target/release/facthorypage target/release/facthorypage-cli
+
+  branded-check:
+    # The required check, under a name we own: the call above reports as "branded / gate (<runner>)",
+    # which follows the shared gate workflow's job name and runner. Fails unless it succeeded.
+    name: branded
+    needs: branded
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    steps:
+      - name: The branded build passed
+        env:
+          RESULT: ${{ needs.branded.result }}
+        run: |
+          if [ "$RESULT" != success ]; then
+            echo "::error::The branded build ended with ${RESULT}."
+            exit 1
+          fi
