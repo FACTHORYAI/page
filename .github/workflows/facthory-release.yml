@@ -96,7 +96,8 @@ jobs:
             else
               # A tag v<version> made outside this workflow would carry the release instead of this
               # commit: GitHub ignores the target when the tag exists.
-              tagged=$(gh api "repos/${GITHUB_REPOSITORY}/commits/v${version}" --jq .sha 2>/dev/null || true)
+              # gh prints GitHub's error to stdout when the tag is missing: only a success counts.
+              tagged=$(gh api "repos/${GITHUB_REPOSITORY}/commits/v${version}" --jq .sha 2>/dev/null) || tagged=""
               if [ -n "$tagged" ] && [ "$tagged" != "$GITHUB_SHA" ]; then
                 echo "::error::Tag v${version} exists on ${tagged}, not on this commit ${GITHUB_SHA}; delete it or release from that commit."
                 exit 1
@@ -504,7 +505,7 @@ jobs:
           VERSION: ${{ needs.version.outputs.version }}
         run: |
           tag="v${VERSION}"
-          tagged=$(gh api "repos/${GITHUB_REPOSITORY}/commits/${tag}" --jq .sha 2>/dev/null || true)
+          tagged=$(gh api "repos/${GITHUB_REPOSITORY}/commits/${tag}" --jq .sha 2>/dev/null) || tagged=""
           if [ -n "$tagged" ] && [ "$tagged" != "$GITHUB_SHA" ]; then
             echo "::error::Tag ${tag} appeared on ${tagged} during this run; nothing published."
             exit 1
