@@ -108,8 +108,9 @@ Verified on clean machines, per app (Page, Grid, Deck):
   Debian 12 and Ubuntu; `.rpm` on Fedora; `.tar.gz`; desktop entry, icon and file types
   registered; `xdg-mime` default works; AppImageUpdate fetches the next release.
 - [ ] **Claude**: every file's hash matches `SHA256SUMS`.
-- [ ] **Owner**: publish the first draft release of each app (the W4 workflow drafts releases for
-  a person to publish).
+- [ ] **Nobody**: the first release of each app publishes itself once the signing secrets are in
+  (W4, fully automated since 1 November 2026: built, signed, install-checked on each system,
+  published at a 10% rollout). **Claude** checks it after.
 
 ## Gate 4: W6, the pass rate meets the bar
 

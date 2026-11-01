@@ -1,0 +1,58 @@
+name: Facthory Page rollout
+
+# A release reaches its copies in steps: its update feed latest.json (facthory/release.py) offers
+# the update to 10% of copies, then 25%, 50% and all of them a day apart, by the release's age; the
+# apps follow it (facthory/update/facthory_update.rs). Releases can't change once published, so
+# the feed can't either. To stop a rollout, `halt` marks the release a pre-release: the latest
+# release, and with it the feed every copy reads, is the one before it again, so no copy is offered
+# the update (copies that took it keep it), and the apt and dnf repositories drop it. `resume`
+# makes it the latest release again, and the rollout goes on by its age.
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: halt or resume
+        type: choice
+        options: [halt, resume]
+        required: true
+      version:
+        description: The release, e.g. 0.12.0 (empty for the newest)
+        type: string
+        required: false
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: facthory-rollout
+  cancel-in-progress: false
+
+jobs:
+  rollout:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Halt or resume
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ACTION: ${{ inputs.action }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          if [ -n "$VERSION" ]; then
+            if ! [[ "${VERSION#v}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then echo "::error::Not a version: ${VERSION}"; exit 1; fi
+            tag="v${VERSION#v}"
+          else
+            tag=$(gh release list --repo "$GITHUB_REPOSITORY" --exclude-drafts --limit 1 --json tagName --jq '.[0].tagName // ""')
+            if [ -z "$tag" ]; then echo "::error::No release to ${ACTION}."; exit 1; fi
+          fi
+          case "$ACTION" in
+            halt) gh release edit "$tag" --repo "$GITHUB_REPOSITORY" --prerelease ;;
+            resume) gh release edit "$tag" --repo "$GITHUB_REPOSITORY" --prerelease=false --latest ;;
+          esac
+          latest=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName --jq .tagName 2>/dev/null || echo none)
+          echo "${ACTION}: ${tag}. The feed the apps read is now ${latest}'s." | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: The apt and dnf repositories follow
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run facthory-packages.yml --repo "$GITHUB_REPOSITORY" --ref main

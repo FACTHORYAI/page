@@ -3,9 +3,11 @@ name: Facthory Page Linux repositories
 # The apt and dnf repositories (facthory/packages.py), served by GitHub Pages at
 # https://facthoryai.github.io/page/: the .deb and .rpm files of the two newest published
 # releases, with the metadata signed by the key PACKAGES_GPG_KEY of the environment `release`.
-# Runs when a release is published, or by hand. Users add the repository once (the site's
-# index.html says how) and get updates with their system's.
+# Runs after the release workflow publishes a release (it calls this: a release its token
+# publishes starts no workflow), when a person publishes one, or by hand. Users add the
+# repository once (the site's index.html says how) and get updates with their system's.
 on:
+  workflow_call:
   release:
     types: [published]
   workflow_dispatch:
