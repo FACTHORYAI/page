@@ -21,8 +21,10 @@ base = "facthorypage"
 # macOS frames an icon that has no tile of its own, so its files come from the icon on a tile.
 macos_svg = "page-macos.svg"
 author = "with icons contributors; recoloured by Bandpey GmbH"
-source = "`notepad-text` in with icons' Chrome style (https://github.com/withevergrow/withicons at 996cc78), recoloured to the Page colours; licence text in `facthory/icons/LICENSE-withicons.txt`"
+source = "`notepad-text` in with icons' Chrome style (https://github.com/withevergrow/withicons at 996cc78), recoloured to the Page colours"
 licence = "MIT"
+# The licence text, written at the end of ATTRIBUTION.md's Facthory block (which ships).
+notice = "LICENSE-withicons.txt"
 
 # Facthory's other asset files, credited in ATTRIBUTION.md's Facthory block (render.py).
 [[asset]]
