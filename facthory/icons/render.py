@@ -5,7 +5,8 @@ layout of upstream's assets/app-icon/ after the rebrand renames it (rebrand.py c
 whether upstream's layout has <base>-macos-512.png and <base>.svg. macos_svg (default: svg) is the
 SVG the macOS files (<base>.icns, <base>-macos-512.png) are rendered from. author, source and
 licence credit the icon in ATTRIBUTION.md (default: Bandpey GmbH's original artwork), and notice
-names a licence file beside the SVG whose text the block ends with, so it ships with the app.
+names a licence file beside the SVG whose text the block ends with, so it travels wherever
+ATTRIBUTION.md does.
 
 Needs resvg (cargo install resvg). The outputs are committed, so builds never need it. Writes
 the .ico and .icns containers itself (PNG entries), so no macOS or Windows tool is needed.
@@ -81,7 +82,7 @@ def attribution(brand: dict, svg: Path, out: Path) -> None:
         if p.is_file()
     ]
     rows += [f"| `facthory/{a['path']}` | {a['author']} | {a['source']} | {a['licence']} |" for a in brand.get("asset", [])]
-    # The packages ship ATTRIBUTION.md, not facthory/, so the icon's licence text goes in the block.
+    # The icon's licence text goes in the block, so it travels wherever ATTRIBUTION.md does.
     notice = []
     if "notice" in icon:
         notice = ["", f"The app icon's licence ({licence}), from `{(HERE / icon['notice']).relative_to(ROOT).as_posix()}`:", "",

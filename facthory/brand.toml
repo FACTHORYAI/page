@@ -495,6 +495,14 @@ from = "icons/app-icon"
 to = "assets/app-icon"
 replace = true
 
+[[rule]]
+phase = "after"
+why = "DMG window: 256 colours, not 16, so the chrome app icon's gradients do not band (the TIFF grows by a few KB)"
+files = "packaging/macos/dmg/generate.py"
+find = "PALETTE = 16  # colours in background.tiff"
+replace = "PALETTE = 256  # colours in background.tiff"
+count = 1
+
 [[copy]]
 # The DMG window: our colours, title and icon (the release workflow renders it with generate.py).
 from = "dmg/background.svg"
