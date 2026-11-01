@@ -2,8 +2,9 @@ name: Upstream sync
 
 # Every WordCraft release lands in main without a person. `merge` takes the next release
 # (facthory/sync.py), pushes sync/<tag> and opens its pull request; the Facthory Page build
-# runs on it as on any pull request, and `land` merges it when that build passes. A conflict
-# or a red build opens an issue instead, for a person or a Claude session.
+# and release runs check it as any pull request, and `land` merges it once the checks main
+# requires pass. A conflict opens an issue instead, and a red run a comment, for a person or a
+# Claude session.
 #
 # Runs as the GitHub App facthory-office-sync (bandpey-hq/github-infra, apps/office-sync.json):
 # merges carry upstream's workflow changes, which the Actions token may not push, and its pull
@@ -14,7 +15,7 @@ on:
     - cron: "41 */3 * * *"
   workflow_dispatch:
   workflow_run:
-    workflows: ["Facthory Page"]
+    workflows: ["Facthory Page", "Facthory Page release"]
     types: [completed]
 
 permissions:
@@ -96,7 +97,7 @@ jobs:
           client-id: ${{ vars.SYNC_APP_CLIENT_ID }}
           private-key: ${{ secrets.SYNC_APP_PRIVATE_KEY }}
 
-      - name: Merge when the build passed, report when it failed
+      - name: Merge when the checks passed, report when one failed
         env:
           GH_TOKEN: ${{ steps.app.outputs.token }}
           GH_REPO: ${{ github.repository }}
@@ -105,6 +106,7 @@ jobs:
           SHA: ${{ github.event.workflow_run.head_sha }}
           CONCLUSION: ${{ github.event.workflow_run.conclusion }}
           RUN: ${{ github.event.workflow_run.html_url }}
+          WORKFLOW: ${{ github.event.workflow_run.name }}
         run: |
           pr=$(gh pr list --state open --head "$BRANCH" --json number,author,headRefOid --jq '.[0] // empty')
           if [ -z "$pr" ]; then echo "No open pull request from ${BRANCH}."; exit 0; fi
@@ -119,10 +121,15 @@ jobs:
           if [ "$head" != "$SHA" ]; then echo "The branch moved on since this build; its own build decides."; exit 0; fi
           case "$CONCLUSION" in
             success)
-              gh pr merge "$number" --merge --delete-branch --match-head-commit "$SHA" ;;
+              # main requires both workflows' checks, and the other may still be running: GitHub's
+              # auto-merge merges once all of them pass. A pull request that is ready merges now.
+              case "$(gh pr view "$number" --json mergeStateStatus --jq .mergeStateStatus)" in
+                CLEAN|HAS_HOOKS|UNSTABLE) gh pr merge "$number" --merge --delete-branch --match-head-commit "$SHA" ;;
+                *) gh pr merge "$number" --auto --merge --match-head-commit "$SHA" ;;
+              esac ;;
             failure|timed_out)
               gh pr comment "$number" --body \
-                "The Facthory Page build ended ${CONCLUSION}: ${RUN}. Usually a rule in facthory/brand.toml no longer matches what upstream changed: fix the rule on this branch, and the sync merges it once the build passes." ;;
+                "The ${WORKFLOW} run ended ${CONCLUSION}: ${RUN}. Usually a rule in facthory/brand.toml no longer matches what upstream changed: fix the rule on this branch, and the sync merges it once the checks pass." ;;
             *)
               echo "Build ${CONCLUSION}; nothing to do." ;;
           esac
