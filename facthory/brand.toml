@@ -18,6 +18,13 @@ repository = "https://github.com/storytold/wordcraft"
 [icon]
 svg = "page.svg"
 base = "facthorypage"
+# macOS frames an icon that has no tile of its own, so its files come from the icon on a tile.
+macos_svg = "page-macos.svg"
+author = "with icons contributors; recoloured by Bandpey GmbH"
+source = "`notepad-text` in with icons' Chrome style (https://github.com/withevergrow/withicons at 996cc78), recoloured to the Page colours"
+licence = "MIT"
+# The licence text, written at the end of ATTRIBUTION.md's Facthory block (which ships).
+notice = "LICENSE-withicons.txt"
 
 # Facthory's other asset files, credited in ATTRIBUTION.md's Facthory block (render.py).
 [[asset]]
@@ -407,10 +414,10 @@ count = 1
 
 [[rule]]
 phase = "after"
-why = "The app icon is ours; its attribution rows say so"
+why = "The app icon is ours (derived from with icons, MIT); its attribution rows say so"
 files = "ATTRIBUTION.md"
 find = '^(\| `assets/app-icon/[^`]+` \|).*$'
-replace = '\1 Bandpey GmbH | original artwork (`facthory/icons/page.svg`), rendered by `facthory/icons/render.py` | MIT OR Apache-2.0 | Facthory Page app icon |'
+replace = '\1 with icons contributors; recoloured by Bandpey GmbH | `notepad-text` from with icons (Chrome style), recoloured (`facthory/icons/page.svg`; on a tile for macOS, `facthory/icons/page-macos.svg`), rendered by `facthory/icons/render.py` | MIT | Facthory Page app icon |'
 regex = true
 
 # The updater (facthory/update/facthory_update.rs, copied below): its module and its calls from
@@ -487,6 +494,14 @@ to = "apps/facthorypage/src/facthory_update.rs"
 from = "icons/app-icon"
 to = "assets/app-icon"
 replace = true
+
+[[rule]]
+phase = "after"
+why = "DMG window: 256 colours, not 16, so the chrome app icon's gradients do not band (the TIFF grows by a few KB)"
+files = "packaging/macos/dmg/generate.py"
+find = "PALETTE = 16  # colours in background.tiff"
+replace = "PALETTE = 256  # colours in background.tiff"
+count = 1
 
 [[copy]]
 # The DMG window: our colours, title and icon (the release workflow renders it with generate.py).

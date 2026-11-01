@@ -2,7 +2,11 @@
 """Render the app icon set from facthory/icons/<svg> into facthory/icons/app-icon/, in the
 layout of upstream's assets/app-icon/ after the rebrand renames it (rebrand.py copies it over).
 [icon] in brand.toml names the SVG and the file base; macos_512 and svg_copy (default true) say
-whether upstream's layout has <base>-macos-512.png and <base>.svg.
+whether upstream's layout has <base>-macos-512.png and <base>.svg. macos_svg (default: svg) is the
+SVG the macOS files (<base>.icns, <base>-macos-512.png) are rendered from. author, source and
+licence credit the icon in ATTRIBUTION.md (default: Bandpey GmbH's original artwork), and notice
+names a licence file beside the SVG whose text the block ends with, so it travels wherever
+ATTRIBUTION.md does.
 
 Needs resvg (cargo install resvg). The outputs are committed, so builds never need it. Writes
 the .ico and .icns containers itself (PNG entries), so no macOS or Windows tool is needed.
@@ -63,17 +67,29 @@ def attribution(brand: dict, svg: Path, out: Path) -> None:
     place when it exists. The icon set, then brand.toml's [[asset]] entries."""
     path = ROOT / "ATTRIBUTION.md"
     text = path.read_text(encoding="utf-8")
-    src = svg.relative_to(ROOT).as_posix()
-    rows = [f"| `{src}` | Bandpey GmbH | original artwork | MIT OR Apache-2.0 |"]
+    icon = brand["icon"]
+    author, licence = icon.get("author", "Bandpey GmbH"), icon.get("licence", "MIT OR Apache-2.0")
+    mac = HERE / icon.get("macos_svg", icon["svg"])
+    mac_files = {out / f"{icon['base']}.icns", out / f"{icon['base']}-macos-512.png"}
+    source = icon.get("source", "original artwork")
+    rows = [f"| `{svg.relative_to(ROOT).as_posix()}` | {author} | {source} | {licence} |"]
+    if mac != svg:
+        rows.append(f"| `{mac.relative_to(ROOT).as_posix()}` | {author} | {source}; on a light tile for macOS by Bandpey GmbH | {licence} |")
     rows += [
-        f"| `{p.relative_to(ROOT).as_posix()}` | Bandpey GmbH | rendered from `{src}` by `facthory/icons/render.py` | MIT OR Apache-2.0 |"
+        f"| `{p.relative_to(ROOT).as_posix()}` | {author} | rendered from `{(mac if p in mac_files else svg).relative_to(ROOT).as_posix()}` "
+        f"by `facthory/icons/render.py` | {licence} |"
         for p in sorted(out.rglob("*"))
         if p.is_file()
     ]
     rows += [f"| `facthory/{a['path']}` | {a['author']} | {a['source']} | {a['licence']} |" for a in brand.get("asset", [])]
+    # The icon's licence text goes in the block, so it travels wherever ATTRIBUTION.md does.
+    notice = []
+    if "notice" in icon:
+        notice = ["", f"The app icon's licence ({licence}), from `{(HERE / icon['notice']).relative_to(ROOT).as_posix()}`:", "",
+                  "```text", (HERE / icon["notice"]).read_text(encoding="utf-8").strip(), "```"]
     block = "\n".join(
         [f"{BEGIN}: Facthory's own files, written by facthory/icons/render.py; see facthory/README.md -->",
-         "| Facthory asset | Author | Source | Licence |", "|---|---|---|---|", *rows, END]
+         "| Facthory asset | Author | Source | Licence |", "|---|---|---|---|", *rows, *notice, END]
     )
     if BEGIN in text:
         start = text.index(BEGIN)
@@ -89,6 +105,15 @@ def main() -> int:
     with (HERE.parent / "brand.toml").open("rb") as f:
         brand = tomllib.load(f)
     svg, out = HERE / brand["icon"]["svg"], HERE / "app-icon"
+    # Check the sources before anything is deleted, so a typo in brand.toml leaves the set alone.
+    mac_svg = HERE / brand["icon"].get("macos_svg", brand["icon"]["svg"])
+    for s in (svg, mac_svg):
+        if not s.is_file() or 'viewBox="0 0 512 512"' not in s.read_text(encoding="utf-8"):
+            print(f"error: {s} is missing or lacks viewBox=\"0 0 512 512\"", file=sys.stderr)
+            return 1
+    if "notice" in brand["icon"] and not (HERE / brand["icon"]["notice"]).is_file():
+        print(f"error: {HERE / brand['icon']['notice']} is missing", file=sys.stderr)
+        return 1
     if sys.argv[1:] == ["--attribution"]:
         attribution(brand, svg, out)
         return 0
@@ -103,10 +128,7 @@ def main() -> int:
         tmp = Path(tmp)
         # macOS icons sit on Apple's grid: an 824/1024 body with a transparent margin.
         mac = tmp / "mac.svg"
-        text = svg.read_text(encoding="utf-8")
-        if 'viewBox="0 0 512 512"' not in text:
-            print(f"error: expected viewBox=\"0 0 512 512\" in {svg}", file=sys.stderr)
-            return 1
+        text = mac_svg.read_text(encoding="utf-8")
         mac.write_text(text.replace('viewBox="0 0 512 512"', 'viewBox="-62.136 -62.136 636.272 636.272"'), encoding="utf-8")
 
         render(svg, 1024, out / f"{base}-1024.png")

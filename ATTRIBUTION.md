@@ -3,22 +3,49 @@
 <!-- facthory:begin: Facthory's own files, written by facthory/icons/render.py; see facthory/README.md -->
 | Facthory asset | Author | Source | Licence |
 |---|---|---|---|
-| `facthory/icons/page.svg` | Bandpey GmbH | original artwork | MIT OR Apache-2.0 |
-| `facthory/icons/app-icon/facthorypage-1024.png` | Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT OR Apache-2.0 |
-| `facthory/icons/app-icon/facthorypage-macos-512.png` | Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT OR Apache-2.0 |
-| `facthory/icons/app-icon/facthorypage.icns` | Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT OR Apache-2.0 |
-| `facthory/icons/app-icon/facthorypage.ico` | Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT OR Apache-2.0 |
-| `facthory/icons/app-icon/facthorypage.svg` | Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT OR Apache-2.0 |
-| `facthory/icons/app-icon/hicolor/128x128/apps/com.facthory.page.png` | Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT OR Apache-2.0 |
-| `facthory/icons/app-icon/hicolor/16x16/apps/com.facthory.page.png` | Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT OR Apache-2.0 |
-| `facthory/icons/app-icon/hicolor/24x24/apps/com.facthory.page.png` | Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT OR Apache-2.0 |
-| `facthory/icons/app-icon/hicolor/256x256/apps/com.facthory.page.png` | Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT OR Apache-2.0 |
-| `facthory/icons/app-icon/hicolor/32x32/apps/com.facthory.page.png` | Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT OR Apache-2.0 |
-| `facthory/icons/app-icon/hicolor/48x48/apps/com.facthory.page.png` | Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT OR Apache-2.0 |
-| `facthory/icons/app-icon/hicolor/512x512/apps/com.facthory.page.png` | Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT OR Apache-2.0 |
-| `facthory/icons/app-icon/hicolor/64x64/apps/com.facthory.page.png` | Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT OR Apache-2.0 |
-| `facthory/icons/app-icon/hicolor/scalable/apps/com.facthory.page.svg` | Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT OR Apache-2.0 |
+| `facthory/icons/page.svg` | with icons contributors; recoloured by Bandpey GmbH | `notepad-text` in with icons' Chrome style (https://github.com/withevergrow/withicons at 996cc78), recoloured to the Page colours | MIT |
+| `facthory/icons/page-macos.svg` | with icons contributors; recoloured by Bandpey GmbH | `notepad-text` in with icons' Chrome style (https://github.com/withevergrow/withicons at 996cc78), recoloured to the Page colours; on a light tile for macOS by Bandpey GmbH | MIT |
+| `facthory/icons/app-icon/facthorypage-1024.png` | with icons contributors; recoloured by Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT |
+| `facthory/icons/app-icon/facthorypage-macos-512.png` | with icons contributors; recoloured by Bandpey GmbH | rendered from `facthory/icons/page-macos.svg` by `facthory/icons/render.py` | MIT |
+| `facthory/icons/app-icon/facthorypage.icns` | with icons contributors; recoloured by Bandpey GmbH | rendered from `facthory/icons/page-macos.svg` by `facthory/icons/render.py` | MIT |
+| `facthory/icons/app-icon/facthorypage.ico` | with icons contributors; recoloured by Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT |
+| `facthory/icons/app-icon/facthorypage.svg` | with icons contributors; recoloured by Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT |
+| `facthory/icons/app-icon/hicolor/128x128/apps/com.facthory.page.png` | with icons contributors; recoloured by Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT |
+| `facthory/icons/app-icon/hicolor/16x16/apps/com.facthory.page.png` | with icons contributors; recoloured by Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT |
+| `facthory/icons/app-icon/hicolor/24x24/apps/com.facthory.page.png` | with icons contributors; recoloured by Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT |
+| `facthory/icons/app-icon/hicolor/256x256/apps/com.facthory.page.png` | with icons contributors; recoloured by Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT |
+| `facthory/icons/app-icon/hicolor/32x32/apps/com.facthory.page.png` | with icons contributors; recoloured by Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT |
+| `facthory/icons/app-icon/hicolor/48x48/apps/com.facthory.page.png` | with icons contributors; recoloured by Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT |
+| `facthory/icons/app-icon/hicolor/512x512/apps/com.facthory.page.png` | with icons contributors; recoloured by Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT |
+| `facthory/icons/app-icon/hicolor/64x64/apps/com.facthory.page.png` | with icons contributors; recoloured by Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT |
+| `facthory/icons/app-icon/hicolor/scalable/apps/com.facthory.page.svg` | with icons contributors; recoloured by Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT |
 | `facthory/dmg/background.svg` | @XusBadia (WordCraft contributors); recoloured and retitled by Bandpey GmbH | derived from WordCraft's `packaging/macos/dmg/background.svg`; title outlined from Inter SemiBold (OFL-1.1) | MIT OR Apache-2.0 |
+
+The app icon's licence (MIT), from `facthory/icons/LICENSE-withicons.txt`:
+
+```text
+MIT License
+
+Copyright (c) 2026 with icons contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
 <!-- facthory:end -->
 
 Every non-code asset in this repository (fonts, icons, images, example documents) is listed here with its author, source and licence. `cargo xtask assets` (part of `cargo xtask ci`) fails if an asset file is missing from this table.
