@@ -25,6 +25,7 @@ Files Facthory adds to upstream's tree, and nothing else:
 | `.github/workflows/facthory.yml` | The branded build: apply, upstream's gate on the branded tree, release build, mark check |
 | `.github/workflows/upstream-sync.yml` | Every three hours: merge the next upstream release on `sync/<tag>`, open its pull request, merge it when the branded build passes |
 | `.github/workflows/facthory-release.yml` | Releases with no person: on `main`, a version without a release builds, signs, install-checks and publishes `v<version>` |
+| `facthory/tag_commit.sh` | The commit a release tag points at, for `facthory-release.yml`; any lookup error stops the run instead of reading as no tag |
 | `facthory/release.py` | Collects a release's files and writes `SHA256SUMS`, the update feed `latest.json` (with its rollout) and the notes |
 | `facthory/install_check.py` | Installs a release's files on macOS, Windows or Linux as a user would, over the newest release's, and checks versions and signatures |
 | `.github/workflows/facthory-rollout.yml` | Halts a release's staged rollout (marks it a pre-release, so the one before is the latest again) or resumes it, by hand |
@@ -92,9 +93,17 @@ over the newest release's MSI, which it must upgrade into one installed copy, th
 the AppImage, and the `.deb` and `.rpm` (over the newest release's) on Linux. Each program must
 report the new version, and a release's signatures must hold (Developer ID and notarization on
 macOS, Authenticode by Bandpey GmbH on Windows). Only when every platform passes does the run
-publish the GitHub release `v<version>`, which also creates the tag (only this workflow may), with
-`SHA256SUMS` and `latest.json`, then call `facthory-packages.yml`. A version older than the newest
-release, or one that is not `major.minor.patch`, is never released.
+publish the GitHub release `v<version>`, which also creates the tag, with `SHA256SUMS` and
+`latest.json`, then call `facthory-packages.yml`. A version older than the newest release, or one
+that is not `major.minor.patch`, is never released.
+
+Nobody can move or delete a `v*` tag, this workflow included (the `release-tags` ruleset in
+bandpey-hq/github-infra), but anyone with write access can push one, and GitHub ignores a
+release's target when its tag exists. So the run refuses a `v<version>` tag on another commit
+before it builds, before the draft and just before publishing, and checks the tag once published
+(`facthory/tag_commit.sh`, which stops on any lookup error). A run that fails before publishing
+can be re-run. A published release and its tag can't change: a broken one is halted
+(`facthory-rollout.yml`) and replaced by a new version.
 
 A pull request that touches the release or the packaging builds and install-checks everything
 unsigned, as does a manual run, which signs on `main` when asked (`sign`); both keep the files as
