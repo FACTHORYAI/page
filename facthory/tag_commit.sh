@@ -1,16 +1,17 @@
 #!/usr/bin/env bash
 # Print the commit that tag $1 of $GITHUB_REPOSITORY points at (an annotated tag is followed to
-# its commit), or nothing when the repository has no such tag. Any other answer from the API, an
-# outage or a refused token, exits non-zero: the release jobs must never read an error as "no
-# tag". Needs gh and GH_TOKEN. Used by facthory-release.yml.
+# its commit), or nothing when the repository has no such tag. matching-refs answers a missing
+# tag with an empty list, so any failed request (an outage, a refused token, a missing
+# repository) exits non-zero: the release jobs never read an error as "no tag". Needs gh and
+# GH_TOKEN. Used by facthory-release.yml.
 set -euo pipefail
 tag=$1
-if ! out=$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${tag}" --jq '.object.type + " " + .object.sha' 2>&1); then
-  case $out in
-    *"(HTTP 404)"*) exit 0 ;;
-    *) echo "::error::Could not look up tag ${tag}: ${out}" >&2; exit 1 ;;
-  esac
+if ! out=$(gh api --paginate "repos/${GITHUB_REPOSITORY}/git/matching-refs/tags/${tag}" \
+  --jq ".[] | select(.ref == \"refs/tags/${tag}\") | .object.type + \" \" + .object.sha"); then
+  echo "::error::Could not look up tag ${tag}." >&2
+  exit 1
 fi
+[ -n "$out" ] || exit 0
 read -r type sha <<<"$out"
 while [ "$type" = tag ]; do
   out=$(gh api "repos/${GITHUB_REPOSITORY}/git/tags/${sha}" --jq '.object.type + " " + .object.sha')

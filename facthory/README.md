@@ -97,12 +97,14 @@ publish the GitHub release `v<version>`, which also creates the tag, with `SHA25
 `latest.json`, then call `facthory-packages.yml`. A version older than the newest release, or one
 that is not `major.minor.patch`, is never released.
 
-Nobody can move or delete a `v*` tag, this workflow included (the `release-tags` ruleset in
-bandpey-hq/github-infra), but anyone with write access can push one, and GitHub ignores a
+bandpey-hq/github-infra's `release-tags` ruleset stops anyone, this workflow included, from
+moving or deleting a `v*` tag, but anyone with write access can push one, and GitHub ignores a
 release's target when its tag exists. So the run refuses a `v<version>` tag on another commit
 before it builds, before the draft and just before publishing, and checks the tag once published
 (`facthory/tag_commit.sh`, which stops on any lookup error). A run that fails before publishing
-can be re-run. A published release and its tag can't change: a broken one is halted
+can be re-run. When something fails after publishing, re-run the failed jobs: the publish step
+finds the release published and only checks its tag, then `facthory-packages.yml` runs (it can
+also be run by hand). A published release and its tag can't change: a broken one is halted
 (`facthory-rollout.yml`) and replaced by a new version.
 
 A pull request that touches the release or the packaging builds and install-checks everything
