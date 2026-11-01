@@ -3,21 +3,22 @@
 <!-- facthory:begin: Facthory's own files, written by facthory/icons/render.py; see facthory/README.md -->
 | Facthory asset | Author | Source | Licence |
 |---|---|---|---|
-| `facthory/icons/page.svg` | Bandpey GmbH | original artwork | MIT OR Apache-2.0 |
-| `facthory/icons/app-icon/facthorypage-1024.png` | Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT OR Apache-2.0 |
-| `facthory/icons/app-icon/facthorypage-macos-512.png` | Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT OR Apache-2.0 |
-| `facthory/icons/app-icon/facthorypage.icns` | Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT OR Apache-2.0 |
-| `facthory/icons/app-icon/facthorypage.ico` | Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT OR Apache-2.0 |
-| `facthory/icons/app-icon/facthorypage.svg` | Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT OR Apache-2.0 |
-| `facthory/icons/app-icon/hicolor/128x128/apps/com.facthory.page.png` | Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT OR Apache-2.0 |
-| `facthory/icons/app-icon/hicolor/16x16/apps/com.facthory.page.png` | Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT OR Apache-2.0 |
-| `facthory/icons/app-icon/hicolor/24x24/apps/com.facthory.page.png` | Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT OR Apache-2.0 |
-| `facthory/icons/app-icon/hicolor/256x256/apps/com.facthory.page.png` | Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT OR Apache-2.0 |
-| `facthory/icons/app-icon/hicolor/32x32/apps/com.facthory.page.png` | Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT OR Apache-2.0 |
-| `facthory/icons/app-icon/hicolor/48x48/apps/com.facthory.page.png` | Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT OR Apache-2.0 |
-| `facthory/icons/app-icon/hicolor/512x512/apps/com.facthory.page.png` | Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT OR Apache-2.0 |
-| `facthory/icons/app-icon/hicolor/64x64/apps/com.facthory.page.png` | Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT OR Apache-2.0 |
-| `facthory/icons/app-icon/hicolor/scalable/apps/com.facthory.page.svg` | Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT OR Apache-2.0 |
+| `facthory/icons/page.svg` | with icons contributors; recoloured by Bandpey GmbH | `notepad-text` in with icons' Chrome style (https://github.com/withevergrow/withicons at 996cc78), recoloured to the Page colours; licence text in `facthory/icons/LICENSE-withicons.txt` | MIT |
+| `facthory/icons/page-macos.svg` | with icons contributors; recoloured by Bandpey GmbH | `notepad-text` in with icons' Chrome style (https://github.com/withevergrow/withicons at 996cc78), recoloured to the Page colours; licence text in `facthory/icons/LICENSE-withicons.txt` | MIT |
+| `facthory/icons/app-icon/facthorypage-1024.png` | with icons contributors; recoloured by Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT |
+| `facthory/icons/app-icon/facthorypage-macos-512.png` | with icons contributors; recoloured by Bandpey GmbH | rendered from `facthory/icons/page-macos.svg` by `facthory/icons/render.py` | MIT |
+| `facthory/icons/app-icon/facthorypage.icns` | with icons contributors; recoloured by Bandpey GmbH | rendered from `facthory/icons/page-macos.svg` by `facthory/icons/render.py` | MIT |
+| `facthory/icons/app-icon/facthorypage.ico` | with icons contributors; recoloured by Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT |
+| `facthory/icons/app-icon/facthorypage.svg` | with icons contributors; recoloured by Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT |
+| `facthory/icons/app-icon/hicolor/128x128/apps/com.facthory.page.png` | with icons contributors; recoloured by Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT |
+| `facthory/icons/app-icon/hicolor/16x16/apps/com.facthory.page.png` | with icons contributors; recoloured by Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT |
+| `facthory/icons/app-icon/hicolor/24x24/apps/com.facthory.page.png` | with icons contributors; recoloured by Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT |
+| `facthory/icons/app-icon/hicolor/256x256/apps/com.facthory.page.png` | with icons contributors; recoloured by Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT |
+| `facthory/icons/app-icon/hicolor/32x32/apps/com.facthory.page.png` | with icons contributors; recoloured by Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT |
+| `facthory/icons/app-icon/hicolor/48x48/apps/com.facthory.page.png` | with icons contributors; recoloured by Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT |
+| `facthory/icons/app-icon/hicolor/512x512/apps/com.facthory.page.png` | with icons contributors; recoloured by Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT |
+| `facthory/icons/app-icon/hicolor/64x64/apps/com.facthory.page.png` | with icons contributors; recoloured by Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT |
+| `facthory/icons/app-icon/hicolor/scalable/apps/com.facthory.page.svg` | with icons contributors; recoloured by Bandpey GmbH | rendered from `facthory/icons/page.svg` by `facthory/icons/render.py` | MIT |
 | `facthory/dmg/background.svg` | @XusBadia (WordCraft contributors); recoloured and retitled by Bandpey GmbH | derived from WordCraft's `packaging/macos/dmg/background.svg`; title outlined from Inter SemiBold (OFL-1.1) | MIT OR Apache-2.0 |
 <!-- facthory:end -->
 
