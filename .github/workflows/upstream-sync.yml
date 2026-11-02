@@ -1,10 +1,10 @@
 name: Upstream sync
 
 # Every WordCraft release lands in main without a person. `merge` takes the next release
-# (facthory/sync.py), pushes sync/<tag> and opens its pull request; the Facthory Page build
-# and release runs check it as any pull request, and `land` merges it once the checks main
-# requires pass. A conflict opens an issue instead, and a red run a comment, for a person or a
-# Claude session.
+# (facthory/sync.py), pushes sync/<tag> and opens its pull request; the checks run on it as on any
+# pull request (the Facthory Page build and release runs, upstream's CI), and `land` merges it
+# once those main requires pass. A conflict opens an issue instead, and a red run a comment, for a
+# person or a Claude session.
 #
 # Runs as the GitHub App facthory-office-sync (bandpey-hq/github-infra, apps/office-sync.json):
 # merges carry upstream's workflow changes, which the Actions token may not push, and its pull
@@ -15,7 +15,7 @@ on:
     - cron: "41 */3 * * *"
   workflow_dispatch:
   workflow_run:
-    workflows: ["Facthory Page", "Facthory Page release"]
+    workflows: ["Facthory Page", "Facthory Page release", "CI"]
     types: [completed]
 
 permissions:
@@ -66,7 +66,7 @@ jobs:
         run: |
           git push origin "HEAD:refs/heads/sync/${TAG}"
           gh pr create --base main --head "sync/${TAG}" --title "Merge upstream WordCraft ${TAG}" --body \
-            "WordCraft ${TAG}, merged by the upstream sync (facthory/sync.py). It merges itself once the Facthory Page build passes on this branch."
+            "WordCraft ${TAG}, merged by the upstream sync (facthory/sync.py). It merges itself once the checks main requires pass on this branch."
 
       - name: Report a conflict
         if: failure() && steps.sync.outputs.conflicts != ''
@@ -121,15 +121,21 @@ jobs:
           if [ "$head" != "$SHA" ]; then echo "The branch moved on since this build; its own build decides."; exit 0; fi
           case "$CONCLUSION" in
             success)
-              # main requires both workflows' checks, and the other may still be running: GitHub's
-              # auto-merge merges once all of them pass. A pull request that is ready merges now.
-              case "$(gh pr view "$number" --json mergeStateStatus --jq .mergeStateStatus)" in
-                CLEAN|HAS_HOOKS|UNSTABLE) gh pr merge "$number" --merge --delete-branch --match-head-commit "$SHA" ;;
-                *) gh pr merge "$number" --auto --merge --match-head-commit "$SHA" ;;
-              esac ;;
+              # main requires checks of all three workflows, and the others may still be running.
+              # With --auto, gh merges a pull request that is ready now and has GitHub merge any
+              # other once they pass. While GitHub still works out whether it can merge, neither
+              # works, so it tries again for a minute; another run that merged it ends this one.
+              for _ in 1 2 3 4 5 6; do
+                state=$(gh pr view "$number" --json state --jq .state)
+                if [ "$state" != OPEN ]; then echo "#${number} is ${state}."; exit 0; fi
+                if gh pr merge "$number" --auto --merge --delete-branch --match-head-commit "$SHA"; then exit 0; fi
+                sleep 10
+              done
+              echo "::error::Couldn't merge #${number} or turn on its auto-merge."
+              exit 1 ;;
             failure|timed_out)
               gh pr comment "$number" --body \
-                "The ${WORKFLOW} run ended ${CONCLUSION}: ${RUN}. Usually a rule in facthory/brand.toml no longer matches what upstream changed: fix the rule on this branch, and the sync merges it once the checks pass." ;;
+                "The ${WORKFLOW} run ended ${CONCLUSION}: ${RUN}. Often a rule in facthory/brand.toml no longer matches what upstream changed. Fix it on this branch, and the sync merges it once the checks pass." ;;
             *)
               echo "Build ${CONCLUSION}; nothing to do." ;;
           esac

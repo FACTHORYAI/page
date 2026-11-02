@@ -170,10 +170,10 @@ workflows and the Actions token may not push those. Its key is a secret of the e
    a conflict in `ATTRIBUTION.md` takes upstream's file and writes our block again. Any other
    conflict opens an issue and stops there.
 2. The App opens the pull request; the checks run on it as on any other.
-3. When the Facthory Page build or release run passes on exactly that commit, the workflow merges
-   it, through GitHub's auto-merge while the other's checks still run. When either fails, it says
-   so on the pull request: usually a rule in `brand.toml` that upstream's change no longer
-   matches. Fix the rule on the branch; the merge follows the green checks.
+3. When the Facthory Page build, its release run or upstream's CI passes on exactly that commit,
+   the workflow merges it, through GitHub's auto-merge while other checks still run. When one
+   fails, it says so on the pull request: often a rule in `brand.toml` that upstream's change no
+   longer matches. Fix it on the branch; the merge follows the green checks.
 
 One sync pull request is open at a time, so releases land in order.
 
