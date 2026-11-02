@@ -136,12 +136,16 @@ a tag ruleset in github-infra), on the commit it built and checked.
    start it. The version is the one in `Cargo.toml` (`0.12.0` for page and deck, `0.13.0` for grid
    today). The run builds and signs every platform, installs each platform's files on a machine of
    that platform with every signature checked (`facthory/install_check.py`), publishes the release
-   with `SHA256SUMS` and `latest.json` with its staged rollout, and builds the apt and dnf repositories at
-   `https://facthoryai.github.io/<app>/`.
+   with `SHA256SUMS` and `latest.json` with its staged rollout, serves its files and then the feed
+   from `https://downloads.facthory.com` (`facthory/downloads.sh`), and builds the apt and dnf
+   repositories at `https://facthoryai.github.io/<app>/`.
 3. **Claude**: check the published release: the checks of the two days above on its files, every
    installer in `SHA256SUMS` (which doesn't list `latest.json`, written after it), and
    `latest.json` naming the version, a file for each platform, `published`, and the rollout
-   `[[0, 10], [24, 25], [48, 50], [72, 100]]`.
+   `[[0, 10], [24, 25], [48, 50], [72, 100]]`. Then the same on the host: each file at
+   `https://downloads.facthory.com/releases/<app>/<version>/` matches `SHA256SUMS`, and
+   `https://downloads.facthory.com/feeds/<app>/latest.json` is that `latest.json`, its file links on
+   the host.
 4. **Claude**: install from each channel: the DMG, the MSI (x64 and arm64), the AppImage, the
    `.deb` from the apt repository on Ubuntu, the `.rpm` from the dnf repository on Fedora.
 6. **Owner**: Partner Center's package check on the published MSI's URL (it needs a public one,
@@ -151,8 +155,9 @@ a tag ruleset in github-infra), on the commit it built and checked.
 ## The update test
 
 The other half of the exit criterion. The updater reads the feed compiled into release builds
-(`releases/latest/download/latest.json` of the same repository) and refuses a file from anywhere
-else, so updates can only be tested between two **published** releases:
+(`https://downloads.facthory.com/feeds/<app>/latest.json`) and refuses a file from anywhere but
+that app's folder of that version on the same host, so updates can only be tested between two
+**published** releases:
 
 1. Install the first release from each channel and start it once.
 2. The next release publishes itself. The natural one is the next upstream release merged by the
