@@ -28,6 +28,7 @@ Files Facthory adds to upstream's tree, and nothing else:
 | `facthory/tag_commit.sh` | The commit a release tag points at, for `facthory-release.yml`; any lookup error stops the run instead of reading as no tag |
 | `facthory/release.py` | Collects a release's files and writes `SHA256SUMS`, the update feed `latest.json` (with its rollout) and the notes |
 | `facthory/install_check.py` | Installs a release's files on macOS, Windows or Linux as a user would, over the newest release's, and checks versions and signatures |
+| `facthory/downloads.sh` | Serves a release's files and the update feed from `downloads.facthory.com` (Cloudflare R2), for the release and rollout workflows |
 | `.github/workflows/facthory-rollout.yml` | Halts a release's staged rollout (marks it a pre-release, so the one before is the latest again) or resumes it, by hand |
 | `facthory/packages.py` | Builds the apt and dnf repositories from the newest releases' `.deb` and `.rpm` files, signed |
 | `.github/workflows/facthory-packages.yml` | Publishes those repositories on GitHub Pages: called by the release, or when a person publishes one |
@@ -94,7 +95,8 @@ the AppImage, and the `.deb` and `.rpm` (over the newest release's) on Linux. Ea
 report the new version, and a release's signatures must hold (Developer ID and notarization on
 macOS, Authenticode by Bandpey GmbH on Windows). Only when every platform passes does the run
 publish the GitHub release `v<version>`, which also creates the tag, with `SHA256SUMS` and
-`latest.json`, then call `facthory-packages.yml`. A version older than the newest release, or one
+`latest.json`, then call `facthory-packages.yml`. `facthory/downloads.sh` then serves the
+published files from `https://downloads.facthory.com/releases/page/<v>/` and, last, the feed. A version older than the newest release, or one
 that is not `major.minor.patch`, is never released.
 
 bandpey-hq/github-infra's `release-tags` ruleset stops anyone, this workflow included, from
@@ -112,13 +114,14 @@ signs on `main` when asked (`sign`); both keep the files as workflow artifacts. 
 the run's `release` check, which passes only when every build, install check and the publish step
 did, so a change that breaks a platform's build or install can't merge.
 
-`latest.json`, at `releases/latest/download/latest.json`, is the update feed: the version, when
-it was published, the rollout and, per platform, the file the app updates itself from with its
-size and SHA-256. The rollout is a schedule written once, since a release can't change after it
+`latest.json`, at `https://downloads.facthory.com/feeds/page/latest.json`, is the update feed: the
+version, when it was published, the rollout and, per platform, the file the app updates itself
+from on the same host, with its size and SHA-256. The host's files can't change once written; the
+feed is the latest release's, cached for a minute. The rollout is a schedule written once, since a release can't change after it
 is published: 10% of copies at first, 25% after a day, 50% after two and every copy after three.
 The apps work out the share from the release's age. `facthory-rollout.yml` stops a rollout by hand
-(`halt` marks the release a pre-release, so the release before it is the latest again and its feed
-offers no update; copies that took it keep it) and `resume` restores it. The `.deb` and `.rpm`
+(`halt` marks the release a pre-release, so the release before it is the latest again and the
+feed is its, which offers no update; copies that took it keep it) and `resume` restores it. The `.deb` and `.rpm`
 repositories carry the new version at once, since the system's package manager updates those.
 
 Publishing a release also runs `.github/workflows/facthory-packages.yml`: the `.deb` and `.rpm`

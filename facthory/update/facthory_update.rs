@@ -2,7 +2,7 @@
 //! `facthory/rebrand.py` copies it into the app and calls it from `main.rs` (`brand.toml`).
 //!
 //! Once a day it reads the update feed of our releases (`latest.json`, which
-//! `facthory/release.py` writes). A new release reaches a growing share of copies: the feed's
+//! `facthory/release.py` writes and our download host serves). A new release reaches a growing share of copies: the feed's
 //! `rollout` schedule (shares by hours since `published`, fixed when the release is) against
 //! this copy's own lasting bucket, 0 to 99. When the feed names a newer version for this copy,
 //! it downloads this
@@ -350,15 +350,10 @@ struct Asset {
 }
 
 impl Feed {
-    /// Reads the feed fetched from `feed_url`. Only files of the same repository's releases are
-    /// taken, under plain file names, and the release page is made from the version.
+    /// Reads the feed fetched from `feed_url`. Only this app's release files are taken, from where
+    /// the feed is (`Home`), under plain file names.
     fn parse(bytes: &[u8], feed_url: &str, platform: Option<&str>) -> Result<Feed, String> {
-        // `https://github.com/<owner>/<repo>/`, from `…/releases/latest/download/latest.json`.
-        let repo = feed_url
-            .strip_prefix("https://")
-            .and_then(|rest| rest.find("/releases/"))
-            .and_then(|i| feed_url.get(..8 + i + 1))
-            .ok_or_else(|| format!("not a release feed: {feed_url}"))?;
+        let home = Home::of(feed_url).ok_or_else(|| format!("not a release feed: {feed_url}"))?;
         let v: serde_json::Value = serde_json::from_slice(bytes).map_err(|e| format!("the feed: {e}"))?;
         let version = v.get("version").and_then(|v| v.as_str()).filter(|s| parse_version(s).is_some());
         let version = version.ok_or("the feed names no version")?.to_owned();
@@ -368,12 +363,63 @@ impl Feed {
             let sha256 = a.get("sha256")?.as_str()?.to_ascii_lowercase();
             let size = a.get("size")?.as_u64()?;
             let plain = !name.starts_with('.') && name.len() < 200 && name.chars().all(|c| c.is_ascii_alphanumeric() || "._+-".contains(c));
-            let ours = url.starts_with(&format!("{repo}releases/download/")) && url.ends_with(&format!("/{name}"));
+            let ours = home.serves(url, &version, name);
             let sum = sha256.len() == 64 && sha256.chars().all(|c| c.is_ascii_hexdigit());
             (plain && ours && sum && size > 0 && size <= FILE_MAX).then(|| Asset { name: name.into(), url: url.into(), sha256, size })
         });
         let rollout = Rollout::parse(v.get("rollout"), v.get("published"));
-        Ok(Feed { page: format!("{repo}releases/tag/v{version}"), version, asset, rollout })
+        let page = home.page(&version, v.get("notes").and_then(|n| n.as_str()));
+        Ok(Feed { page, version, asset, rollout })
+    }
+}
+
+/// Where a feed's release files come from, by the feed's own address.
+#[derive(Debug, PartialEq)]
+enum Home {
+    /// Our download host, `https://<host>/feeds/<app>/latest.json`: the files of a version are at
+    /// `https://<host>/releases/<app>/<version>/<name>`.
+    Downloads { host: String, app: String },
+    /// A GitHub repository, `https://github.com/<owner>/<repo>/releases/latest/download/latest.json`:
+    /// its releases' files. `repo` is `https://github.com/<owner>/<repo>/`.
+    GitHub { repo: String },
+}
+
+impl Home {
+    fn of(feed_url: &str) -> Option<Home> {
+        let rest = feed_url.strip_prefix("https://")?;
+        if let Some((host, path)) = rest.split_once('/')
+            && let Some(app) = path.strip_prefix("feeds/").and_then(|p| p.strip_suffix("/latest.json"))
+        {
+            let plain = |s: &str, extra: &str| !s.is_empty() && s.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || extra.contains(c));
+            return (plain(host, ".-") && plain(app, "-")).then(|| Home::Downloads { host: host.into(), app: app.into() });
+        }
+        let i = rest.find("/releases/")?;
+        Some(Home::GitHub { repo: feed_url.get(..8 + i + 1)?.into() })
+    }
+
+    /// Whether `url` is the file `name` of release `version` here.
+    fn serves(&self, url: &str, version: &str, name: &str) -> bool {
+        match self {
+            Home::Downloads { host, app } => url == format!("https://{host}/releases/{app}/{version}/{name}"),
+            Home::GitHub { repo } => url.starts_with(&format!("{repo}releases/download/")) && url.ends_with(&format!("/{name}")),
+        }
+    }
+
+    /// The release's page: on GitHub, made from the version; from our host, the feed's `notes`
+    /// when they are on GitHub or this host, else the host's front page.
+    fn page(&self, version: &str, notes: Option<&str>) -> String {
+        match self {
+            Home::Downloads { host, .. } => {
+                let front = format!("https://{host}/");
+                let ours = |n: &&str| {
+                    (n.starts_with("https://github.com/") || n.starts_with(&front))
+                        && n.len() < 300
+                        && !n.chars().any(|c| c.is_whitespace() || c.is_control())
+                };
+                notes.filter(ours).map_or(front.clone(), str::to_owned)
+            }
+            Home::GitHub { repo } => format!("{repo}releases/tag/v{version}"),
+        }
     }
 }
 
@@ -959,6 +1005,47 @@ mod tests {
         assert!(Feed::parse(b"{}", FEED_URL, None).is_err());
         assert!(Feed::parse(b"not json", FEED_URL, None).is_err());
         assert!(Feed::parse(&feed("a", "b"), "http://github.com/FACTHORYAI/page/releases/latest/download/latest.json", None).is_err());
+    }
+
+    #[test]
+    fn a_download_host_feed_gives_this_apps_file_of_that_version_only() {
+        const HOST_FEED: &str = "https://downloads.facthory.com/feeds/page/latest.json";
+        let name = "facthorypage-0.11.0-linux-x86_64.AppImage";
+        let url = format!("https://downloads.facthory.com/releases/page/0.11.0/{name}");
+        let f = Feed::parse(&feed(name, &url), HOST_FEED, Some("linux-x86_64")).unwrap();
+        assert_eq!(f.asset.map(|a| a.url), Some(url.clone()));
+        assert_eq!(f.page, "https://downloads.facthory.com/");
+        let parse = |url: &str| Feed::parse(&feed(name, url), HOST_FEED, Some("linux-x86_64")).unwrap().asset;
+        for elsewhere in [
+            format!("https://downloads.facthory.com/releases/other/0.11.0/{name}"),
+            format!("https://downloads.facthory.com/releases/page/0.10.0/{name}"),
+            format!("https://downloads.facthory.com/releases/page/0.11.0/sub/{name}"),
+            format!("https://example.com/releases/page/0.11.0/{name}"),
+            format!("http://downloads.facthory.com/releases/page/0.11.0/{name}"),
+            format!("https://github.com/FACTHORYAI/page/releases/download/v0.11.0/{name}"),
+        ] {
+            assert_eq!(parse(&elsewhere), None, "{elsewhere}");
+        }
+        let page = |notes: &str| {
+            let mut v: serde_json::Value = serde_json::from_slice(&feed(name, &url)).unwrap();
+            v["notes"] = notes.into();
+            Feed::parse(v.to_string().as_bytes(), HOST_FEED, None).unwrap().page
+        };
+        let notes = "https://github.com/FACTHORYAI/page/releases/tag/v0.11.0";
+        assert_eq!(page(notes), notes);
+        for odd in ["https://example.com/page", "javascript:alert(1)", "https://github.com/a b", ""] {
+            assert_eq!(page(odd), "https://downloads.facthory.com/", "{odd}");
+        }
+        for odd in [
+            "https://downloads.facthory.com/feeds/page/other.json",
+            "https://downloads.facthory.com/feeds/latest.json",
+            "https://downloads.facthory.com/feeds/../latest.json",
+            "https://downloads.facthory.com/feeds/Page/latest.json",
+            "https:///feeds/page/latest.json",
+            "http://downloads.facthory.com/feeds/page/latest.json",
+        ] {
+            assert!(Feed::parse(&feed(name, &url), odd, None).is_err(), "{odd}");
+        }
     }
 
     #[test]

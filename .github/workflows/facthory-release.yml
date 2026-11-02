@@ -14,7 +14,9 @@ name: Facthory Page release
 # (facthory/install_check.py, upgrading the newest release's); then the run publishes the GitHub
 # release, which makes the tag v<version>, with SHA256SUMS and the update feed latest.json, whose
 # staged rollout the apps follow (10% of copies, then 25%, 50% and all a day apart; facthory/
-# release.py), and rebuilds the apt and dnf repositories. facthory-rollout.yml halts or resumes it.
+# release.py). It serves the files and, last, the feed from downloads.facthory.com (facthory/
+# downloads.sh), where the apps look, and rebuilds the apt and dnf repositories.
+# facthory-rollout.yml halts or resumes it.
 #
 # A push that changes no version builds nothing. Every pull request builds and checks everything
 # unsigned, outside the environment, and main requires the run's `release` check. A manual run does
@@ -133,7 +135,7 @@ jobs:
       FACTHORY_PAGE_BUILD_DATE: ${{ needs.version.outputs.date }}
       FACTHORY_PAGE_BUILD_SHA: ${{ github.sha }}
       # The updater's feed (facthory/update/): builds without it never check.
-      FACTHORY_UPDATE_FEED: https://github.com/${{ github.repository }}/releases/latest/download/latest.json
+      FACTHORY_UPDATE_FEED: https://downloads.facthory.com/feeds/${{ github.event.repository.name }}/latest.json
     steps:
       - name: Require signing for a release
         if: needs.version.outputs.release == 'true'
@@ -233,7 +235,7 @@ jobs:
       FACTHORY_PAGE_BUILD_DATE: ${{ needs.version.outputs.date }}
       FACTHORY_PAGE_BUILD_SHA: ${{ github.sha }}
       # The updater's feed (facthory/update/): builds without it never check.
-      FACTHORY_UPDATE_FEED: https://github.com/${{ github.repository }}/releases/latest/download/latest.json
+      FACTHORY_UPDATE_FEED: https://downloads.facthory.com/feeds/${{ github.event.repository.name }}/latest.json
     steps:
       - name: Signing material
         # Azure Artifact Signing through the app registration's federated credential for this
@@ -361,7 +363,7 @@ jobs:
       FACTHORY_PAGE_BUILD_DATE: ${{ needs.version.outputs.date }}
       FACTHORY_PAGE_BUILD_SHA: ${{ github.sha }}
       # The updater's feed (facthory/update/): builds without it never check.
-      FACTHORY_UPDATE_FEED: https://github.com/${{ github.repository }}/releases/latest/download/latest.json
+      FACTHORY_UPDATE_FEED: https://downloads.facthory.com/feeds/${{ github.event.repository.name }}/latest.json
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -472,6 +474,8 @@ jobs:
     needs: [version, verify]
     if: needs.version.outputs.build == 'true'
     runs-on: ubuntu-24.04
+    # A release serves its files from downloads.facthory.com, with the environment's DOWNLOADS_TOKEN.
+    environment: ${{ needs.version.outputs.release == 'true' && 'release' || '' }}
     permissions:
       contents: write
     steps:
@@ -489,6 +493,8 @@ jobs:
           REPO: ${{ github.repository }}
           # The staged rollout the apps follow: 10% of copies first, all of them after three days.
           FACTHORY_ROLLOUT: staged
+          # The feed's files are those downloads.facthory.com serves.
+          FACTHORY_DOWNLOADS: https://downloads.facthory.com
         run: python3 facthory/release.py dist "$VERSION" "$REPO"
       - name: Keep the release files
         if: needs.version.outputs.release != 'true'
@@ -557,6 +563,15 @@ jobs:
             echo "::error::${tag} was published on ${tagged}, not on ${GITHUB_SHA}. It can't be changed: halt it (facthory-rollout.yml) and release a new version."
             exit 1
           fi
+      - name: Serve it from downloads.facthory.com
+        # The published release's files, then the feed, which makes it reach the apps. A re-run
+        # serves what was published, not what it rebuilt.
+        if: needs.version.outputs.release == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DOWNLOADS_TOKEN: ${{ secrets.DOWNLOADS_TOKEN }}
+          VERSION: ${{ needs.version.outputs.version }}
+        run: bash facthory/downloads.sh release "v${VERSION}"
 
   packages:
     # The apt and dnf repositories with the new release's .deb and .rpm. Called from here: a

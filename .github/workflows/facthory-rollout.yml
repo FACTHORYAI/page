@@ -4,9 +4,10 @@ name: Facthory Page rollout
 # the update to 10% of copies, then 25%, 50% and all of them a day apart, by the release's age; the
 # apps follow it (facthory/update/facthory_update.rs). Releases can't change once published, so
 # the feed can't either. To stop a rollout, `halt` marks the release a pre-release: the latest
-# release, and with it the feed every copy reads, is the one before it again, so no copy is offered
-# the update (copies that took it keep it), and the apt and dnf repositories drop it. `resume`
-# makes it the latest release again, and the rollout goes on by its age.
+# release is the one before it again, and the feed every copy reads, on downloads.facthory.com, is
+# that one's (facthory/downloads.sh), so no copy is offered the update (copies that took it keep
+# it); the apt and dnf repositories drop it. `resume` makes it the latest release again, and the
+# rollout goes on by its age.
 on:
   workflow_dispatch:
     inputs:
@@ -32,7 +33,13 @@ jobs:
   rollout:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
+    # DOWNLOADS_TOKEN, for the feed on downloads.facthory.com.
+    environment: release
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: facthory
       - name: Halt or resume
         env:
           GH_TOKEN: ${{ github.token }}
@@ -52,6 +59,11 @@ jobs:
           esac
           latest=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName --jq .tagName 2>/dev/null || echo none)
           echo "${ACTION}: ${tag}. The feed the apps read is now ${latest}'s." | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: The feed on downloads.facthory.com follows
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DOWNLOADS_TOKEN: ${{ secrets.DOWNLOADS_TOKEN }}
+        run: bash facthory/downloads.sh feed
       - name: The apt and dnf repositories follow
         env:
           GH_TOKEN: ${{ github.token }}
