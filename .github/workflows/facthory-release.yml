@@ -16,20 +16,15 @@ name: Facthory Page release
 # staged rollout the apps follow (10% of copies, then 25%, 50% and all a day apart; facthory/
 # release.py), and rebuilds the apt and dnf repositories. facthory-rollout.yml halts or resumes it.
 #
-# A push that changes no version builds nothing. A pull request that changes the release or the
-# packaging builds and checks everything unsigned, outside the environment, as a check; so does a
-# manual run, which signs when asked from main (sign) and publishes only when asked (publish).
+# A push that changes no version builds nothing. Every pull request builds and checks everything
+# unsigned, outside the environment, and main requires the run's `release` check. A manual run does
+# the same, signs when asked from main (sign) and publishes only when asked (publish).
 # Secrets live in the environment `release` (bandpey-hq/github-infra), which only main may use.
 # Nobody may move or delete a v* tag; one pushed by hand on another commit stops the release.
 on:
   push:
     branches: [main]
   pull_request:
-    paths:
-      - .github/workflows/facthory-release.yml
-      - .github/workflows/facthory-packages.yml
-      - facthory/**
-      - packaging/**
   workflow_dispatch:
     inputs:
       sign:
@@ -168,6 +163,8 @@ jobs:
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           key: facthory-release-macos
+          # Pull requests read main's cache and keep none, so theirs don't push it out.
+          save-if: ${{ github.ref == 'refs/heads/main' }}
       - name: Check out craft-i18n
         # The interface catalogs at craft-i18n.rev (sets CRAFT_I18N_DIR and requires them), which the
         # brand edits with the tree (facthory/rebrand.py, [i18n]).
@@ -282,6 +279,8 @@ jobs:
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           key: facthory-release-windows-${{ matrix.arch }}
+          # Pull requests read main's cache and keep none, so theirs don't push it out.
+          save-if: ${{ github.ref == 'refs/heads/main' }}
       - name: Check out craft-i18n
         # The interface catalogs at craft-i18n.rev (sets CRAFT_I18N_DIR and requires them), which the
         # brand edits with the tree (facthory/rebrand.py, [i18n]).
@@ -380,6 +379,8 @@ jobs:
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           key: facthory-release-linux-${{ matrix.arch }}
+          # Pull requests read main's cache and keep none, so theirs don't push it out.
+          save-if: ${{ github.ref == 'refs/heads/main' }}
       - name: Check out craft-i18n
         # The interface catalogs at craft-i18n.rev (sets CRAFT_I18N_DIR and requires them), which the
         # brand edits with the tree (facthory/rebrand.py, [i18n]).
@@ -568,3 +569,37 @@ jobs:
       id-token: write
     uses: ./.github/workflows/facthory-packages.yml
     secrets: inherit
+
+  release-check:
+    # The check main requires of this workflow, under a name we own. It passes when every build,
+    # install check and the publish step succeeded, or when the run builds nothing (a push that
+    # changes no version). It runs even in a cancelled run, because a skipped required check counts
+    # as passing.
+    name: release
+    needs: [version, macos, windows, linux, verify, publish]
+    if: ${{ always() }}
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Every build, install check and the publish step passed
+        env:
+          VERSION: ${{ needs.version.result }}
+          BUILD: ${{ needs.version.outputs.build }}
+          RESULTS: >-
+            macOS=${{ needs.macos.result }} Windows=${{ needs.windows.result }}
+            Linux=${{ needs.linux.result }} install=${{ needs.verify.result }}
+            publish=${{ needs.publish.result }}
+        run: |
+          if [ "$VERSION" != success ]; then
+            echo "::error::The version job ended with ${VERSION}."
+            exit 1
+          fi
+          if [ "$BUILD" != true ]; then
+            echo "This run builds nothing."
+            exit 0
+          fi
+          for r in $RESULTS; do
+            if [ "${r#*=}" != success ]; then
+              echo "::error::Not every job passed: ${RESULTS}."
+              exit 1
+            fi
+          done
