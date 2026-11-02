@@ -406,15 +406,15 @@ impl Home {
     }
 
     /// The release's page: on GitHub, made from the version; from our host, the feed's `notes`
-    /// when they are on GitHub or this host, else the host's front page.
+    /// when they are this app's page of that release on GitHub or a page on this host, else the
+    /// host's front page.
     fn page(&self, version: &str, notes: Option<&str>) -> String {
         match self {
-            Home::Downloads { host, .. } => {
+            Home::Downloads { host, app } => {
                 let front = format!("https://{host}/");
                 let ours = |n: &&str| {
-                    (n.starts_with("https://github.com/") || n.starts_with(&front))
-                        && n.len() < 300
-                        && !n.chars().any(|c| c.is_whitespace() || c.is_control())
+                    let release = n.starts_with("https://github.com/") && n.ends_with(&format!("/{app}/releases/tag/v{version}"));
+                    (release || n.starts_with(&front)) && n.len() < 300 && n.chars().all(|c| c.is_ascii_alphanumeric() || "-._~/:".contains(c))
                 };
                 notes.filter(ours).map_or(front.clone(), str::to_owned)
             }
@@ -1031,11 +1031,24 @@ mod tests {
             v["notes"] = notes.into();
             Feed::parse(v.to_string().as_bytes(), HOST_FEED, None).unwrap().page
         };
-        let notes = "https://github.com/FACTHORYAI/page/releases/tag/v0.11.0";
-        assert_eq!(page(notes), notes);
-        for odd in ["https://example.com/page", "javascript:alert(1)", "https://github.com/a b", ""] {
+        for notes in ["https://github.com/FACTHORYAI/page/releases/tag/v0.11.0", "https://downloads.facthory.com/page/0.11.0"] {
+            assert_eq!(page(notes), notes);
+        }
+        for odd in [
+            "https://example.com/page",
+            "javascript:alert(1)",
+            "https://github.com/a b",
+            "https://github.com/FACTHORYAI/other/releases/tag/v0.11.0",
+            "https://github.com/FACTHORYAI/page/releases/tag/v0.10.0",
+            "https://downloads.facthory.com/\"x",
+            "",
+        ] {
             assert_eq!(page(odd), "https://downloads.facthory.com/", "{odd}");
         }
+        // A GitHub feed's page is always made from the version.
+        let mut v: serde_json::Value = serde_json::from_slice(&feed(name, &url)).unwrap();
+        v["notes"] = "https://example.com/".into();
+        assert_eq!(Feed::parse(v.to_string().as_bytes(), FEED_URL, None).unwrap().page, "https://github.com/FACTHORYAI/page/releases/tag/v0.11.0");
         for odd in [
             "https://downloads.facthory.com/feeds/page/other.json",
             "https://downloads.facthory.com/feeds/latest.json",

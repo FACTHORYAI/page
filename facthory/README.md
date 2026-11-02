@@ -28,7 +28,7 @@ Files Facthory adds to upstream's tree, and nothing else:
 | `facthory/tag_commit.sh` | The commit a release tag points at, for `facthory-release.yml`; any lookup error stops the run instead of reading as no tag |
 | `facthory/release.py` | Collects a release's files and writes `SHA256SUMS`, the update feed `latest.json` (with its rollout) and the notes |
 | `facthory/install_check.py` | Installs a release's files on macOS, Windows or Linux as a user would, over the newest release's, and checks versions and signatures |
-| `facthory/downloads.sh` | Serves a release's files and the update feed from `downloads.facthory.com` (Cloudflare R2), for the release and rollout workflows |
+| `facthory/downloads.sh` | Serves a release's files and the update feed from `downloads.facthory.com` (Cloudflare R2), for the release and rollout workflows; the feed only once every file it names is served |
 | `.github/workflows/facthory-rollout.yml` | Halts a release's staged rollout (marks it a pre-release, so the one before is the latest again) or resumes it, by hand |
 | `facthory/packages.py` | Builds the apt and dnf repositories from the newest releases' `.deb` and `.rpm` files, signed |
 | `.github/workflows/facthory-packages.yml` | Publishes those repositories on GitHub Pages: called by the release, or when a person publishes one |
@@ -121,7 +121,8 @@ feed is the latest release's, cached for a minute. The rollout is a schedule wri
 is published: 10% of copies at first, 25% after a day, 50% after two and every copy after three.
 The apps work out the share from the release's age. `facthory-rollout.yml` stops a rollout by hand
 (`halt` marks the release a pre-release, so the release before it is the latest again and the
-feed is its, which offers no update; copies that took it keep it) and `resume` restores it. The `.deb` and `.rpm`
+feed is its, which offers no update; copies that took it keep it) and `resume` restores it.
+`serve` uploads a published release to the host again when the release run's upload failed. The `.deb` and `.rpm`
 repositories carry the new version at once, since the system's package manager updates those.
 
 Publishing a release also runs `.github/workflows/facthory-packages.yml`: the `.deb` and `.rpm`

@@ -2,19 +2,20 @@ name: Facthory Page rollout
 
 # A release reaches its copies in steps: its update feed latest.json (facthory/release.py) offers
 # the update to 10% of copies, then 25%, 50% and all of them a day apart, by the release's age; the
-# apps follow it (facthory/update/facthory_update.rs). Releases can't change once published, so
-# the feed can't either. To stop a rollout, `halt` marks the release a pre-release: the latest
+# apps follow it (facthory/update/facthory_update.rs). A published release and its feed can't
+# change. To stop a rollout, `halt` marks the release a pre-release: the latest
 # release is the one before it again, and the feed every copy reads, on downloads.facthory.com, is
 # that one's (facthory/downloads.sh), so no copy is offered the update (copies that took it keep
 # it); the apt and dnf repositories drop it. `resume` makes it the latest release again, and the
-# rollout goes on by its age.
+# rollout goes on by its age. `serve` uploads a published release to downloads.facthory.com again,
+# when the release run's upload failed.
 on:
   workflow_dispatch:
     inputs:
       action:
-        description: halt or resume
+        description: halt, resume, or serve (upload a published release to downloads.facthory.com again)
         type: choice
-        options: [halt, resume]
+        options: [halt, resume, serve]
         required: true
       version:
         description: The release, e.g. 0.12.0 (empty for the newest)
@@ -41,6 +42,7 @@ jobs:
           persist-credentials: false
           sparse-checkout: facthory
       - name: Halt or resume
+        id: which
         env:
           GH_TOKEN: ${{ github.token }}
           ACTION: ${{ inputs.action }}
@@ -57,14 +59,23 @@ jobs:
             halt) gh release edit "$tag" --repo "$GITHUB_REPOSITORY" --prerelease ;;
             resume) gh release edit "$tag" --repo "$GITHUB_REPOSITORY" --prerelease=false --latest ;;
           esac
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
           latest=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName --jq .tagName 2>/dev/null || echo none)
-          echo "${ACTION}: ${tag}. The feed the apps read is now ${latest}'s." | tee -a "$GITHUB_STEP_SUMMARY"
-      - name: The feed on downloads.facthory.com follows
+          echo "${ACTION}: ${tag}. The latest release is ${latest}." | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: downloads.facthory.com follows
         env:
           GH_TOKEN: ${{ github.token }}
           DOWNLOADS_TOKEN: ${{ secrets.DOWNLOADS_TOKEN }}
-        run: bash facthory/downloads.sh feed
+          ACTION: ${{ inputs.action }}
+          TAG: ${{ steps.which.outputs.tag }}
+        run: |
+          if [ "$ACTION" = serve ]; then
+            bash facthory/downloads.sh release "$TAG"
+          else
+            bash facthory/downloads.sh feed
+          fi
       - name: The apt and dnf repositories follow
+        if: inputs.action != 'serve'
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh workflow run facthory-packages.yml --repo "$GITHUB_REPOSITORY" --ref main

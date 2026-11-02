@@ -20,9 +20,10 @@ the website URLs the apps' About boxes already link to), plus the shared section
 > - **Checksums** are in one file per release named `SHA256SUMS` (not `SHA256SUMS.txt` as
 >   upstream names it). The release also carries `latest.json`, the update feed, which lists the
 >   DMG, both MSIs and both AppImages with URL, size and SHA-256: the page can fill its main
->   buttons from `https://github.com/FACTHORYAI/<app>/releases/latest/download/latest.json`.
->   `.deb`, `.rpm`, `.tar.gz` and the zips are not in the feed; link them from the release
->   (`https://github.com/FACTHORYAI/<app>/releases/download/v<version>/<file>`).
+>   buttons from `https://downloads.facthory.com/feeds/<app>/latest.json` (`<app>` is `page`,
+>   `grid` or `deck`). `.deb`, `.rpm`, `.tar.gz` and the zips are not in the feed; link them on
+>   the same host (`https://downloads.facthory.com/releases/<app>/<version>/<file>`), where every
+>   file of a release, `SHA256SUMS` included, stays at that address for good.
 > - **Versions follow upstream**: Facthory Page 0.10.0 is built from upstream 0.10.0; tags are
 >   `v<version>`.
 > - Never use "Word", "Excel" or "PowerPoint" in a heading, button, title or page name here (§14.6).
