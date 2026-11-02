@@ -8,8 +8,12 @@
   <dist>/release-files/   the installers and archives, SHA256SUMS, and latest.json
   <dist>/NOTES.md         the release notes
 
-latest.json is the update feed the apps read (from releases/latest/download/latest.json, which
-GitHub serves for the newest published, non-draft, non-prerelease release):
+latest.json is the update feed the apps read. With FACTHORY_DOWNLOADS (the release workflow:
+https://downloads.facthory.com) its files are those the download host serves, at
+<FACTHORY_DOWNLOADS>/releases/<repo name>/<version>/<file>, and the host serves the feed of the
+latest release at feeds/<repo name>/latest.json (facthory/downloads.sh). Without it they are the
+GitHub release's, and the feed is releases/latest/download/latest.json, which GitHub serves for the
+newest published, non-draft, non-prerelease release:
 
   {"name", "version", "date", "published", "notes", "rollout",
    "assets": {"<platform>": {"name", "url", "sha256", "size"}}}
@@ -88,7 +92,11 @@ def main() -> int:
     sums = {p.name: sha256(p) for p in shipped}
     (out / "SHA256SUMS").write_text("".join(f"{h}  {n}\n" for n, h in sums.items()), encoding="utf-8")
 
-    base = f"https://github.com/{repo}/releases/download/v{version}"
+    downloads = os.environ.get("FACTHORY_DOWNLOADS", "").rstrip("/")
+    if downloads:
+        base = f"{downloads}/releases/{repo.rsplit('/', 1)[-1]}/{version}"
+    else:
+        base = f"https://github.com/{repo}/releases/download/v{version}"
     assets = {}
     for platform, pattern in PLATFORMS:
         match = [p for p in shipped if pattern.search(p.name)]

@@ -22,12 +22,13 @@ Files Facthory adds to upstream's tree, and nothing else:
 | `facthory/README.md` | This list |
 | `facthory/.gitignore` | Keeps Python's bytecode out of the repository |
 | `.github/README.md` | The repository's front page |
-| `.github/workflows/facthory.yml` | The branded build: apply, upstream's gate on the branded tree, release build, mark check. `main` requires its `branded` check, a name we own, beside upstream's `gate / gate (ubuntu-24.04)` |
-| `.github/workflows/upstream-sync.yml` | Every three hours: merge the next upstream release on `sync/<tag>`, open its pull request, merge it when the branded build passes |
-| `.github/workflows/facthory-release.yml` | Releases with no person: on `main`, a version without a release builds, signs, install-checks and publishes `v<version>` |
+| `.github/workflows/facthory.yml` | The branded build: apply, upstream's gate on the branded tree, release build, mark check. `main` requires its `branded` check, a name we own, beside upstream's `gate / gate (ubuntu-24.04)` and the release workflow's `release` |
+| `.github/workflows/upstream-sync.yml` | Every three hours: merge the next upstream release on `sync/<tag>`, open its pull request, merge it once the checks `main` requires pass |
+| `.github/workflows/facthory-release.yml` | Releases with no person: on `main`, a version without a release builds, signs, install-checks and publishes `v<version>`. Every pull request builds and install-checks unsigned; `main` requires its `release` check |
 | `facthory/tag_commit.sh` | The commit a release tag points at, for `facthory-release.yml`; any lookup error stops the run instead of reading as no tag |
 | `facthory/release.py` | Collects a release's files and writes `SHA256SUMS`, the update feed `latest.json` (with its rollout) and the notes |
 | `facthory/install_check.py` | Installs a release's files on macOS, Windows or Linux as a user would, over the newest release's, and checks versions and signatures |
+| `facthory/downloads.sh` | Serves a release's files and the update feed from `downloads.facthory.com` (Cloudflare R2), for the release and rollout workflows; the feed only once every file it names is served |
 | `.github/workflows/facthory-rollout.yml` | Halts a release's staged rollout (marks it a pre-release, so the one before is the latest again) or resumes it, by hand |
 | `facthory/packages.py` | Builds the apt and dnf repositories from the newest releases' `.deb` and `.rpm` files, signed |
 | `.github/workflows/facthory-packages.yml` | Publishes those repositories on GitHub Pages: called by the release, or when a person publishes one |
@@ -94,7 +95,8 @@ the AppImage, and the `.deb` and `.rpm` (over the newest release's) on Linux. Ea
 report the new version, and a release's signatures must hold (Developer ID and notarization on
 macOS, Authenticode by Bandpey GmbH on Windows). Only when every platform passes does the run
 publish the GitHub release `v<version>`, which also creates the tag, with `SHA256SUMS` and
-`latest.json`, then call `facthory-packages.yml`. A version older than the newest release, or one
+`latest.json`, then call `facthory-packages.yml`. `facthory/downloads.sh` then serves the
+published files from `https://downloads.facthory.com/releases/page/<v>/` and, last, the feed. A version older than the newest release, or one
 that is not `major.minor.patch`, is never released.
 
 bandpey-hq/github-infra's `release-tags` ruleset stops anyone, this workflow included, from
@@ -107,17 +109,20 @@ finds the release published and only checks its tag, then `facthory-packages.yml
 also be run by hand). A published release and its tag can't change: a broken one is halted
 (`facthory-rollout.yml`) and replaced by a new version.
 
-A pull request that touches the release or the packaging builds and install-checks everything
-unsigned, as does a manual run, which signs on `main` when asked (`sign`); both keep the files as
-workflow artifacts.
+Every pull request builds and install-checks everything unsigned, as does a manual run, which
+signs on `main` when asked (`sign`); both keep the files as workflow artifacts. `main` requires
+the run's `release` check, which passes only when every build, install check and the publish step
+did, so a change that breaks a platform's build or install can't merge.
 
-`latest.json`, at `releases/latest/download/latest.json`, is the update feed: the version, when
-it was published, the rollout and, per platform, the file the app updates itself from with its
-size and SHA-256. The rollout is a schedule written once, since a release can't change after it
+`latest.json`, at `https://downloads.facthory.com/feeds/page/latest.json`, is the update feed: the
+version, when it was published, the rollout and, per platform, the file the app updates itself
+from on the same host, with its size and SHA-256. The host's files can't change once written; the
+feed is the latest release's, cached for a minute. The rollout is a schedule written once, since a release can't change after it
 is published: 10% of copies at first, 25% after a day, 50% after two and every copy after three.
 The apps work out the share from the release's age. `facthory-rollout.yml` stops a rollout by hand
-(`halt` marks the release a pre-release, so the release before it is the latest again and its feed
-offers no update; copies that took it keep it) and `resume` restores it. The `.deb` and `.rpm`
+(`halt` marks the release a pre-release, so the release before it is the latest again and the
+feed is its, which offers no update; copies that took it keep it) and `resume` restores it.
+`serve` uploads a published release to the host again when the release run's upload failed. The `.deb` and `.rpm`
 repositories carry the new version at once, since the system's package manager updates those.
 
 Publishing a release also runs `.github/workflows/facthory-packages.yml`: the `.deb` and `.rpm`
@@ -169,9 +174,10 @@ workflows and the Actions token may not push those. Its key is a secret of the e
    a conflict in `ATTRIBUTION.md` takes upstream's file and writes our block again. Any other
    conflict opens an issue and stops there.
 2. The App opens the pull request; the checks run on it as on any other.
-3. When the Facthory Page build passes on exactly that commit, the workflow merges it. When it
-   fails, it says so on the pull request: usually a rule in `brand.toml` that upstream's change
-   no longer matches. Fix the rule on the branch; the merge follows the green build.
+3. When the Facthory Page build, its release run or upstream's CI passes on exactly that commit,
+   the workflow merges it, through GitHub's auto-merge while other checks still run. When one
+   fails, it says so on the pull request: often a rule in `brand.toml` that upstream's change no
+   longer matches. Fix it on the branch; the merge follows the green checks.
 
 One sync pull request is open at a time, so releases land in order.
 

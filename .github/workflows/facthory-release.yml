@@ -14,22 +14,19 @@ name: Facthory Page release
 # (facthory/install_check.py, upgrading the newest release's); then the run publishes the GitHub
 # release, which makes the tag v<version>, with SHA256SUMS and the update feed latest.json, whose
 # staged rollout the apps follow (10% of copies, then 25%, 50% and all a day apart; facthory/
-# release.py), and rebuilds the apt and dnf repositories. facthory-rollout.yml halts or resumes it.
+# release.py). It serves the files and, last, the feed from downloads.facthory.com (facthory/
+# downloads.sh), where the apps look, and rebuilds the apt and dnf repositories.
+# facthory-rollout.yml halts or resumes it.
 #
-# A push that changes no version builds nothing. A pull request that changes the release or the
-# packaging builds and checks everything unsigned, outside the environment, as a check; so does a
-# manual run, which signs when asked from main (sign) and publishes only when asked (publish).
+# A push that changes no version builds nothing. Every pull request builds and checks everything
+# unsigned, outside the environment, and main requires the run's `release` check. A manual run does
+# the same, signs when asked from main (sign) and publishes only when asked (publish).
 # Secrets live in the environment `release` (bandpey-hq/github-infra), which only main may use.
 # Nobody may move or delete a v* tag; one pushed by hand on another commit stops the release.
 on:
   push:
     branches: [main]
   pull_request:
-    paths:
-      - .github/workflows/facthory-release.yml
-      - .github/workflows/facthory-packages.yml
-      - facthory/**
-      - packaging/**
   workflow_dispatch:
     inputs:
       sign:
@@ -138,7 +135,7 @@ jobs:
       FACTHORY_PAGE_BUILD_DATE: ${{ needs.version.outputs.date }}
       FACTHORY_PAGE_BUILD_SHA: ${{ github.sha }}
       # The updater's feed (facthory/update/): builds without it never check.
-      FACTHORY_UPDATE_FEED: https://github.com/${{ github.repository }}/releases/latest/download/latest.json
+      FACTHORY_UPDATE_FEED: https://downloads.facthory.com/feeds/${{ github.event.repository.name }}/latest.json
     steps:
       - name: Require signing for a release
         if: needs.version.outputs.release == 'true'
@@ -168,6 +165,8 @@ jobs:
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           key: facthory-release-macos
+          # Pull requests read main's cache and keep none, so theirs don't push it out.
+          save-if: ${{ github.ref == 'refs/heads/main' }}
       - name: Check out craft-i18n
         # The interface catalogs at craft-i18n.rev (sets CRAFT_I18N_DIR and requires them), which the
         # brand edits with the tree (facthory/rebrand.py, [i18n]).
@@ -236,7 +235,7 @@ jobs:
       FACTHORY_PAGE_BUILD_DATE: ${{ needs.version.outputs.date }}
       FACTHORY_PAGE_BUILD_SHA: ${{ github.sha }}
       # The updater's feed (facthory/update/): builds without it never check.
-      FACTHORY_UPDATE_FEED: https://github.com/${{ github.repository }}/releases/latest/download/latest.json
+      FACTHORY_UPDATE_FEED: https://downloads.facthory.com/feeds/${{ github.event.repository.name }}/latest.json
     steps:
       - name: Signing material
         # Azure Artifact Signing through the app registration's federated credential for this
@@ -282,6 +281,8 @@ jobs:
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           key: facthory-release-windows-${{ matrix.arch }}
+          # Pull requests read main's cache and keep none, so theirs don't push it out.
+          save-if: ${{ github.ref == 'refs/heads/main' }}
       - name: Check out craft-i18n
         # The interface catalogs at craft-i18n.rev (sets CRAFT_I18N_DIR and requires them), which the
         # brand edits with the tree (facthory/rebrand.py, [i18n]).
@@ -362,7 +363,7 @@ jobs:
       FACTHORY_PAGE_BUILD_DATE: ${{ needs.version.outputs.date }}
       FACTHORY_PAGE_BUILD_SHA: ${{ github.sha }}
       # The updater's feed (facthory/update/): builds without it never check.
-      FACTHORY_UPDATE_FEED: https://github.com/${{ github.repository }}/releases/latest/download/latest.json
+      FACTHORY_UPDATE_FEED: https://downloads.facthory.com/feeds/${{ github.event.repository.name }}/latest.json
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -380,6 +381,8 @@ jobs:
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           key: facthory-release-linux-${{ matrix.arch }}
+          # Pull requests read main's cache and keep none, so theirs don't push it out.
+          save-if: ${{ github.ref == 'refs/heads/main' }}
       - name: Check out craft-i18n
         # The interface catalogs at craft-i18n.rev (sets CRAFT_I18N_DIR and requires them), which the
         # brand edits with the tree (facthory/rebrand.py, [i18n]).
@@ -471,6 +474,8 @@ jobs:
     needs: [version, verify]
     if: needs.version.outputs.build == 'true'
     runs-on: ubuntu-24.04
+    # A release serves its files from downloads.facthory.com, with the environment's DOWNLOADS_TOKEN.
+    environment: ${{ needs.version.outputs.release == 'true' && 'release' || '' }}
     permissions:
       contents: write
     steps:
@@ -488,6 +493,8 @@ jobs:
           REPO: ${{ github.repository }}
           # The staged rollout the apps follow: 10% of copies first, all of them after three days.
           FACTHORY_ROLLOUT: staged
+          # The feed's files are those downloads.facthory.com serves.
+          FACTHORY_DOWNLOADS: https://downloads.facthory.com
         run: python3 facthory/release.py dist "$VERSION" "$REPO"
       - name: Keep the release files
         if: needs.version.outputs.release != 'true'
@@ -556,6 +563,17 @@ jobs:
             echo "::error::${tag} was published on ${tagged}, not on ${GITHUB_SHA}. It can't be changed: halt it (facthory-rollout.yml) and release a new version."
             exit 1
           fi
+      - name: Serve it from downloads.facthory.com
+        # The published release's files, then the feed, which makes it reach the apps. A re-run
+        # serves what was published, not what it rebuilt. Once the release is published, only a
+        # re-run of this run's failed jobs comes back here; facthory-rollout.yml's serve does the
+        # same from any run.
+        if: needs.version.outputs.release == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DOWNLOADS_TOKEN: ${{ secrets.DOWNLOADS_TOKEN }}
+          VERSION: ${{ needs.version.outputs.version }}
+        run: bash facthory/downloads.sh release "v${VERSION}"
 
   packages:
     # The apt and dnf repositories with the new release's .deb and .rpm. Called from here: a
@@ -568,3 +586,37 @@ jobs:
       id-token: write
     uses: ./.github/workflows/facthory-packages.yml
     secrets: inherit
+
+  release-check:
+    # The check main requires of this workflow, under a name we own. It passes when every build,
+    # install check and the publish step succeeded, or when the run builds nothing (a push that
+    # changes no version). It runs even in a cancelled run, because a skipped required check counts
+    # as passing.
+    name: release
+    needs: [version, macos, windows, linux, verify, publish]
+    if: ${{ always() }}
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Every build, install check and the publish step passed
+        env:
+          VERSION: ${{ needs.version.result }}
+          BUILD: ${{ needs.version.outputs.build }}
+          RESULTS: >-
+            macOS=${{ needs.macos.result }} Windows=${{ needs.windows.result }}
+            Linux=${{ needs.linux.result }} install=${{ needs.verify.result }}
+            publish=${{ needs.publish.result }}
+        run: |
+          if [ "$VERSION" != success ]; then
+            echo "::error::The version job ended with ${VERSION}."
+            exit 1
+          fi
+          if [ "$BUILD" != true ]; then
+            echo "This run builds nothing."
+            exit 0
+          fi
+          for r in $RESULTS; do
+            if [ "${r#*=}" != success ]; then
+              echo "::error::Not every job passed: ${RESULTS}."
+              exit 1
+            fi
+          done
