@@ -20,7 +20,7 @@ import signing_preflight as sp  # noqa: E402
 
 PASSWORD = "p12 pass #1 $x"
 GOOD_AZURE = {
-    "AZURE_TENANT_ID": "16b3a288-2a37-4dd1-8081-bb81ddf6de00",
+    "AZURE_TENANT_ID": "00000000-1111-2222-3333-444444444444",
     "AZURE_CLIENT_ID": "11111111-2222-3333-4444-555555555555",
     "AZURE_SIGNING_ENDPOINT": "https://weu.codesigning.azure.net",
     "AZURE_SIGNING_ACCOUNT": "bandpey-signing",

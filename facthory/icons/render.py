@@ -102,6 +102,13 @@ def attribution(brand: dict, out: Path) -> None:
         for p in sorted(out.rglob("*"))
         if p.is_file()
     ]
+    # The branded tree has the icon set at assets/app-icon/, where upstream's own rows credit
+    # upstream's files (brand.toml rewrites them); the files upstream never had need rows of ours.
+    rows += [
+        f"| `assets/app-icon/{p.name}` | {author} | the branded tree's copy of `{p.relative_to(ROOT).as_posix()}`, rendered from "
+        f"`{made_from(p).relative_to(ROOT).as_posix()}` by `facthory/icons/render.py` | {licence} |"
+        for p in sorted(out.glob("*-logo-*.png"))
+    ]
     rows += [f"| `facthory/{a['path']}` | {a['author']} | {a['source']} | {a['licence']} |" for a in brand.get("asset", [])]
     note = ["", icon["note"].strip()] if "note" in icon else []
     block = "\n".join(
