@@ -300,15 +300,13 @@ find = 'count_words("WordCraft是一个文字处理器，很好用！")'
 replace = 'count_words("Brand是一个文字处理器，很好用！")'
 count = 1
 
-# The Flatpak recipes grant access to the shared updater's host folder, which our builds leave out
-# with craft-update (above): without it they need neither the permission nor the folder.
+# The Flatpak recipes name the shared updater's version folder under the ArtCraft name; our builds
+# leave that updater out (craft-update, above), so the folder goes. The update permissions stay:
+# upstream's test requires them (crates/ui-egui/tests/flatpak_updates.rs) and they name nobody.
 [[rule]]
-why = "The Flatpak recipes drop the shared updater's host permissions"
+why = "The Flatpak recipes drop the shared updater's ArtCraft folder"
 files = ["packaging/linux/flatpak/ai.storyteller.wordcraft.yml", "packaging/linux/flatpak/ai.storyteller.wordcraft.bundle.yml"]
-find = '''  # The shared updater inspects and updates this installation via flatpak-spawn --host.
-  - --talk-name=org.freedesktop.Flatpak
-  - --filesystem=xdg-data/ArtCraft/versions:ro
-'''
+find = "  - --filesystem=xdg-data/ArtCraft/versions:ro\n"
 replace = ""
 count = 2
 
@@ -756,6 +754,13 @@ allow = [
   # and credits the English word supplement's authors in the language data window.
   'WORDCRAFT_DICTIONARIES',
   'wordcraftdictionaries',
+  # The same crate's dictionary folders on Windows and macOS (one string in the binary, with the
+  # path separators stripped by the scan): …/WordCraft/dictionaries, beside LibreOffice's.
+  'LibreOfficeshareextensionsWordCraftdictionaries',
+  'WordCraftdictionaries',
+  'Application SupportWordCraftdictionaries',
+  'Library/Application Support/WordCraft/dictionaries',
+  'WordCraft/dictionaries',
   'is written by WordCraft contributors and licensed MIT OR Apache-2.0.',
   # An English word in the Hunspell dictionaries embedded from craft-i18n, not a mark.
   'storyteller/MS',
