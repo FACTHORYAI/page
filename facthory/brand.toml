@@ -16,15 +16,17 @@ team = "ArtCraft team"
 repository = "https://github.com/storytold/wordcraft"
 
 [icon]
+# Composed by facthory/icons/compose.py from Facthory's mark (icons/brand/, unmodified) and an
+# original glyph; render.py renders the platform files from these four.
 svg = "page.svg"
 base = "facthorypage"
-# macOS frames an icon that has no tile of its own, so its files come from the icon on a tile.
 macos_svg = "page-macos.svg"
-author = "with icons contributors; recoloured by Bandpey GmbH"
-source = "`notepad-text` in with icons' Chrome style (https://github.com/withevergrow/withicons at 996cc78), recoloured to the Page colours"
-licence = "MIT"
-# The licence text, written at the end of ATTRIBUTION.md's Facthory block (which ships).
-notice = "LICENSE-withicons.txt"
+small_svg = "page-small.svg"
+macos_small_svg = "page-macos-small.svg"
+author = "Bandpey GmbH"
+source = "original artwork drawn in code (`facthory/icons/compose.py`) around Facthory's mark (`facthory/icons/brand/mark.svg`, unmodified)"
+licence = "MIT OR Apache-2.0, except Facthory's mark in it: trademark of Bandpey GmbH"
+note = """Facthory's marks (`facthory/icons/brand/`) are the brand of Bandpey GmbH, copied unmodified from the Facthory Design System. They are not open source and not covered by this project's MIT OR Apache-2.0 licence: they may be used unmodified only, to name Facthory's own builds, and a logo is never recoloured, stretched, cropped or redrawn. The glyphs and tiles around the mark in the app icons are original work by Bandpey GmbH, under this project's licence."""
 
 # Facthory's other asset files, credited in ATTRIBUTION.md's Facthory block (render.py).
 [[asset]]
@@ -32,6 +34,48 @@ path = "dmg/background.svg"
 author = "@XusBadia (WordCraft contributors); recoloured and retitled by Bandpey GmbH"
 source = "derived from WordCraft's `packaging/macos/dmg/background.svg`; title outlined from Inter SemiBold (OFL-1.1)"
 licence = "MIT OR Apache-2.0"
+
+[[asset]]
+path = "icons/brand/mark.svg"
+author = "Bandpey GmbH"
+source = "Facthory's logo (the mark, for light grounds), copied unmodified from the Facthory Design System"
+licence = "Facthory trademark, all rights reserved: not open source; usable unmodified only"
+
+[[asset]]
+path = "icons/brand/mark-mono.svg"
+author = "Bandpey GmbH"
+source = "Facthory's logo (the mark in white and greys, for dark grounds), copied unmodified from the Facthory Design System"
+licence = "Facthory trademark, all rights reserved: not open source; usable unmodified only"
+
+[[asset]]
+path = "icons/brand/mark.png"
+author = "Bandpey GmbH"
+source = "Facthory's logo (the mark, 960 x 1016 pixels), copied unmodified from the Facthory Design System"
+licence = "Facthory trademark, all rights reserved: not open source; usable unmodified only"
+
+[[asset]]
+path = "icons/brand/word-mark.svg"
+author = "Bandpey GmbH"
+source = "Facthory's logo (the mark beside the name), copied unmodified from the Facthory Design System"
+licence = "Facthory trademark, all rights reserved: not open source; usable unmodified only"
+
+[[asset]]
+path = "icons/brand/word-mark-only.svg"
+author = "Bandpey GmbH"
+source = "Facthory's logo (the lettering alone), copied unmodified from the Facthory Design System"
+licence = "Facthory trademark, all rights reserved: not open source; usable unmodified only"
+
+[[asset]]
+path = "icons/brand/word-mark-only-mono.svg"
+author = "Bandpey GmbH"
+source = "Facthory's logo (the lettering alone, for dark grounds), copied unmodified from the Facthory Design System"
+licence = "Facthory trademark, all rights reserved: not open source; usable unmodified only"
+
+[[asset]]
+path = "icons/proof/page.png"
+author = "Bandpey GmbH"
+source = "contact sheet of the icon candidates beside reference shapes, drawn by `facthory/icons/proof.py`; contains Facthory's mark"
+licence = "MIT OR Apache-2.0, except Facthory's mark in it: trademark of Bandpey GmbH"
 
 [files]
 # Never touched: upstream's licences and notices stay exactly as written (Apache-2.0 §4).
@@ -206,6 +250,57 @@ replace = """
       $_
     } | ConvertTo-Json | Set-Content -Path $metadata -Encoding utf8
 """
+count = 1
+
+# Notarization with the App Store Connect API key of Bandpey GmbH's other releases, not an Apple
+# account's app-specific password: package.sh reads the key's file, id and issuer (the release
+# workflow writes the .p8 under $RUNNER_TEMP, mode 600, and removes it again).
+[[rule]]
+why = "Notarization takes an API key: the script's header"
+files = "packaging/macos/package.sh"
+find = '''# Notarization (env; all three needed, and a real identity):
+#   APPLE_ID, APPLE_PASSWORD (app-specific password), APPLE_TEAM_ID
+'''
+replace = '''# Notarization (env; all three needed, and a real identity), with an App Store Connect API key:
+#   NOTARY_KEY_FILE (the .p8), NOTARY_KEY_ID, NOTARY_ISSUER
+'''
+count = 1
+
+[[rule]]
+why = "... the condition"
+files = "packaging/macos/package.sh"
+find = '''elif [[ -n "${APPLE_ID:-}" ]] && [[ -n "${APPLE_PASSWORD:-}" ]] && [[ -n "${APPLE_TEAM_ID:-}" ]]; then
+  NOTARIZE=1
+else
+  warn "macOS: APPLE_ID / APPLE_PASSWORD / APPLE_TEAM_ID incomplete; signed but not notarized"
+fi
+'''
+replace = '''elif [[ -f "${NOTARY_KEY_FILE:-}" ]] && [[ -n "${NOTARY_KEY_ID:-}" ]] && [[ -n "${NOTARY_ISSUER:-}" ]]; then
+  NOTARIZE=1
+else
+  warn "macOS: NOTARY_KEY_FILE / NOTARY_KEY_ID / NOTARY_ISSUER incomplete; signed but not notarized"
+fi
+'''
+count = 1
+
+[[rule]]
+why = "... the submission"
+files = "packaging/macos/package.sh"
+find = '''  out="$(xcrun notarytool submit "$file" --apple-id "$APPLE_ID" --password "$APPLE_PASSWORD" \
+    --team-id "$APPLE_TEAM_ID" --wait --timeout 1h --output-format json)" || true
+'''
+replace = '''  out="$(xcrun notarytool submit "$file" --key "$NOTARY_KEY_FILE" --key-id "$NOTARY_KEY_ID" \
+    --issuer "$NOTARY_ISSUER" --wait --timeout 1h --output-format json)" || true
+'''
+count = 1
+
+[[rule]]
+why = "... and the log of a refusal"
+files = "packaging/macos/package.sh"
+find = '''      xcrun notarytool log "$id" --apple-id "$APPLE_ID" --password "$APPLE_PASSWORD" --team-id "$APPLE_TEAM_ID" || true
+'''
+replace = '''      xcrun notarytool log "$id" --key "$NOTARY_KEY_FILE" --key-id "$NOTARY_KEY_ID" --issuer "$NOTARY_ISSUER" || true
+'''
 count = 1
 
 # Upstream's own updater (craft-update, from craft-libs) checks and installs the upstream apps'
@@ -434,11 +529,29 @@ count = 1
 
 [[rule]]
 phase = "after"
-why = "The app icon is ours (derived from with icons, MIT); its attribution rows say so"
+why = "The app icon is ours; its attribution rows say so"
 files = "ATTRIBUTION.md"
 find = '^(\| `assets/app-icon/[^`]+` \|).*$'
-replace = '\1 with icons contributors; recoloured by Bandpey GmbH | `notepad-text` from with icons (Chrome style), recoloured (`facthory/icons/page.svg`; on a tile for macOS, `facthory/icons/page-macos.svg`), rendered by `facthory/icons/render.py` | MIT | Facthory Page app icon |'
+replace = '\1 Bandpey GmbH | original artwork drawn in code (`facthory/icons/compose.py`) around the Facthory mark (`facthory/icons/brand/mark.svg`, unmodified), rendered by `facthory/icons/render.py` | MIT OR Apache-2.0, except the Facthory mark in it: trademark of Bandpey GmbH | Facthory Page app icon |'
 regex = true
+
+# Facthory's mark in the About box (facthory/ui/facthory_logo.rs, copied below), which upstream's
+# shows as text only: its module, and one call before the app's name.
+[[rule]]
+phase = "after"
+why = "The About box's logo: its module"
+files = "crates/ui-egui/src/lib.rs"
+find = "pub mod updates_ui;\n"
+replace = "pub mod updates_ui;\nmod facthory_logo;\n"
+count = 1
+
+[[rule]]
+phase = "after"
+why = "The About box's logo: drawn above the name, the mark of the window's theme"
+files = "crates/ui-egui/src/dialogs/dispatch.rs"
+find = "        _ => {\n            ui.label(egui::RichText::new(tl!(\"Facthory Page\")).font(semibold(22.0)));\n"
+replace = "        _ => {\n            crate::facthory_logo::show(ui);\n            ui.label(egui::RichText::new(tl!(\"Facthory Page\")).font(semibold(22.0)));\n"
+count = 1
 
 # The updater (facthory/update/facthory_update.rs, copied below): its module and its calls from
 # main.rs. It needs no dependency the app lacks.
@@ -505,6 +618,10 @@ new_key = "MIT OR Apache-2.0. Copyright (c) 2026 Bandpey GmbH. Based on WordCraf
 # Upstream's update window, without its updater (facthory/update/updates_ui.rs).
 from = "update/updates_ui.rs"
 to = "crates/ui-egui/src/updates_ui.rs"
+
+[[copy]]
+from = "ui/facthory_logo.rs"
+to = "crates/ui-egui/src/facthory_logo.rs"
 
 [[copy]]
 from = "update/facthory_update.rs"

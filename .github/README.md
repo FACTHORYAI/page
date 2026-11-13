@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="../facthory/icons/app-icon/hicolor/256x256/apps/com.facthory.page.png" width="128" height="128" alt="Facthory Page icon: a chrome notepad in the Page colour">
+  <img src="../facthory/icons/app-icon/hicolor/256x256/apps/com.facthory.page.png" width="128" height="128" alt="Facthory Page icon: the Facthory mark on a light tile, with a page badge">
 </p>
 
 # Facthory Page
