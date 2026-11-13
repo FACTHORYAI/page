@@ -16,15 +16,18 @@ team = "ArtCraft team"
 repository = "https://github.com/storytold/wordcraft"
 
 [icon]
-svg = "page.svg"
+# The glyph is page.svg, unchanged; facthory/icons/fit.py places it: page-macos.svg (Apple's grid) and
+# page-flat.svg (Windows, Linux, the scalable icon). render.py renders the platform files from those.
+glyph = "page.svg"
+svg = "page-flat.svg"
 base = "facthorypage"
-# macOS frames an icon that has no tile of its own, so its files come from the icon on a tile.
 macos_svg = "page-macos.svg"
 author = "with icons contributors; recoloured by Bandpey GmbH"
 source = "`notepad-text` in with icons' Chrome style (https://github.com/withevergrow/withicons at 996cc78), recoloured to the Page colours"
 licence = "MIT"
 # The licence text, written at the end of ATTRIBUTION.md's Facthory block (which ships).
 notice = "LICENSE-withicons.txt"
+note = """Facthory's marks (`facthory/icons/brand/`, and the two renders of them in `app-icon/` that the About box draws) are the brand of Bandpey GmbH, copied unmodified from the Facthory Design System. They are not open source and not covered by this project's MIT OR Apache-2.0 licence: they may be used unmodified only, to name Facthory's own builds, and a logo is never recoloured, stretched, cropped or redrawn. They are not in the app icons."""
 
 # Facthory's other asset files, credited in ATTRIBUTION.md's Facthory block (render.py).
 [[asset]]
@@ -32,6 +35,48 @@ path = "dmg/background.svg"
 author = "@XusBadia (WordCraft contributors); recoloured and retitled by Bandpey GmbH"
 source = "derived from WordCraft's `packaging/macos/dmg/background.svg`; title outlined from Inter SemiBold (OFL-1.1)"
 licence = "MIT OR Apache-2.0"
+
+[[asset]]
+path = "icons/brand/mark.svg"
+author = "Bandpey GmbH"
+source = "Facthory's logo (the mark, for light grounds), copied unmodified from the Facthory Design System"
+licence = "Facthory trademark, all rights reserved: not open source; usable unmodified only"
+
+[[asset]]
+path = "icons/brand/mark-mono.svg"
+author = "Bandpey GmbH"
+source = "Facthory's logo (the mark in white and greys, for dark grounds), copied unmodified from the Facthory Design System"
+licence = "Facthory trademark, all rights reserved: not open source; usable unmodified only"
+
+[[asset]]
+path = "icons/brand/mark.png"
+author = "Bandpey GmbH"
+source = "Facthory's logo (the mark, 960 x 1016 pixels), copied unmodified from the Facthory Design System"
+licence = "Facthory trademark, all rights reserved: not open source; usable unmodified only"
+
+[[asset]]
+path = "icons/brand/word-mark.svg"
+author = "Bandpey GmbH"
+source = "Facthory's logo (the mark beside the name), copied unmodified from the Facthory Design System"
+licence = "Facthory trademark, all rights reserved: not open source; usable unmodified only"
+
+[[asset]]
+path = "icons/brand/word-mark-only.svg"
+author = "Bandpey GmbH"
+source = "Facthory's logo (the lettering alone), copied unmodified from the Facthory Design System"
+licence = "Facthory trademark, all rights reserved: not open source; usable unmodified only"
+
+[[asset]]
+path = "icons/brand/word-mark-only-mono.svg"
+author = "Bandpey GmbH"
+source = "Facthory's logo (the lettering alone, for dark grounds), copied unmodified from the Facthory Design System"
+licence = "Facthory trademark, all rights reserved: not open source; usable unmodified only"
+
+[[asset]]
+path = "icons/proof/page.png"
+author = "Bandpey GmbH"
+source = "contact sheet of the icon candidates beside reference shapes, drawn by `facthory/icons/proof.py`; contains Facthory's mark"
+licence = "MIT OR Apache-2.0, except Facthory's mark in it: trademark of Bandpey GmbH"
 
 [files]
 # Never touched: upstream's licences and notices stay exactly as written (Apache-2.0 §4).
@@ -43,7 +88,12 @@ credits = ["ATTRIBUTION.md", "contributors"]
 delete = ["docs/brand"]
 # Authorship lines the tokens would otherwise turn into a false credit: upstream's data files
 # (the spelling supplements, embedded in the app) say who wrote them.
-keep = ["Written by WordCraft contributors"]
+keep = [
+  "Written by WordCraft contributors",
+  # The environment variable craft-proof (a build input we can't edit) reads for a folder of
+  # Hunspell dictionaries; the app's help names the variable that works.
+  "WORDCRAFT_DICTIONARIES",
+]
 
 # ---------------------------------------------------------------------------------------------
 # Rules before the tokens, on upstream's text. Each fails the build when upstream moves it.
@@ -78,8 +128,9 @@ count = 1
 
 [[rule]]
 files = "crates/ui-egui/src/chrome.rs"
-find = 'tl!("Discord"), medium(11.5)'
-replace = 'tl!("Help"), medium(11.5)'
+find = 'tl!\("Discord"\),(\s+medium\(11\.5\))'
+replace = 'tl!("Help"),\1'
+regex = true
 count = 1
 
 [[rule]]
@@ -116,9 +167,11 @@ replace = 'c("Help and feedback", "ui.discord")'
 count = 1
 
 # The spelling list (sorted; a test checks the order) knows our name in its place, not upstream's.
+# Since upstream's CP1.3 it is data of craft-i18n ([i18n].data), not a file of the tree.
 [[rule]]
 why = "The spelling list drops ArtCraft"
-files = "assets/spelling/en-extra.txt"
+files = "craft-i18n/language-data/en-us/en-extra.txt"
+i18n = true
 find = '^artcraft\n'
 replace = ""
 regex = true
@@ -126,7 +179,8 @@ count = 1
 
 [[rule]]
 why = "The spelling list drops WordCraft"
-files = "assets/spelling/en-extra.txt"
+files = "craft-i18n/language-data/en-us/en-extra.txt"
+i18n = true
 find = '^wordcraft\n'
 replace = ""
 regex = true
@@ -134,7 +188,8 @@ count = 1
 
 [[rule]]
 why = "The spelling list knows Facthory, in its sorted place"
-files = "assets/spelling/en-extra.txt"
+files = "craft-i18n/language-data/en-us/en-extra.txt"
+i18n = true
 find = '^facebook\n'
 replace = "facebook\nfacthory\n"
 regex = true
@@ -203,6 +258,117 @@ replace = """
 """
 count = 1
 
+# A test of the community button expects it on by default and under upstream's label; the
+# branded build has it off by default and calls it Help and feedback.
+[[rule]]
+why = "The community-button test turns it on itself, under our label"
+files = "crates/ui-egui/src/tests.rs"
+find = '''    let mut a = app();
+    a.run("ui.backstage", json!({"value": true})).unwrap();
+    let mut h = harness(a);
+    h.run_steps(2);
+    assert!(h.query_by_label("Discord community").is_some(), "the community link shows by default");
+'''
+replace = '''    let mut a = app();
+    a.ui.show_discord = true;
+    a.run("ui.backstage", json!({"value": true})).unwrap();
+    let mut h = harness(a);
+    h.run_steps(2);
+    assert!(h.query_by_label("Help and feedback").is_some(), "the community link shows when the button is on");
+'''
+count = 1
+
+[[rule]]
+why = "... and the off state looks for our label"
+files = "crates/ui-egui/src/tests.rs"
+find = 'assert!(h.query_by_label("Discord community").is_none(), "the backstage link honors the same setting");'
+replace = 'assert!(h.query_by_label("Help and feedback").is_none(), "the backstage link honors the same setting");'
+count = 1
+
+# A PDF test pins the hash of an export, whose Creator and Producer name the app.
+[[rule]]
+why = "The golden hash of the PDF with a grey box: the file names Facthory Page as its producer"
+files = "crates/pdf/src/tests.rs"
+find = "assert_eq!(h, 0x1edbbffab353d744, \"{h:#x}\");"
+replace = "assert_eq!(h, 0x5f9304fd08007fa9, \"{h:#x}\");"
+count = 1
+
+# Test data that holds the name: the brand's name is two words, which changes a word count.
+[[rule]]
+why = "A word-count test counts the name as one word; ours is two"
+files = "crates/doc/src/tests.rs"
+find = 'count_words("WordCraft是一个文字处理器，很好用！")'
+replace = 'count_words("Brand是一个文字处理器，很好用！")'
+count = 1
+
+# The Flatpak recipes name the shared updater's version folder under the ArtCraft name; our builds
+# leave that updater out (craft-update, above), so the folder goes. The update permissions stay:
+# upstream's test requires them (crates/ui-egui/tests/flatpak_updates.rs) and they name nobody.
+[[rule]]
+why = "The Flatpak recipes drop the shared updater's ArtCraft folder"
+files = ["packaging/linux/flatpak/ai.storyteller.wordcraft.yml", "packaging/linux/flatpak/ai.storyteller.wordcraft.bundle.yml"]
+find = "  - --filesystem=xdg-data/ArtCraft/versions:ro\n"
+replace = ""
+count = 2
+
+[[rule]]
+why = "The Flatpak image push names a fallback user: ours"
+files = "packaging/linux/flatpak-oci.sh"
+find = "${GITHUB_ACTOR:-storytold}"
+replace = "${GITHUB_ACTOR:-facthory}"
+count = 1
+
+# Notarization with the App Store Connect API key of Bandpey GmbH's other releases, not an Apple
+# account's app-specific password: package.sh reads the key's file, id and issuer (the release
+# workflow writes the .p8 under $RUNNER_TEMP, mode 600, and removes it again).
+[[rule]]
+why = "Notarization takes an API key: the script's header"
+files = "packaging/macos/package.sh"
+find = '''# Notarization (env; all three needed, and a real identity):
+#   APPLE_ID, APPLE_PASSWORD (app-specific password), APPLE_TEAM_ID
+'''
+replace = '''# Notarization (env; all three needed, and a real identity), with an App Store Connect API key:
+#   NOTARY_KEY_FILE (the .p8), NOTARY_KEY_ID, NOTARY_ISSUER
+'''
+count = 1
+
+[[rule]]
+why = "... the condition"
+files = "packaging/macos/package.sh"
+find = '''elif [[ -n "${APPLE_ID:-}" ]] && [[ -n "${APPLE_PASSWORD:-}" ]] && [[ -n "${APPLE_TEAM_ID:-}" ]]; then
+  NOTARIZE=1
+else
+  warn "macOS: APPLE_ID / APPLE_PASSWORD / APPLE_TEAM_ID incomplete; signed but not notarized"
+fi
+'''
+replace = '''elif [[ -f "${NOTARY_KEY_FILE:-}" ]] && [[ -n "${NOTARY_KEY_ID:-}" ]] && [[ -n "${NOTARY_ISSUER:-}" ]]; then
+  NOTARIZE=1
+else
+  warn "macOS: NOTARY_KEY_FILE / NOTARY_KEY_ID / NOTARY_ISSUER incomplete; signed but not notarized"
+fi
+'''
+count = 1
+
+[[rule]]
+why = "... the submission"
+files = "packaging/macos/package.sh"
+find = '''  out="$(xcrun notarytool submit "$file" --apple-id "$APPLE_ID" --password "$APPLE_PASSWORD" \
+    --team-id "$APPLE_TEAM_ID" --wait --timeout 1h --output-format json)" || true
+'''
+replace = '''  out="$(xcrun notarytool submit "$file" --key "$NOTARY_KEY_FILE" --key-id "$NOTARY_KEY_ID" \
+    --issuer "$NOTARY_ISSUER" --wait --timeout 1h --output-format json)" || true
+'''
+count = 1
+
+[[rule]]
+why = "... and the log of a refusal"
+files = "packaging/macos/package.sh"
+find = '''      xcrun notarytool log "$id" --apple-id "$APPLE_ID" --password "$APPLE_PASSWORD" --team-id "$APPLE_TEAM_ID" || true
+'''
+replace = '''      xcrun notarytool log "$id" --key "$NOTARY_KEY_FILE" --key-id "$NOTARY_KEY_ID" --issuer "$NOTARY_ISSUER" || true
+'''
+count = 1
+
 # Upstream's own updater (craft-update, from craft-libs) checks and installs the upstream apps'
 # releases, by their repositories and ai.storyteller.* ids, and carries their names into the binary.
 # It is left out: facthory/update/ is the updater that runs, and facthory/update/updates_ui.rs
@@ -211,8 +377,23 @@ count = 1
 [[rule]]
 why = "No self-update helper of upstream's flow at start"
 files = "apps/wordcraft/src/main.rs"
-find = "    // Windows: the update helper is a copy of this program started with `--finish-update`.\n    #[cfg(windows)]\n    if let Some(result) = craft_update::self_update::finish(&craft_update::suite::WORDCRAFT, &std::env::args_os().skip(1).collect::<Vec<_>>()) {\n        std::process::exit(i32::from(result.is_err()));\n    }\n"
+find = "    // Windows: the update helper is a copy of this program started with `--finish-update`.\n    #[cfg(windows)]\n    if let Some(result) = craft_update::self_update::finish(&wordcraft_ui_egui::UPDATE_APP, &std::env::args_os().skip(1).collect::<Vec<_>>()) {\n        std::process::exit(i32::from(result.is_err()));\n    }\n"
 replace = ""
+count = 1
+
+[[rule]]
+why = "... nor upstream's description of its app for craft-update"
+files = "crates/ui-egui/src/lib.rs"
+find = '''(?s)/// WordCraft as craft-update knows it.*?\n};\n\n'''
+replace = ""
+regex = true
+count = 1
+
+[[rule]]
+why = "A process that carries another program's AppImage variables must not install an update (upstream #5653): ours turns off too"
+files = "apps/wordcraft/src/main.rs"
+find = "                app.disable_self_update();\n"
+replace = "                app.disable_self_update();\n                facthory_update::disable();\n"
 count = 1
 
 [[rule]]
@@ -416,9 +597,27 @@ count = 1
 phase = "after"
 why = "The app icon is ours (derived from with icons, MIT); its attribution rows say so"
 files = "ATTRIBUTION.md"
-find = '^(\| `assets/app-icon/[^`]+` \|).*$'
+find = '^(\| `assets/app-icon/(?!facthory[a-z]+-logo-)[^`]+` \|).*$'
 replace = '\1 with icons contributors; recoloured by Bandpey GmbH | `notepad-text` from with icons (Chrome style), recoloured (`facthory/icons/page.svg`; on a tile for macOS, `facthory/icons/page-macos.svg`), rendered by `facthory/icons/render.py` | MIT | Facthory Page app icon |'
 regex = true
+
+# Facthory's mark in the About box (facthory/ui/facthory_logo.rs, copied below), which upstream's
+# shows as text only: its module, and one call before the app's name.
+[[rule]]
+phase = "after"
+why = "The About box's logo: its module"
+files = "crates/ui-egui/src/lib.rs"
+find = "pub mod updates_ui;\n"
+replace = "pub mod updates_ui;\nmod facthory_logo;\n"
+count = 1
+
+[[rule]]
+phase = "after"
+why = "The About box's logo: drawn above the name, the mark of the window's theme"
+files = "crates/ui-egui/src/dialogs/dispatch.rs"
+find = "        _ => {\n            ui.label(egui::RichText::new(tl!(\"Facthory Page\")).font(semibold(22.0)));\n"
+replace = "        _ => {\n            crate::facthory_logo::show(ui);\n            ui.label(egui::RichText::new(tl!(\"Facthory Page\")).font(semibold(22.0)));\n"
+count = 1
 
 # The updater (facthory/update/facthory_update.rs, copied below): its module and its calls from
 # main.rs. It needs no dependency the app lacks.
@@ -487,6 +686,10 @@ from = "update/updates_ui.rs"
 to = "crates/ui-egui/src/updates_ui.rs"
 
 [[copy]]
+from = "ui/facthory_logo.rs"
+to = "crates/ui-egui/src/facthory_logo.rs"
+
+[[copy]]
 from = "update/facthory_update.rs"
 to = "apps/facthorypage/src/facthory_update.rs"
 
@@ -518,6 +721,8 @@ to = "README.md"
 # (CRAFT_I18N_DIR); the tables Facthory Page embeds are branded with the tree.
 dir = "craft-i18n"
 tables = ["common.tsv", "wordcraft.tsv"]
+# Other craft-i18n files the build embeds and the brand edits, from the checkout's root.
+data = ["language-data/en-us/en-extra.txt"]
 
 # ---------------------------------------------------------------------------------------------
 # `rebrand.py check`: no upstream mark in what ships, except the credits above.
@@ -545,6 +750,21 @@ allow = [
   'Released into the public domain (CC0-1.0) by the DesignCraft contributors.',
   # Build input used unmodified (Cargo git dependency), not a product surface.
   'https://github.com/storytold/craft-libs',
+  "craft-proof is storytold/craft-libs main",
+  # craft-proof (craft-libs, a build input we can't edit) names the folder it reads dictionaries from
+  # and credits the English word supplement's authors in the language data window.
+  'WORDCRAFT_DICTIONARIES',
+  'wordcraftdictionaries',
+  # The same crate's dictionary folders on Windows and macOS (one string in the binary, with the
+  # path separators stripped by the scan): …/WordCraft/dictionaries, beside LibreOffice's.
+  'LibreOfficeshareextensionsWordCraftdictionaries',
+  'WordCraftdictionaries',
+  'Application SupportWordCraftdictionaries',
+  'Library/Application Support/WordCraft/dictionaries',
+  'WordCraft/dictionaries',
+  'is written by WordCraft contributors and licensed MIT OR Apache-2.0.',
+  # An English word in the Hunspell dictionaries embedded from craft-i18n, not a mark.
+  'storyteller/MS',
   # Upstream's forks of egui and winit (Cargo git dependencies), and the translations the
   # Flatpak recipe checks out: build inputs used unmodified.
   'https://github.com/storytold/egui.git',

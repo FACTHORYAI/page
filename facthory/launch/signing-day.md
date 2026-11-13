@@ -21,42 +21,53 @@ Claude. The owner's account steps themselves are runbook M in `bandpey-hq/github
   identity validation is In Progress at Microsoft (1–20 business days); the certificate profile
   `bandpey-public` follows once it is Completed. Windows signs through GitHub's OIDC token, so no
   client secret exists (`facthory-release.yml`, and a brand rule on upstream's `sign.ps1`).
-- In each repository's environment `release`: **0 of the 12 secrets set**. GitHub Pages is not
+- In each repository's environment `release`: **the secrets below are copied by the owner (the status line of 30 October: none set)**. GitHub Pages is not
   enabled, release immutability is off, and no release exists yet.
 
 ## The secrets
 
-Twelve, in Secret Manager (`signing/office-release.json` in github-infra), copied by
-`scripts/release-secrets.sh copy` into the environment `release` of page, grid and deck. Only
-`main` deploys from it, and no job waits for a person (the owner chose full automation on
-1 November 2026): the macOS and Windows jobs of `facthory-release.yml` in a release or a signed
-manual run (the Linux, install-check and publish jobs use no environment), and
-`facthory-packages.yml`.
+Thirteen, in the environment `release` of page, grid and deck. Their source is
+`signing/office-release.json` in github-infra (copied by `scripts/release-secrets.sh --product office
+copy`) and, for the five `AZURE_*`, `stacks/release-identities`. Only `main` deploys from the
+environment, and no job waits for a person (the owner chose full automation on 1 November 2026):
+the preflight, macOS, Windows and publish jobs of `facthory-release.yml` in a release or a signed
+manual run (the Linux and install-check jobs use no environment), and `facthory-packages.yml`.
+They are the same identities, and for Apple the same names, as the Facthory desktop app's release
+(`FACTHORYAI/data-plane`, `.github/workflows/desktop-release.yml`).
 
-| Secret | What it is | From | Read by |
-| ------ | ---------- | ---- | ------- |
-| `APPLE_CERTIFICATE` | Base64 of the `.p12` export of **Developer ID Application: Bandpey GmbH (TEAMID)** | R3, runbook M2 | macOS job: `packaging/macos/import-cert.sh` |
-| `APPLE_CERTIFICATE_PASSWORD` | The `.p12` export's password | R3, M2 | the same |
-| `KEYCHAIN_PASSWORD` | Random; the job's temporary keychain | `release-secrets.sh keychain` | the same |
-| `APPLE_ID` | The Apple Account that notarizes (a member of the Bandpey GmbH team) | R3, M2 | macOS job: `xcrun notarytool` in `package.sh` |
-| `APPLE_PASSWORD` | That account's app-specific password `office-notarize` | R3, M2 | the same |
-| `APPLE_TEAM_ID` | Bandpey GmbH's team id (10 characters) | R3, M2 | the same |
-| `AZURE_TENANT_ID` | The Entra tenant of the signing app registration | R4, M3 | Windows jobs: `azure/login` |
-| `AZURE_CLIENT_ID` | App registration `office-signing`, with a federated credential for each repository's environment `release` and the role Artifact Signing Certificate Profile Signer on `bandpey-public`. Not secret, and it has no client secret: the job signs in with GitHub's OIDC token | R4, M3 | the same |
-| `AZURE_SIGNING_ENDPOINT` | The Artifact Signing account's regional endpoint, `https://weu.codesigning.azure.net`; a mismatch gives 403 | R4, M3 | Windows jobs: `packaging/windows/sign.ps1` |
-| `AZURE_SIGNING_ACCOUNT` | The Artifact Signing account, `bandpey-signing` | R4, M3 | the same |
-| `AZURE_CERT_PROFILE` | The Public Trust certificate profile, `bandpey-public` | R4, M3 | the same |
-| `PACKAGES_GPG_KEY` | The apt and dnf repositories' signing key (RSA 4096, 5 years, no passphrase) | `release-secrets.sh packages-key` | `facthory-packages.yml`, when a release is published |
+| Secret | What it is | Read by |
+| ------ | ---------- | ------- |
+| `APPLE_CERTIFICATE` | Base64 of the `.p12` export of **Developer ID Application: Bandpey GmbH (97RCTA3838)** | macOS job: `packaging/macos/import-cert.sh` |
+| `APPLE_CERTIFICATE_PASSWORD` | The `.p12` export's password | the same |
+| `APPLE_TEAM_ID` | Bandpey GmbH's team id, `97RCTA3838` | the preflight (the job's keychain needs no password secret: the script makes a random one per run) |
+| `APPLE_API_KEY` | The App Store Connect API key's id (10 characters) | macOS job: `xcrun notarytool --key-id` in `package.sh` |
+| `APPLE_API_ISSUER` | The issuer id (a UUID) | the same, `--issuer` |
+| `APPLE_API_KEY_P8` | The key's `.p8`, as text or its base64. The job writes it to a file under `$RUNNER_TEMP` (mode 600) and removes it at the end | the same, `--key` |
+| `AZURE_TENANT_ID` | The Entra tenant of the signing app registration | Windows jobs: `azure/login` |
+| `AZURE_CLIENT_ID` | App registration `office-signing`, with a federated credential for each repository's environment `release` and the role Artifact Signing Certificate Profile Signer on `bandpey-public`. Not secret, and it has no client secret: the job signs in with GitHub's OIDC token | the same |
+| `AZURE_SIGNING_ENDPOINT` | The Artifact Signing account's regional endpoint, `https://weu.codesigning.azure.net`; a mismatch gives 403 | Windows jobs: `packaging/windows/sign.ps1` |
+| `AZURE_SIGNING_ACCOUNT` | The Artifact Signing account, `bandpey-signing` | the same |
+| `AZURE_CERT_PROFILE` | The Public Trust certificate profile, `bandpey-public` | the same |
+| `DOWNLOADS_TOKEN` | The token that writes `downloads.facthory.com` | publish job: `facthory/downloads.sh` |
+| `PACKAGES_GPG_KEY` | The apt and dnf repositories' signing key (RSA 4096, 5 years, no passphrase) | `facthory-packages.yml`, when a release is published |
 
 What each run requires:
 
-- **A release**, which any push to `main` starts when the version in `Cargo.toml` has none yet,
-  refuses to build unless both platforms can sign: the five `APPLE_*` and `KEYCHAIN_PASSWORD` for
-  macOS, and the five `AZURE_*` (or a `WINDOWS_CERTIFICATE` pair) for Windows. So **the first
-  release needs R3 and R4 both**; until then, a push to `main` with a new version fails at that
-  check and publishes nothing.
-- **A manual run from `main` with `sign`** signs what it can and builds the rest unsigned, as
-  workflow artifacts, without a release. That is how each identity is tested the day it lands.
+- **The preflight** (`facthory/signing_preflight.py`) starts every run that signs, before any
+  build, and every build waits for it. It checks that each secret above is set and well formed,
+  and says which is not, by name only: the `.p12` opens with its password, has not expired and is a
+  Developer ID Application identity of team `97RCTA3838`; the `.p8` parses as a private key; the
+  `AZURE_*` values name Bandpey GmbH's signing account, profile and endpoint; and, in a release,
+  `DOWNLOADS_TOKEN` is set and `PACKAGES_GPG_KEY` is a key that can sign. A missing value costs one
+  minute instead of a macOS build.
+- **A release**, which a manual run from `main` with `publish` starts when the version in
+  `Cargo.toml` has none yet (a push to `main` does it only when the repository variable
+  `RELEASE_ON_MERGE` is `true`, which is off), signs both platforms, so **the first release needs
+  the Apple and the Azure identities both**. A release run before they are in the environment
+  stops at the preflight and publishes nothing. Merging releases nothing.
+- **A manual run from `main` with `sign`** signs both platforms (the preflight checks the Apple
+  and Azure values, not the two a release adds) and publishes nothing. That is how each identity is
+  tested the day it lands.
 - **The release's last step** calls `facthory-packages.yml`, which fails without `PACKAGES_GPG_KEY`.
 - Not W4: `SYNC_APP_PRIVATE_KEY` in the environment `upstream-sync` (W3, runbook L).
 
@@ -67,8 +78,8 @@ credentials; our brand rule that switched to it is retired, since we follow upst
 
 ## The day R3 lands (Apple)
 
-1. **Owner**: runbook M2, then `scripts/release-secrets.sh status` (the five `APPLE_*` and
-   `KEYCHAIN_PASSWORD` set) and `scripts/release-secrets.sh copy` (it skips what is not set yet).
+1. **Owner**: runbook M2, then `scripts/release-secrets.sh --product office status` (the six `APPLE_*`
+   set) and `scripts/release-secrets.sh --product office copy` (it skips what is not set yet).
 2. **Claude**: start a manual run in each repository:
 
    ```sh
@@ -102,7 +113,7 @@ the signing token at once, and only then run `package.ps1 -SkipBuild` on the bin
 run built first, so the token cannot run out during a long build. The brand rule's
 `ExcludeCredentials` makes the signing library use the Azure CLI's sign-in alone; version 1.0.95
 accepts the setting and all nine names in it (checked in the package, 2026-10-31). A pull request
-never signs in, and a configured `WINDOWS_CERTIFICATE` pair is used instead of Azure.
+never signs in, and there is no certificate-file path.
 
 1. **Owner**, once Microsoft's validation shows Completed: the certificate profile `bandpey-public`
    (owner guide, P3 part 2); the app registration `office-signing` with a federated credential for
@@ -129,11 +140,12 @@ Nobody tags or publishes: a release is a run of `facthory-release.yml` on `main`
 no release yet. The workflow itself creates the tag `v<version>` when it publishes (only it may:
 a tag ruleset in github-infra), on the commit it built and checked.
 
-1. **Owner**: runbook M4: `scripts/release-secrets.sh packages-key`, `copy` (12 of 12), then in
+1. **Owner**: runbook M4: `scripts/release-secrets.sh packages-key`, `copy` (13 of 13), then in
    each repository GitHub Pages from GitHub Actions and release immutability on.
 2. **Claude**: start it with a manual run from `main` with `publish` (`gh workflow run
-   facthory-release.yml -R FACTHORYAI/<app> --ref main -f publish=true`), or let the next push to `main`
-   start it. The version is the one in `Cargo.toml` (`0.12.0` for page and deck, `0.13.0` for grid
+   facthory-release.yml -R FACTHORYAI/<app> --ref main -f publish=true`), after the rehearsal
+   (`-f sign=true`, which publishes nothing). A merge to `main` starts nothing while the repository
+   variable `RELEASE_ON_MERGE` is unset. The version is the one in `Cargo.toml` (`0.12.0` for page and deck, `0.13.0` for grid
    today). The run builds and signs every platform, installs each platform's files on a machine of
    that platform with every signature checked (`facthory/install_check.py`), publishes the release
    with `SHA256SUMS` and `latest.json` with its staged rollout, serves its files and then the feed
@@ -160,7 +172,8 @@ that app's folder of that version on the same host, so updates can only be teste
 **published** releases:
 
 1. Install the first release from each channel and start it once.
-2. The next release publishes itself. The natural one is the next upstream release merged by the
+2. The next release publishes itself once the owner has set `RELEASE_ON_MERGE=true` (`gh variable set
+   RELEASE_ON_MERGE --repo FACTHORYAI/<app> --body true`); until then it is dispatched by hand. The natural one is the next upstream release merged by the
    sync (W3): upstream is at WordCraft v0.12.0, GridCraft v0.13.0 and DeckCraft v0.12.0 on
    30 October. It reaches 10% of copies first, every copy after three days: for the test, give
    the test copies `"bucket": 0` in their `update.json`, which the first step already includes.

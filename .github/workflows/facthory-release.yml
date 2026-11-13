@@ -8,9 +8,12 @@ name: Facthory Page release
 #   Windows  facthorypage-<v>-windows-<arch>.msi (signed), portable zip; x64 and arm64
 #   Linux    AppImage (+ .zsync for delta updates), .deb, .rpm, .tar.gz; x86_64 and aarch64
 #
-# Releases need no person. Every push to main (an upstream release the sync merged, or our own
-# change) checks the version in Cargo.toml: when no release has it yet, and it is newer than the
-# newest one, the run is a release. It must sign; each platform's files are installed and checked
+# A release is an explicit act, by default. A manual run from main with publish checks the version
+# in Cargo.toml: when no release has it yet, and it is newer than the newest one, the run is a
+# release. A push to main (an upstream release the sync merged, or our own change) does the same
+# only when the repository variable RELEASE_ON_MERGE is exactly true, the owner's switch, off by
+# default (gh variable set RELEASE_ON_MERGE --repo FACTHORYAI/<app> --body true); otherwise a
+# push builds nothing and says so in the log. A release must sign; each platform's files are installed and checked
 # (facthory/install_check.py, upgrading the newest release's); then the run publishes the GitHub
 # release, which makes the tag v<version>, with SHA256SUMS and the update feed latest.json, whose
 # staged rollout the apps follow (10% of copies, then 25%, 50% and all a day apart; facthory/
@@ -18,10 +21,13 @@ name: Facthory Page release
 # downloads.sh), where the apps look, and rebuilds the apt and dnf repositories.
 # facthory-rollout.yml halts or resumes it.
 #
-# A push that changes no version builds nothing. Every pull request builds and checks everything
+# A push that releases nothing (no new version, or releasing on merge is off) builds nothing. Every pull request builds and checks everything
 # unsigned, outside the environment, and main requires the run's `release` check. A manual run does
 # the same, signs when asked from main (sign) and publishes only when asked (publish).
 # Secrets live in the environment `release` (bandpey-hq/github-infra), which only main may use.
+# In a run that signs, the job `preflight` checks first that every secret is set and well formed
+# (facthory/signing_preflight.py, names only in the log), so a missing value costs a minute and
+# not a macOS build; every build waits for it.
 # Nobody may move or delete a v* tag; one pushed by hand on another commit stops the release.
 on:
   push:
@@ -76,6 +82,8 @@ jobs:
           EVENT: ${{ github.event_name }}
           SIGN: ${{ inputs.sign }}
           PUBLISH: ${{ inputs.publish }}
+          # The owner's switch: a push to main releases only when the repository variable is `true`.
+          RELEASE_ON_MERGE: ${{ vars.RELEASE_ON_MERGE }}
         run: |
           version=$(awk '/^\[/ { p = ($0 == "[workspace.package]"); next } p && $1 == "version" { gsub(/[" ]/, "", $3); print $3; exit }' Cargo.toml)
           if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
@@ -86,12 +94,18 @@ jobs:
           previous=""
           if [ -n "$newest" ] && [ "$newest" != "v${version}" ]; then previous=$newest; fi
           release=false
-          asked=false
-          if [ "$EVENT" = push ] || { [ "$EVENT" = workflow_dispatch ] && [ "$PUBLISH" = true ]; }; then asked=true; fi
+          # Asked for: a push to main, or a manual run with publish. A push counts only when the
+          # repository variable RELEASE_ON_MERGE is exactly true; a manual run always counts.
+          wanted=false
+          if [ "$EVENT" = push ] || { [ "$EVENT" = workflow_dispatch ] && [ "$PUBLISH" = true ]; }; then wanted=true; fi
+          asked=$wanted
+          if [ "$EVENT" = push ] && [ "$RELEASE_ON_MERGE" != true ]; then asked=false; fi
           # A published release only: a draft left by a failed run doesn't count (publish replaces it).
-          if [ "$asked" = true ] && [ "$GITHUB_REF" = refs/heads/main ] && ! gh api "repos/${GITHUB_REPOSITORY}/releases/tags/v${version}" >/dev/null 2>&1; then
+          if [ "$wanted" = true ] && [ "$GITHUB_REF" = refs/heads/main ] && ! gh api "repos/${GITHUB_REPOSITORY}/releases/tags/v${version}" >/dev/null 2>&1; then
             if [ -n "$newest" ] && [ "$(printf '%s\n%s\n' "${newest#v}" "$version" | sort -V | tail -1)" != "$version" ]; then
               echo "::warning::Cargo.toml's version ${version} is older than the newest release ${newest}: no release."
+            elif [ "$asked" != true ]; then
+              echo "version ${version} has no release yet; releasing on merge is off (RELEASE_ON_MERGE is not true): dispatch with publish=true to release"
             else
               # A tag v<version> made outside this workflow would carry the release instead of this
               # commit: GitHub ignores the target when the tag exists. v* tags can't be moved or
@@ -122,9 +136,45 @@ jobs:
             echo "previous=${previous}"
           } >> "$GITHUB_OUTPUT"
 
+  preflight:
+    name: Signing preflight
+    needs: version
+    if: needs.version.outputs.build == 'true'
+    runs-on: ubuntu-24.04
+    # Only signing runs see the secrets; in the others this job passes at once.
+    environment: ${{ needs.version.outputs.sign == 'true' && 'release' || '' }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: facthory
+      - name: Check the secrets of the environment release
+        if: needs.version.outputs.sign == 'true'
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          APPLE_API_KEY_P8: ${{ secrets.APPLE_API_KEY_P8 }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_SIGNING_ENDPOINT: ${{ secrets.AZURE_SIGNING_ENDPOINT }}
+          AZURE_SIGNING_ACCOUNT: ${{ secrets.AZURE_SIGNING_ACCOUNT }}
+          AZURE_CERT_PROFILE: ${{ secrets.AZURE_CERT_PROFILE }}
+          DOWNLOADS_TOKEN: ${{ secrets.DOWNLOADS_TOKEN }}
+          PACKAGES_GPG_KEY: ${{ secrets.PACKAGES_GPG_KEY }}
+          RELEASE: ${{ needs.version.outputs.release }}
+        run: |
+          # A run that publishes also needs the downloads token and the packages key.
+          flag=""
+          if [ "$RELEASE" = true ]; then flag="--publish"; fi
+          python3 facthory/signing_preflight.py $flag
+
   macos:
     name: macOS universal
-    needs: version
+    needs: [version, preflight]
     if: needs.version.outputs.build == 'true'
     runs-on: macos-15
     # Only signing runs get the signing secrets: pull requests and plain manual runs have none.
@@ -137,21 +187,6 @@ jobs:
       # The updater's feed (facthory/update/): builds without it never check.
       FACTHORY_UPDATE_FEED: https://downloads.facthory.com/feeds/${{ github.event.repository.name }}/latest.json
     steps:
-      - name: Require signing for a release
-        if: needs.version.outputs.release == 'true'
-        env:
-          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        run: |
-          missing=""
-          for name in APPLE_CERTIFICATE APPLE_CERTIFICATE_PASSWORD KEYCHAIN_PASSWORD APPLE_ID APPLE_PASSWORD APPLE_TEAM_ID; do
-            [ -n "${!name}" ] || missing="$missing $name"
-          done
-          if [ -n "$missing" ]; then echo "::error::A release must be signed and notarized; the environment release lacks:$missing"; exit 1; fi
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -188,16 +223,37 @@ jobs:
           python3 -m pip install --quiet "ds_store==1.3.3" "mac_alias==2.2.3" "pillow==12.3.0"
           python3 packaging/macos/dmg/generate.py
       - name: Import the signing certificate
+        # The temporary keychain's password is random, made by the script (no secret holds it).
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
         run: packaging/macos/import-cert.sh
+      - name: Notarization key
+        # The App Store Connect API key, as a file only this job can read (mode 600, in a private
+        # folder), for upstream's package.sh (brand.toml: notarytool --key). The secret is the .p8
+        # as it is or its base64. Removed again below, even when the build fails.
+        if: needs.version.outputs.sign == 'true'
+        env:
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          APPLE_API_KEY_P8: ${{ secrets.APPLE_API_KEY_P8 }}
+        run: |
+          umask 077
+          dir="$(mktemp -d "$RUNNER_TEMP/notary.XXXXXXXX")"
+          if printf '%s' "$APPLE_API_KEY_P8" | grep -q 'PRIVATE KEY'; then
+            printf '%s\n' "$APPLE_API_KEY_P8" > "$dir/AuthKey.p8"
+          else
+            printf '%s' "$APPLE_API_KEY_P8" | base64 --decode > "$dir/AuthKey.p8"
+          fi
+          chmod 600 "$dir/AuthKey.p8"
+          {
+            echo "NOTARY_KEY_DIR=$dir"
+            echo "NOTARY_KEY_FILE=$dir/AuthKey.p8"
+            echo "NOTARY_KEY_ID=$APPLE_API_KEY"
+            echo "NOTARY_ISSUER=$APPLE_API_ISSUER"
+          } >> "$GITHUB_ENV"
       - name: Build, sign, notarize
         env:
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           CRAFT_FONTS_DIR: ${{ github.workspace }}/craft-fonts
           CRAFT_FONTS_REQUIRED: "1"
         run: packaging/macos/package.sh --arch universal
@@ -208,13 +264,15 @@ jobs:
           name: release-macos
           path: dist/release/*
           if-no-files-found: error
-      - name: Remove the temporary keychain
+      - name: Remove the temporary keychain and the notarization key
         if: always()
-        run: if [ -n "${MACOS_KEYCHAIN:-}" ]; then security delete-keychain "$MACOS_KEYCHAIN" || true; fi
+        run: |
+          if [ -n "${MACOS_KEYCHAIN:-}" ]; then security delete-keychain "$MACOS_KEYCHAIN" || true; fi
+          if [ -n "${NOTARY_KEY_DIR:-}" ]; then rm -rf "$NOTARY_KEY_DIR"; fi
 
   windows:
     name: Windows ${{ matrix.arch }}
-    needs: version
+    needs: [version, preflight]
     if: needs.version.outputs.build == 'true'
     runs-on: windows-latest
     # Only signing runs get the signing secrets: pull requests and plain manual runs have none.
@@ -239,34 +297,15 @@ jobs:
     steps:
       - name: Signing material
         # Azure Artifact Signing through the app registration's federated credential for this
-        # repository's environment release (no client secret), or a certificate, which sign.ps1
-        # prefers. A release must sign; a pull request has no environment, so it never signs in.
+        # repository's environment release (no client secret). A run that signs has passed the
+        # preflight, so the values are there; a pull request has no environment and never signs in.
         id: signing
         shell: bash
         env:
-          TAGGED: ${{ needs.version.outputs.release }}
-          PULL_REQUEST: ${{ github.event_name == 'pull_request' }}
-          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
-          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
-          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          AZURE_SIGNING_ENDPOINT: ${{ secrets.AZURE_SIGNING_ENDPOINT }}
-          AZURE_SIGNING_ACCOUNT: ${{ secrets.AZURE_SIGNING_ACCOUNT }}
-          AZURE_CERT_PROFILE: ${{ secrets.AZURE_CERT_PROFILE }}
+          SIGN: ${{ needs.version.outputs.sign }}
         run: |
           azure=false
-          missing=""
-          for name in AZURE_TENANT_ID AZURE_CLIENT_ID AZURE_SIGNING_ENDPOINT AZURE_SIGNING_ACCOUNT AZURE_CERT_PROFILE; do
-            [ -n "${!name}" ] || missing="$missing $name"
-          done
-          if [ -n "$WINDOWS_CERTIFICATE" ] && [ -n "$WINDOWS_CERTIFICATE_PASSWORD" ]; then
-            :
-          elif [ -z "$missing" ] && [ "$PULL_REQUEST" != true ]; then
-            azure=true
-          elif [ "$TAGGED" = true ]; then
-            echo "::error::A release must be signed: no WINDOWS_CERTIFICATE pair, and the environment release lacks:$missing"
-            exit 1
-          fi
+          if [ "$SIGN" = true ]; then azure=true; fi
           echo "azure=$azure" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -327,8 +366,6 @@ jobs:
       - name: Sign, package
         shell: pwsh
         env:
-          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
-          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
           AZURE_SIGNING_OIDC: ${{ steps.signing.outputs.azure == 'true' && '1' || '' }}
           AZURE_SIGNING_ENDPOINT: ${{ secrets.AZURE_SIGNING_ENDPOINT }}
           AZURE_SIGNING_ACCOUNT: ${{ secrets.AZURE_SIGNING_ACCOUNT }}
@@ -347,7 +384,7 @@ jobs:
 
   linux:
     name: Linux ${{ matrix.arch }}
-    needs: version
+    needs: [version, preflight]
     if: needs.version.outputs.build == 'true'
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 120
@@ -588,12 +625,12 @@ jobs:
     secrets: inherit
 
   release-check:
-    # The check main requires of this workflow, under a name we own. It passes when every build,
+    # The check main requires of this workflow, under a name we own. It passes when the signing preflight, every build,
     # install check and the publish step succeeded, or when the run builds nothing (a push that
-    # changes no version). It runs even in a cancelled run, because a skipped required check counts
+    # releases nothing). It runs even in a cancelled run, because a skipped required check counts
     # as passing.
     name: release
-    needs: [version, macos, windows, linux, verify, publish]
+    needs: [version, preflight, macos, windows, linux, verify, publish]
     if: ${{ always() }}
     runs-on: ubuntu-24.04
     steps:
@@ -602,7 +639,7 @@ jobs:
           VERSION: ${{ needs.version.result }}
           BUILD: ${{ needs.version.outputs.build }}
           RESULTS: >-
-            macOS=${{ needs.macos.result }} Windows=${{ needs.windows.result }}
+            preflight=${{ needs.preflight.result }} macOS=${{ needs.macos.result }} Windows=${{ needs.windows.result }}
             Linux=${{ needs.linux.result }} install=${{ needs.verify.result }}
             publish=${{ needs.publish.result }}
         run: |

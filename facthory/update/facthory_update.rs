@@ -28,6 +28,7 @@
 
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output, Stdio};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Mutex, MutexGuard, OnceLock, PoisonError};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
@@ -90,6 +91,8 @@ struct Shared {
 }
 
 static SHARED: OnceLock<Mutex<Shared>> = OnceLock::new();
+/// Set by `disable`: this process never checks for or installs an update.
+static DISABLED: AtomicBool = AtomicBool::new(false);
 
 fn shared() -> Option<MutexGuard<'static, Shared>> {
     SHARED.get().map(|m| m.lock().unwrap_or_else(PoisonError::into_inner))
@@ -99,6 +102,10 @@ fn shared() -> Option<MutexGuard<'static, Shared>> {
 /// `name` is the app's name; `settings` its settings folder, `None` for a run without preferences.
 pub fn start(name: &'static str, settings: Option<PathBuf>) {
     let (Some(feed), Some(settings)) = (FEED, settings) else { return };
+    if DISABLED.load(Ordering::Relaxed) {
+        log::info!("updates: off in this process");
+        return;
+    }
     if std::env::var("FACTHORY_UPDATES").is_ok_and(|v| v.eq_ignore_ascii_case("off")) || !Saved::load(&settings).enabled {
         log::info!("updates: off");
         return;
@@ -184,8 +191,18 @@ enum Action {
     Skip(String),
 }
 
+/// Turns the updater off for the rest of this process: nothing is checked, offered or installed.
+/// For a process that still carries another program's AppImage variables, which an install would
+/// take for this copy's file and replace (upstream #5653). Call it before `start`.
+pub fn disable() {
+    DISABLED.store(true, Ordering::Relaxed);
+}
+
 /// Installs a downloaded update, if there is one; call as the app quits, once it has saved.
 pub fn on_exit() {
+    if DISABLED.load(Ordering::Relaxed) {
+        return;
+    }
     let Some(mut s) = shared() else { return };
     let Phase::Ready { version, install } = std::mem::replace(&mut s.phase, Phase::Idle) else { return };
     match finish(&install, s.restart) {

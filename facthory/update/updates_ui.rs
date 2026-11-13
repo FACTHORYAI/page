@@ -17,6 +17,13 @@ pub(crate) struct Runtime {
 impl WordApp {
     /// Upstream's switch for its check at start; `facthory_update` decides when to check.
     pub fn set_startup_update_check(&mut self, _on: bool) {}
+
+    /// Upstream's switch for a process that still carries another program's AppImage variables;
+    /// `facthory_update::disable` (called beside it in main.rs) is the one that turns updates off.
+    pub fn disable_self_update(&mut self) {}
+
+    /// Upstream starts the helper of a ready update here; `facthory_update::on_exit` installs ours.
+    pub fn start_pending_update(&mut self) {}
 }
 
 pub(crate) fn check(app: &mut WordApp) {
