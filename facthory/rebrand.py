@@ -255,7 +255,9 @@ def i18n_files(brand: dict) -> list[str]:
     if not conf or not (ROOT / conf["dir"]).is_dir():
         return []
     locales = ROOT / conf["dir"] / "locales"
-    return sorted(p.relative_to(ROOT).as_posix() for t in conf["tables"] for p in locales.glob(f"*/{t}"))
+    tables = [p.relative_to(ROOT).as_posix() for t in conf["tables"] for p in locales.glob(f"*/{t}")]
+    data = [f"{conf['dir']}/{d}" for d in conf.get("data", []) if (ROOT / conf["dir"] / d).is_file()]
+    return sorted(tables + data)
 
 
 def apply() -> None:

@@ -78,8 +78,9 @@ count = 1
 
 [[rule]]
 files = "crates/ui-egui/src/chrome.rs"
-find = 'tl!("Discord"), medium(11.5)'
-replace = 'tl!("Help"), medium(11.5)'
+find = 'tl!\("Discord"\),(\s+medium\(11\.5\))'
+replace = 'tl!("Help"),\1'
+regex = true
 count = 1
 
 [[rule]]
@@ -116,9 +117,11 @@ replace = 'c("Help and feedback", "ui.discord")'
 count = 1
 
 # The spelling list (sorted; a test checks the order) knows our name in its place, not upstream's.
+# Since upstream's CP1.3 it is data of craft-i18n ([i18n].data), not a file of the tree.
 [[rule]]
 why = "The spelling list drops ArtCraft"
-files = "assets/spelling/en-extra.txt"
+files = "craft-i18n/language-data/en-us/en-extra.txt"
+i18n = true
 find = '^artcraft\n'
 replace = ""
 regex = true
@@ -126,7 +129,8 @@ count = 1
 
 [[rule]]
 why = "The spelling list drops WordCraft"
-files = "assets/spelling/en-extra.txt"
+files = "craft-i18n/language-data/en-us/en-extra.txt"
+i18n = true
 find = '^wordcraft\n'
 replace = ""
 regex = true
@@ -134,7 +138,8 @@ count = 1
 
 [[rule]]
 why = "The spelling list knows Facthory, in its sorted place"
-files = "assets/spelling/en-extra.txt"
+files = "craft-i18n/language-data/en-us/en-extra.txt"
+i18n = true
 find = '^facebook\n'
 replace = "facebook\nfacthory\n"
 regex = true
@@ -211,8 +216,23 @@ count = 1
 [[rule]]
 why = "No self-update helper of upstream's flow at start"
 files = "apps/wordcraft/src/main.rs"
-find = "    // Windows: the update helper is a copy of this program started with `--finish-update`.\n    #[cfg(windows)]\n    if let Some(result) = craft_update::self_update::finish(&craft_update::suite::WORDCRAFT, &std::env::args_os().skip(1).collect::<Vec<_>>()) {\n        std::process::exit(i32::from(result.is_err()));\n    }\n"
+find = "    // Windows: the update helper is a copy of this program started with `--finish-update`.\n    #[cfg(windows)]\n    if let Some(result) = craft_update::self_update::finish(&wordcraft_ui_egui::UPDATE_APP, &std::env::args_os().skip(1).collect::<Vec<_>>()) {\n        std::process::exit(i32::from(result.is_err()));\n    }\n"
 replace = ""
+count = 1
+
+[[rule]]
+why = "... nor upstream's description of its app for craft-update"
+files = "crates/ui-egui/src/lib.rs"
+find = '''(?s)/// WordCraft as craft-update knows it.*?\n};\n\n'''
+replace = ""
+regex = true
+count = 1
+
+[[rule]]
+why = "A process that carries another program's AppImage variables must not install an update (upstream #5653): ours turns off too"
+files = "apps/wordcraft/src/main.rs"
+find = "                app.disable_self_update();\n"
+replace = "                app.disable_self_update();\n                facthory_update::disable();\n"
 count = 1
 
 [[rule]]
@@ -518,6 +538,8 @@ to = "README.md"
 # (CRAFT_I18N_DIR); the tables Facthory Page embeds are branded with the tree.
 dir = "craft-i18n"
 tables = ["common.tsv", "wordcraft.tsv"]
+# Other craft-i18n files the build embeds and the brand edits, from the checkout's root.
+data = ["language-data/en-us/en-extra.txt"]
 
 # ---------------------------------------------------------------------------------------------
 # `rebrand.py check`: no upstream mark in what ships, except the credits above.
