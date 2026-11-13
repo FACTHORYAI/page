@@ -148,6 +148,25 @@ def tsv_row(text: str, key: str, new_key: str, translation: str | None) -> tuple
     return "\n".join(out), n
 
 
+def drop_marked_placeholders(brand: dict, files: list[str]) -> None:
+    """Catalog rows commented out with `#` are placeholders of strings a locale has not translated
+    yet; the catalogs ship them whole. Where one still names an upstream mark (a string of the
+    sibling apps, or one a rule renames only in translated rows), drop the placeholder: it carries
+    no translation, and the app shows its English until a translator adds one."""
+    chk = brand.get("check", {})
+    forbid, allow = chk.get("forbid", []), chk.get("allow", [])
+    for p in i18n_files(brand):
+        if p not in files:
+            continue
+        path = ROOT / p
+        text = read_text(path)
+        if text is None:
+            continue
+        keep = [line for line in text.split("\n") if not (line.startswith("#\t") and scan(p, line, forbid, allow))]
+        if len(keep) != len(text.split("\n")):
+            write_text(path, "\n".join(keep))
+
+
 def apply_tokens(brand: dict, files: list[str]) -> None:
     tokens = brand.get("token", [])
     credits = brand.get("files", {}).get("credits", [])
@@ -267,6 +286,7 @@ def apply() -> None:
     files = [p for p in tracked() if not p.startswith("facthory/")] + i18n_files(brand)
     apply_rules(brand, files, "before")
     apply_tokens(brand, files)
+    drop_marked_placeholders(brand, files)
     apply_guids(brand, files)
     files = apply_renames(brand, files)
     apply_rules(brand, files, "after")

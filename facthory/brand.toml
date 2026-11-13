@@ -87,7 +87,12 @@ credits = ["ATTRIBUTION.md", "contributors"]
 delete = ["docs/brand"]
 # Authorship lines the tokens would otherwise turn into a false credit: upstream's data files
 # (the spelling supplements, embedded in the app) say who wrote them.
-keep = ["Written by WordCraft contributors"]
+keep = [
+  "Written by WordCraft contributors",
+  # The environment variable craft-proof (a build input we can't edit) reads for a folder of
+  # Hunspell dictionaries; the app's help names the variable that works.
+  "WORDCRAFT_DICTIONARIES",
+]
 
 # ---------------------------------------------------------------------------------------------
 # Rules before the tokens, on upstream's text. Each fails the build when upstream moves it.
@@ -293,6 +298,25 @@ why = "A word-count test counts the name as one word; ours is two"
 files = "crates/doc/src/tests.rs"
 find = 'count_words("WordCraft是一个文字处理器，很好用！")'
 replace = 'count_words("Brand是一个文字处理器，很好用！")'
+count = 1
+
+# The Flatpak recipes grant access to the shared updater's host folder, which our builds leave out
+# with craft-update (above): without it they need neither the permission nor the folder.
+[[rule]]
+why = "The Flatpak recipes drop the shared updater's host permissions"
+files = ["packaging/linux/flatpak/ai.storyteller.wordcraft.yml", "packaging/linux/flatpak/ai.storyteller.wordcraft.bundle.yml"]
+find = '''  # The shared updater inspects and updates this installation via flatpak-spawn --host.
+  - --talk-name=org.freedesktop.Flatpak
+  - --filesystem=xdg-data/ArtCraft/versions:ro
+'''
+replace = ""
+count = 2
+
+[[rule]]
+why = "The Flatpak image push names a fallback user: ours"
+files = "packaging/linux/flatpak-oci.sh"
+find = "${GITHUB_ACTOR:-storytold}"
+replace = "${GITHUB_ACTOR:-facthory}"
 count = 1
 
 # Notarization with the App Store Connect API key of Bandpey GmbH's other releases, not an Apple
@@ -727,6 +751,14 @@ allow = [
   'Released into the public domain (CC0-1.0) by the DesignCraft contributors.',
   # Build input used unmodified (Cargo git dependency), not a product surface.
   'https://github.com/storytold/craft-libs',
+  "craft-proof is storytold/craft-libs main",
+  # craft-proof (craft-libs, a build input we can't edit) names the folder it reads dictionaries from
+  # and credits the English word supplement's authors in the language data window.
+  'WORDCRAFT_DICTIONARIES',
+  'wordcraftdictionaries',
+  'is written by WordCraft contributors and licensed MIT OR Apache-2.0.',
+  # An English word in the Hunspell dictionaries embedded from craft-i18n, not a mark.
+  'storyteller/MS',
   # Upstream's forks of egui and winit (Cargo git dependencies), and the translations the
   # Flatpak recipe checks out: build inputs used unmodified.
   'https://github.com/storytold/egui.git',
