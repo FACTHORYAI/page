@@ -8,9 +8,12 @@ name: Facthory Page release
 #   Windows  facthorypage-<v>-windows-<arch>.msi (signed), portable zip; x64 and arm64
 #   Linux    AppImage (+ .zsync for delta updates), .deb, .rpm, .tar.gz; x86_64 and aarch64
 #
-# Releases need no person. Every push to main (an upstream release the sync merged, or our own
-# change) checks the version in Cargo.toml: when no release has it yet, and it is newer than the
-# newest one, the run is a release. It must sign; each platform's files are installed and checked
+# A release is an explicit act, by default. A manual run from main with publish checks the version
+# in Cargo.toml: when no release has it yet, and it is newer than the newest one, the run is a
+# release. A push to main (an upstream release the sync merged, or our own change) does the same
+# only when the repository variable RELEASE_ON_MERGE is exactly true, the owner's switch, off by
+# default (gh variable set RELEASE_ON_MERGE --repo FACTHORYAI/<app> --body true); otherwise a
+# push builds nothing and says so in the log. A release must sign; each platform's files are installed and checked
 # (facthory/install_check.py, upgrading the newest release's); then the run publishes the GitHub
 # release, which makes the tag v<version>, with SHA256SUMS and the update feed latest.json, whose
 # staged rollout the apps follow (10% of copies, then 25%, 50% and all a day apart; facthory/
@@ -18,7 +21,7 @@ name: Facthory Page release
 # downloads.sh), where the apps look, and rebuilds the apt and dnf repositories.
 # facthory-rollout.yml halts or resumes it.
 #
-# A push that changes no version builds nothing. Every pull request builds and checks everything
+# A push that releases nothing (no new version, or releasing on merge is off) builds nothing. Every pull request builds and checks everything
 # unsigned, outside the environment, and main requires the run's `release` check. A manual run does
 # the same, signs when asked from main (sign) and publishes only when asked (publish).
 # Secrets live in the environment `release` (bandpey-hq/github-infra), which only main may use.
@@ -79,6 +82,8 @@ jobs:
           EVENT: ${{ github.event_name }}
           SIGN: ${{ inputs.sign }}
           PUBLISH: ${{ inputs.publish }}
+          # The owner's switch: a push to main releases only when the repository variable is `true`.
+          RELEASE_ON_MERGE: ${{ vars.RELEASE_ON_MERGE }}
         run: |
           version=$(awk '/^\[/ { p = ($0 == "[workspace.package]"); next } p && $1 == "version" { gsub(/[" ]/, "", $3); print $3; exit }' Cargo.toml)
           if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
@@ -89,12 +94,18 @@ jobs:
           previous=""
           if [ -n "$newest" ] && [ "$newest" != "v${version}" ]; then previous=$newest; fi
           release=false
-          asked=false
-          if [ "$EVENT" = push ] || { [ "$EVENT" = workflow_dispatch ] && [ "$PUBLISH" = true ]; }; then asked=true; fi
+          # Asked for: a push to main, or a manual run with publish. A push counts only when the
+          # repository variable RELEASE_ON_MERGE is exactly true; a manual run always counts.
+          wanted=false
+          if [ "$EVENT" = push ] || { [ "$EVENT" = workflow_dispatch ] && [ "$PUBLISH" = true ]; }; then wanted=true; fi
+          asked=$wanted
+          if [ "$EVENT" = push ] && [ "$RELEASE_ON_MERGE" != true ]; then asked=false; fi
           # A published release only: a draft left by a failed run doesn't count (publish replaces it).
-          if [ "$asked" = true ] && [ "$GITHUB_REF" = refs/heads/main ] && ! gh api "repos/${GITHUB_REPOSITORY}/releases/tags/v${version}" >/dev/null 2>&1; then
+          if [ "$wanted" = true ] && [ "$GITHUB_REF" = refs/heads/main ] && ! gh api "repos/${GITHUB_REPOSITORY}/releases/tags/v${version}" >/dev/null 2>&1; then
             if [ -n "$newest" ] && [ "$(printf '%s\n%s\n' "${newest#v}" "$version" | sort -V | tail -1)" != "$version" ]; then
               echo "::warning::Cargo.toml's version ${version} is older than the newest release ${newest}: no release."
+            elif [ "$asked" != true ]; then
+              echo "version ${version} has no release yet; releasing on merge is off (RELEASE_ON_MERGE is not true): dispatch with publish=true to release"
             else
               # A tag v<version> made outside this workflow would carry the release instead of this
               # commit: GitHub ignores the target when the tag exists. v* tags can't be moved or
@@ -616,7 +627,7 @@ jobs:
   release-check:
     # The check main requires of this workflow, under a name we own. It passes when the signing preflight, every build,
     # install check and the publish step succeeded, or when the run builds nothing (a push that
-    # changes no version). It runs even in a cancelled run, because a skipped required check counts
+    # releases nothing). It runs even in a cancelled run, because a skipped required check counts
     # as passing.
     name: release
     needs: [version, preflight, macos, windows, linux, verify, publish]

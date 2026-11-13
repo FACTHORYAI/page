@@ -88,7 +88,7 @@ Partner Center → Apps and games → **New product** → **EXE or MSI app** →
 
 ## Step 6. Hosting the MSIs (Claude prepares; a person publishes each release)
 
-- Each signed release is drafted by `facthory-release.yml` as a GitHub release `v<version>` and published by a person after checking it (that workflow's own rule). The Store URL is `https://github.com/FACTHORYAI/<app>/releases/download/v<version>/facthory<app>-<version>-windows-<x64|arm64>.msi`.
+- Each signed release is published by a run of `facthory-release.yml` as a GitHub release `v<version>`, which the owner dispatches by hand (`-f publish=true`, after a `-f sign=true` rehearsal that publishes nothing); merging releases nothing unless the repository variable `RELEASE_ON_MERGE` is `true`, the owner's switch. The Store URL is `https://github.com/FACTHORYAI/<app>/releases/download/v<version>/facthory<app>-<version>-windows-<x64|arm64>.msi`.
 - **Claude**: prepare the change that turns on GitHub **immutable releases** for the three repositories through `bandpey-hq/github-infra`, so a published installer can never be replaced (Policy 10.2.9: "The binary associated with that URL must not change after submission").
 - **Claude**: add release workflows to Grid and Deck (done: #5 in each, 2026-10-25).
 - Never delete a release whose URL is in a live or pending submission.

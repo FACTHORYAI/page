@@ -60,10 +60,11 @@ What each run requires:
   `AZURE_*` values name Bandpey GmbH's signing account, profile and endpoint; and, in a release,
   `DOWNLOADS_TOKEN` is set and `PACKAGES_GPG_KEY` is a key that can sign. A missing value costs one
   minute instead of a macOS build.
-- **A release**, which any push to `main` starts when the version in `Cargo.toml` has none yet,
-  signs both platforms, so **the first release needs the Apple and the Azure identities both**. A
-  push to `main` with a new version before they are in the environment stops at the preflight and
-  publishes nothing.
+- **A release**, which a manual run from `main` with `publish` starts when the version in
+  `Cargo.toml` has none yet (a push to `main` does it only when the repository variable
+  `RELEASE_ON_MERGE` is `true`, which is off), signs both platforms, so **the first release needs
+  the Apple and the Azure identities both**. A release run before they are in the environment
+  stops at the preflight and publishes nothing. Merging releases nothing.
 - **A manual run from `main` with `sign`** signs both platforms (the preflight checks the Apple
   and Azure values, not the two a release adds) and publishes nothing. That is how each identity is
   tested the day it lands.
@@ -142,8 +143,9 @@ a tag ruleset in github-infra), on the commit it built and checked.
 1. **Owner**: runbook M4: `scripts/release-secrets.sh packages-key`, `copy` (13 of 13), then in
    each repository GitHub Pages from GitHub Actions and release immutability on.
 2. **Claude**: start it with a manual run from `main` with `publish` (`gh workflow run
-   facthory-release.yml -R FACTHORYAI/<app> --ref main -f publish=true`), or let the next push to `main`
-   start it. The version is the one in `Cargo.toml` (`0.12.0` for page and deck, `0.13.0` for grid
+   facthory-release.yml -R FACTHORYAI/<app> --ref main -f publish=true`), after the rehearsal
+   (`-f sign=true`, which publishes nothing). A merge to `main` starts nothing while the repository
+   variable `RELEASE_ON_MERGE` is unset. The version is the one in `Cargo.toml` (`0.12.0` for page and deck, `0.13.0` for grid
    today). The run builds and signs every platform, installs each platform's files on a machine of
    that platform with every signature checked (`facthory/install_check.py`), publishes the release
    with `SHA256SUMS` and `latest.json` with its staged rollout, serves its files and then the feed
@@ -170,7 +172,8 @@ that app's folder of that version on the same host, so updates can only be teste
 **published** releases:
 
 1. Install the first release from each channel and start it once.
-2. The next release publishes itself. The natural one is the next upstream release merged by the
+2. The next release publishes itself once the owner has set `RELEASE_ON_MERGE=true` (`gh variable set
+   RELEASE_ON_MERGE --repo FACTHORYAI/<app> --body true`); until then it is dispatched by hand. The natural one is the next upstream release merged by the
    sync (W3): upstream is at WordCraft v0.12.0, GridCraft v0.13.0 and DeckCraft v0.12.0 on
    30 October. It reaches 10% of copies first, every copy after three days: for the test, give
    the test copies `"bucket": 0` in their `update.json`, which the first step already includes.

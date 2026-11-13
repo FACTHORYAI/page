@@ -27,7 +27,7 @@ Files Facthory adds to upstream's tree, and nothing else:
 | `.github/README.md` | The repository's front page |
 | `.github/workflows/facthory.yml` | The branded build: apply, upstream's gate on the branded tree, release build, mark check. `main` requires its `branded` check, a name we own, beside upstream's `gate / gate (ubuntu-24.04)` and the release workflow's `release` |
 | `.github/workflows/upstream-sync.yml` | Every three hours: merge the next upstream release on `sync/<tag>`, open its pull request, merge it once the checks `main` requires pass |
-| `.github/workflows/facthory-release.yml` | Releases with no person: on `main`, a version without a release builds, signs, install-checks and publishes `v<version>`. Every pull request builds and install-checks unsigned; `main` requires its `release` check |
+| `.github/workflows/facthory-release.yml` | Releases by an explicit act: a manual run from `main` with `publish`, or a push to `main` only when the repository variable `RELEASE_ON_MERGE` is `true` (off by default), builds, signs, install-checks and publishes `v<version>` when it has no release. Every pull request builds and install-checks unsigned; `main` requires its `release` check |
 | `facthory/tag_commit.sh` | The commit a release tag points at, for `facthory-release.yml`; any lookup error stops the run instead of reading as no tag |
 | `facthory/signing_preflight.py`, `facthory/test_signing_preflight.py` | Before any build of a signing run, checks that every secret of the environment `release` is set and well formed (names only in the log), with its tests |
 | `facthory/release.py` | Collects a release's files and writes `SHA256SUMS`, the update feed `latest.json` (with its rollout) and the notes |
@@ -81,9 +81,17 @@ releases (see Updates).
 
 ## Releases
 
-No person takes part. Every push to `main` runs `.github/workflows/facthory-release.yml`: when
-the version in `Cargo.toml` (normally upstream's release the sync just merged) has no release
-yet and is newer than the newest one, the run is a release. Each platform brands a fresh checkout
+A release is an explicit act. Merging to `main` releases nothing by default. A manual run of
+`.github/workflows/facthory-release.yml` from `main` with `publish` (`gh workflow run
+facthory-release.yml -R FACTHORYAI/<app> --ref main -f publish=true`) is a release when the
+version in `Cargo.toml` (normally upstream's release the sync just merged) has no release yet and
+is newer than the newest one. A push to `main` counts as that request only when the repository
+variable `RELEASE_ON_MERGE` is exactly `true`. It is unset, and the owner's switch: once it is
+set (`gh variable set RELEASE_ON_MERGE --repo FACTHORYAI/<app> --body true`), every upstream
+release the sync merges publishes by itself. While it is off, a push builds nothing, signs
+nothing, says in the log that the version has no release yet and that releasing on merge is off,
+and its `release` check passes. `sign` (a manual run from `main`) is the rehearsal: it builds and
+signs everything and publishes nothing. Each platform brands a fresh checkout
 and runs upstream's packaging scripts, which sign with the secrets of the environment `release`
 (`bandpey-hq/github-infra`, which only `main` may use and no person approves):
 
@@ -119,7 +127,8 @@ also be run by hand). A published release and its tag can't change: a broken one
 Every pull request builds and install-checks everything unsigned, as does a manual run, which
 signs on `main` when asked (`sign`); both keep the files as workflow artifacts. `main` requires
 the run's `release` check, which passes only when every build, install check and the publish step
-did, so a change that breaks a platform's build or install can't merge.
+did, or when the run builds nothing (a push that releases nothing), so a change that breaks a
+platform's build or install can't merge.
 
 `latest.json`, at `https://downloads.facthory.com/feeds/page/latest.json`, is the update feed: the
 version, when it was published, the rollout and, per platform, the file the app updates itself

@@ -108,9 +108,13 @@ Verified on clean machines, per app (Page, Grid, Deck):
   Debian 12 and Ubuntu; `.rpm` on Fedora; `.tar.gz`; desktop entry, icon and file types
   registered; `xdg-mime` default works; AppImageUpdate fetches the next release.
 - [ ] **Claude**: every file's hash matches `SHA256SUMS`.
-- [ ] **Nobody**: the first release of each app publishes itself once the signing secrets are in
-  (W4, fully automated since 1 November 2026: built, signed, install-checked on each system,
-  published at a 10% rollout). **Claude** checks it after.
+- [ ] **Owner**: the first release of each app is dispatched by hand once the signing secrets are
+  in: a rehearsal first (`gh workflow run facthory-release.yml -R FACTHORYAI/<app> --ref main -f
+  sign=true`, which publishes nothing), then `-f publish=true` (built, signed, install-checked on
+  each system, published at a 10% rollout). Merging releases nothing: setting the repository
+  variable `RELEASE_ON_MERGE=true` later (`gh variable set RELEASE_ON_MERGE --repo
+  FACTHORYAI/<app> --body true`) makes every upstream release the sync merges publish by itself.
+  **Claude** checks it after.
 
 ## Gate 4: W6, the pass rate meets the bar
 
