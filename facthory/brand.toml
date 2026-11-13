@@ -598,7 +598,7 @@ count = 1
 phase = "after"
 why = "The app icon is ours; its attribution rows say so"
 files = "ATTRIBUTION.md"
-find = '^(\| `assets/app-icon/[^`]+` \|).*$'
+find = '^(\| `assets/app-icon/(?!facthory[a-z]+-logo-)[^`]+` \|).*$'
 replace = '\1 Bandpey GmbH | original artwork drawn in code (`facthory/icons/compose.py`) around the Facthory mark (`facthory/icons/brand/mark.svg`, unmodified), rendered by `facthory/icons/render.py` | MIT OR Apache-2.0, except the Facthory mark in it: trademark of Bandpey GmbH | Facthory Page app icon |'
 regex = true
 
