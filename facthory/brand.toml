@@ -16,17 +16,18 @@ team = "ArtCraft team"
 repository = "https://github.com/storytold/wordcraft"
 
 [icon]
-# Composed by facthory/icons/compose.py from Facthory's mark (icons/brand/, unmodified) and an
-# original glyph; render.py renders the platform files from these four.
-svg = "page.svg"
+# The glyph is page.svg, unchanged; facthory/icons/fit.py places it: page-macos.svg (Apple's grid) and
+# page-flat.svg (Windows, Linux, the scalable icon). render.py renders the platform files from those.
+glyph = "page.svg"
+svg = "page-flat.svg"
 base = "facthorypage"
 macos_svg = "page-macos.svg"
-small_svg = "page-small.svg"
-macos_small_svg = "page-macos-small.svg"
-author = "Bandpey GmbH"
-source = "original artwork drawn in code (`facthory/icons/compose.py`) around Facthory's mark (`facthory/icons/brand/mark.svg`, unmodified)"
-licence = "MIT OR Apache-2.0, except Facthory's mark in it: trademark of Bandpey GmbH"
-note = """Facthory's marks (`facthory/icons/brand/`) are the brand of Bandpey GmbH, copied unmodified from the Facthory Design System. They are not open source and not covered by this project's MIT OR Apache-2.0 licence: they may be used unmodified only, to name Facthory's own builds, and a logo is never recoloured, stretched, cropped or redrawn. The glyphs and tiles around the mark in the app icons are original work by Bandpey GmbH, under this project's licence."""
+author = "with icons contributors; recoloured by Bandpey GmbH"
+source = "`notepad-text` in with icons' Chrome style (https://github.com/withevergrow/withicons at 996cc78), recoloured to the Page colours"
+licence = "MIT"
+# The licence text, written at the end of ATTRIBUTION.md's Facthory block (which ships).
+notice = "LICENSE-withicons.txt"
+note = """Facthory's marks (`facthory/icons/brand/`, and the two renders of them in `app-icon/` that the About box draws) are the brand of Bandpey GmbH, copied unmodified from the Facthory Design System. They are not open source and not covered by this project's MIT OR Apache-2.0 licence: they may be used unmodified only, to name Facthory's own builds, and a logo is never recoloured, stretched, cropped or redrawn. They are not in the app icons."""
 
 # Facthory's other asset files, credited in ATTRIBUTION.md's Facthory block (render.py).
 [[asset]]
@@ -594,10 +595,10 @@ count = 1
 
 [[rule]]
 phase = "after"
-why = "The app icon is ours; its attribution rows say so"
+why = "The app icon is ours (derived from with icons, MIT); its attribution rows say so"
 files = "ATTRIBUTION.md"
 find = '^(\| `assets/app-icon/(?!facthory[a-z]+-logo-)[^`]+` \|).*$'
-replace = '\1 Bandpey GmbH | original artwork drawn in code (`facthory/icons/compose.py`) around the Facthory mark (`facthory/icons/brand/mark.svg`, unmodified), rendered by `facthory/icons/render.py` | MIT OR Apache-2.0, except the Facthory mark in it: trademark of Bandpey GmbH | Facthory Page app icon |'
+replace = '\1 with icons contributors; recoloured by Bandpey GmbH | `notepad-text` from with icons (Chrome style), recoloured (`facthory/icons/page.svg`; on a tile for macOS, `facthory/icons/page-macos.svg`), rendered by `facthory/icons/render.py` | MIT | Facthory Page app icon |'
 regex = true
 
 # Facthory's mark in the About box (facthory/ui/facthory_logo.rs, copied below), which upstream's

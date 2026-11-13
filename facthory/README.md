@@ -14,10 +14,13 @@ Files Facthory adds to upstream's tree, and nothing else:
 | ---- | ---------- |
 | `facthory/brand.toml` | The brand as data: names, app ids, links, publisher, the exact edits, the installer GUID namespace, the mark check |
 | `facthory/rebrand.py` | Applies `brand.toml` to a checkout (`apply`) and checks shipped files for upstream marks (`check`) |
-| `facthory/icons/brand/` | Facthory's own marks (mark, mono mark, word marks), unmodified from the Facthory Design System; a logo is never recoloured, stretched, cropped or redrawn |
-| `facthory/icons/compose.py` | Draws the app icon from the mark and an original Page glyph, on a light tile: `page.svg` (Windows, Linux), `page-macos.svg` (Apple's grid, 824 of 1024, with its shadow) and their `-small` forms for 16 to 32 pixels |
-| `facthory/icons/render.py` | Renders the icon set (`facthory/icons/app-icon/`, committed: `.icns`, `.ico`, hicolor PNGs, the scalable icon, and the mark for the About box in a light and a dark file) with resvg, and credits it in `ATTRIBUTION.md` |
-| `facthory/icons/proof.py`, `facthory/icons/proof/` | The contact sheet of the icon candidates beside reference shapes, light and dark grounds, at 2x |
+| `facthory/icons/page.svg` | The Facthory Page icon's glyph: with icons' `notepad-text` in its Chrome style (MIT, `LICENSE-withicons.txt`), recoloured; the source of the icon files, never edited |
+| `facthory/icons/page-macos.svg`, `facthory/icons/page-flat.svg` | Written by `facthory/icons/fit.py` from that glyph: on Apple's grid (an 824 of 1024 tile, the glyph at about 75% of its width) for macOS, and free-form at 88% of the canvas, cut-outs transparent, for Windows, Linux and the scalable icon |
+| `facthory/icons/LICENSE-withicons.txt` | The glyph's MIT licence; `render.py` copies its text into `ATTRIBUTION.md`, which the packages ship |
+| `facthory/icons/fit.py` | Measures the glyph and fits it to each platform's icon frame (see Icons) |
+| `facthory/icons/render.py` | Renders the icon set (`facthory/icons/app-icon/`, committed: `.icns`, `.ico`, hicolor PNGs, the scalable icon, and the Facthory mark for the About box in a light and a dark file) with resvg, and credits it in `ATTRIBUTION.md` |
+| `facthory/icons/proof.py`, `facthory/icons/proof/` | The contact sheet of the icon (main's old icon beside the new one, light and dark tiles, backed and unbacked cut-outs, light and dark grounds, 2x) |
+| `facthory/icons/brand/` | Facthory's own marks (mark, mono mark, word marks), unmodified from the Facthory Design System; the About box draws the mark, never recoloured, stretched, cropped or redrawn. Not in the app icons |
 | `facthory/sync.py` | Merges the next upstream release (W3), resolving the two known conflicts below |
 | `facthory/README.md` | This list |
 | `facthory/.gitignore` | Keeps Python's bytecode out of the repository |
@@ -196,14 +199,15 @@ marks the tokens miss fail the check.
 
 ```sh
 cargo install resvg
-python3 facthory/icons/compose.py --product page --variant a   # draws the four SVGs
-python3 facthory/icons/render.py                               # renders app-icon/, credits it
-python3 facthory/icons/proof.py --product page                 # the contact sheet (needs Pillow)
+python3 facthory/icons/fit.py --product page   # places the glyph: page-macos.svg, page-flat.svg
+python3 facthory/icons/render.py                # renders app-icon/, credits it
+python3 facthory/icons/proof.py --product page  # the contact sheet (needs Pillow and origin/main)
 ```
 
-The icon is a light tile, Facthory's mark and the product's own glyph: the mark is placed
-unmodified and uniformly scaled, never recoloured, stretched, cropped or redrawn. On macOS the
-body is 824 of the 1024 canvas (Apple's grid); on Windows and Linux the same tile fills 960 of it
-with a hairline edge, so it holds on a white ground. At 24 pixels and under (32 on macOS) the hero
-alone is drawn, larger. Inside the app the About box shows `mark.svg`'s render on a light theme and
-`mark-mono.svg`'s on a dark one.
+The glyph (`page.svg`) is with icons' `notepad-text` in its Chrome style, recoloured; it is drawn small in
+its own canvas, so an icon made of the file as it is looks small in the Dock. `fit.py` measures it and
+scales it, nothing else: on macOS a tile on Apple's grid (824 of 1024, tinted from the glyph's colour)
+holds the glyph's box at 72 to 78% of its width (never above 82% of its height); on Windows and Linux
+the free-form glyph's longer side is 88% of the canvas, its cut-outs transparent. Facthory's mark is
+not in the icon: the About box draws it, `mark.svg`'s render on a light theme and `mark-mono.svg`'s on
+a dark one.

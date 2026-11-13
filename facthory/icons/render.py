@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
-"""Render the app icon set from the composed SVGs (facthory/icons/compose.py) into
-facthory/icons/app-icon/, in the layout of upstream's assets/app-icon/ after the rebrand renames it
-(rebrand.py copies it over). [icon] in brand.toml names the four SVGs and the file base:
+"""Render the app icon set from the fitted SVGs (facthory/icons/fit.py) into facthory/icons/app-icon/,
+in the layout of upstream's assets/app-icon/ after the rebrand renames it (rebrand.py copies it
+over). [icon] in brand.toml names the files and the file base:
 
-  svg              the tile at the canvas edge (Windows, Linux, the scalable icon)
-  macos_svg        on Apple's grid: an 824 x 824 body in the 1024 canvas, with its shadow
-  small_svg        the simplified form for Windows and Linux icons of 24 pixels and under
-  macos_small_svg  the same for macOS icons of 32 pixels and under (16 points, at 1x and 2x)
+  glyph      the glyph, unchanged (with icons' Chrome style, recoloured): the source of the others
+  svg        Windows, Linux and the scalable icon: the free-form glyph, its longer side 88% of 1024
+  macos_svg  macOS: an 824 x 824 tile on Apple's grid in the 1024 canvas, the glyph at about 75% of its width
 
 macos_512 and svg_copy (default true) say whether upstream's layout has <base>-macos-512.png and
-<base>.svg. author, source and licence credit the icon in ATTRIBUTION.md (default: Bandpey GmbH's
-original artwork), and note is a paragraph at the end of ATTRIBUTION.md's Facthory block, which ships.
+<base>.svg. author, source and licence credit the glyph and its renders in ATTRIBUTION.md, notice
+names a licence file beside the SVGs whose text ends ATTRIBUTION.md's Facthory block (which ships),
+and note is a paragraph after it. Facthory's own marks (the About box's two renders of them) are
+credited as the trademark they are.
 
 Needs resvg (cargo install resvg). The outputs are committed, so builds never need it. Writes
 the .ico and .icns containers itself (PNG entries), so no macOS or Windows tool is needed.
@@ -39,9 +40,6 @@ BEGIN = "<!-- facthory:begin"
 END = "<!-- facthory:end -->"
 HICOLOR = [16, 24, 32, 48, 64, 128, 256, 512]
 ICO = [16, 20, 24, 32, 40, 48, 64, 128, 256]
-# Up to these pixel sizes the simplified form is used: the hero alone, larger.
-SMALL_PX = 24
-SMALL_MACOS_PX = 32
 # The About box's mark: 72 points at up to 2.5x.
 LOGO_PX = 192
 # icns entry types holding PNG data, by pixel size; the @2x types reuse the same pixels.
@@ -77,43 +75,45 @@ def icns(pngs: dict[int, bytes]) -> bytes:
     return b"icns" + struct.pack(">I", 8 + len(body)) + body
 
 
+MARK_LICENCE = "Facthory trademark, all rights reserved: not open source; usable unmodified only"
+
+
 def attribution(brand: dict, out: Path) -> None:
     """Credit Facthory's own files in ATTRIBUTION.md: one block right under the title, replaced in
-    place when it exists. The composed icons, the icon set, then brand.toml's [[asset]] entries."""
+    place when it exists. The glyph and its fitted SVGs, the icon set, then brand.toml's [[asset]]
+    entries, and the glyph's licence text."""
     path = ROOT / "ATTRIBUTION.md"
     text = path.read_text(encoding="utf-8")
     icon = brand["icon"]
     author, licence = icon.get("author", "Bandpey GmbH"), icon.get("licence", "MIT OR Apache-2.0")
     source = icon.get("source", "original artwork")
-    svgs = [HERE / icon[k] for k in ("svg", "macos_svg", "small_svg", "macos_small_svg") if k in icon]
+    rel = lambda p: p.relative_to(ROOT).as_posix()  # noqa: E731
+    glyph = HERE / icon.get("glyph", icon["svg"])
+    flat, mac = HERE / icon["svg"], HERE / icon["macos_svg"]
+    rows = [f"| `{rel(glyph)}` | {author} | {source} | {licence} |"]
+    for p, what in ((mac, "on Apple's grid"), (flat, "for Windows and Linux")):
+        if p != glyph:
+            rows.append(f"| `{rel(p)}` | {author} | `{rel(glyph)}` scaled and placed {what} by `facthory/icons/fit.py`; the glyph itself is unchanged | {licence} |")
     mac_files = {out / f"{icon['base']}.icns", out / f"{icon['base']}-macos-512.png"}
-    rows = [f"| `{p.relative_to(ROOT).as_posix()}` | {author} | {source} | {licence} |" for p in svgs]
-    mac = HERE / icon.get("macos_svg", icon["svg"])
-    def made_from(p: Path) -> Path:
-        if p.name.endswith("-logo-light.png"):
-            return HERE / "brand" / "mark.svg"
-        if p.name.endswith("-logo-dark.png"):
-            return HERE / "brand" / "mark-mono.svg"
-        return mac if p in mac_files else HERE / icon["svg"]
-
-    rows += [
-        f"| `{p.relative_to(ROOT).as_posix()}` | {author} | rendered from `{made_from(p).relative_to(ROOT).as_posix()}` "
-        f"by `facthory/icons/render.py` | {licence} |"
-        for p in sorted(out.rglob("*"))
-        if p.is_file()
-    ]
-    # The branded tree has the icon set at assets/app-icon/, where upstream's own rows credit
-    # upstream's files (brand.toml rewrites them); the files upstream never had need rows of ours.
-    rows += [
-        f"| `assets/app-icon/{p.name}` | {author} | the branded tree's copy of `{p.relative_to(ROOT).as_posix()}`, rendered from "
-        f"`{made_from(p).relative_to(ROOT).as_posix()}` by `facthory/icons/render.py` | {licence} |"
-        for p in sorted(out.glob("*-logo-*.png"))
-    ]
+    for p in sorted(out.rglob("*")):
+        if not p.is_file():
+            continue
+        if p.name.endswith("-logo-light.png") or p.name.endswith("-logo-dark.png"):
+            mark = HERE / "brand" / ("mark.svg" if p.name.endswith("-light.png") else "mark-mono.svg")
+            rows.append(f"| `{rel(p)}` | Bandpey GmbH | rendered from `{rel(mark)}`, the Facthory mark, by `facthory/icons/render.py` (drawn in the About box) | {MARK_LICENCE} |")
+            rows.append(f"| `assets/app-icon/{p.name}` | Bandpey GmbH | the branded tree's copy of `{rel(p)}` | {MARK_LICENCE} |")
+        else:
+            rows.append(f"| `{rel(p)}` | {author} | rendered from `{rel(mac if p in mac_files else flat)}` by `facthory/icons/render.py` | {licence} |")
     rows += [f"| `facthory/{a['path']}` | {a['author']} | {a['source']} | {a['licence']} |" for a in brand.get("asset", [])]
-    note = ["", icon["note"].strip()] if "note" in icon else []
+    # The glyph's licence text goes in the block, so it travels wherever ATTRIBUTION.md does.
+    tail = []
+    if "notice" in icon:
+        tail += ["", f"The app icon's licence ({licence}), from `{rel(HERE / icon['notice'])}`:", "", "```text", (HERE / icon["notice"]).read_text(encoding="utf-8").strip(), "```"]
+    if "note" in icon:
+        tail += ["", icon["note"].strip()]
     block = "\n".join(
         [f"{BEGIN}: Facthory's own files, written by facthory/icons/render.py; see facthory/README.md -->",
-         "| Facthory asset | Author | Source | Licence |", "|---|---|---|---|", *rows, *note, END]
+         "| Facthory asset | Author | Source | Licence |", "|---|---|---|---|", *rows, *tail, END]
     )
     if BEGIN in text:
         start = text.index(BEGIN)
@@ -129,15 +129,19 @@ def main() -> int:
     with (HERE.parent / "brand.toml").open("rb") as f:
         brand = tomllib.load(f)
     icon, out = brand["icon"], HERE / "app-icon"
-    svg = HERE / icon["svg"]
-    mac_svg = HERE / icon["macos_svg"]
-    small = HERE / icon.get("small_svg", icon["svg"])
-    mac_small = HERE / icon.get("macos_small_svg", icon["macos_svg"])
+    svg, mac_svg = HERE / icon["svg"], HERE / icon["macos_svg"]
+    glyph = HERE / icon.get("glyph", icon["svg"])
     # Check the sources before anything is deleted, so a typo in brand.toml leaves the set alone.
-    for s in (svg, mac_svg, small, mac_small):
+    for s in (svg, mac_svg):
         if not s.is_file() or 'viewBox="0 0 1024 1024"' not in s.read_text(encoding="utf-8"):
-            print(f"error: {s} is missing or lacks viewBox=\"0 0 1024 1024\" (python3 facthory/icons/compose.py)", file=sys.stderr)
+            print(f"error: {s} is missing or lacks viewBox=\"0 0 1024 1024\" (python3 facthory/icons/fit.py)", file=sys.stderr)
             return 1
+    if not glyph.is_file():
+        print(f"error: {glyph} is missing", file=sys.stderr)
+        return 1
+    if "notice" in icon and not (HERE / icon["notice"]).is_file():
+        print(f"error: {HERE / icon['notice']} is missing", file=sys.stderr)
+        return 1
     if sys.argv[1:] == ["--attribution"]:
         attribution(brand, out)
         return 0
@@ -150,24 +154,17 @@ def main() -> int:
     out.mkdir()
     with tempfile.TemporaryDirectory() as tmp:
         tmp = Path(tmp)
-
-        def flat(size: int) -> Path:
-            return small if size <= SMALL_PX else svg
-
-        def mac(size: int) -> Path:
-            return mac_small if size <= SMALL_MACOS_PX else mac_svg
-
         render(svg, 1024, out / f"{base}-1024.png")
         if icon.get("macos_512", True):
             render(mac_svg, 512, out / f"{base}-macos-512.png")
         for s in HICOLOR:
-            render(flat(s), s, out / "hicolor" / f"{s}x{s}" / "apps" / f"{app_id}.png")
+            render(svg, s, out / "hicolor" / f"{s}x{s}" / "apps" / f"{app_id}.png")
         (out / "hicolor" / "scalable" / "apps").mkdir(parents=True)
         shutil.copyfile(svg, out / "hicolor" / "scalable" / "apps" / f"{app_id}.svg")
         if icon.get("svg_copy", True):
             shutil.copyfile(svg, out / f"{base}.svg")
-        (out / f"{base}.ico").write_bytes(ico({s: render(flat(s), s, tmp / f"ico-{s}.png") for s in ICO}))
-        mac_pngs = {s: render(mac(s), s, tmp / f"mac-{s}.png") for s in sorted({s for _, s in ICNS})}
+        (out / f"{base}.ico").write_bytes(ico({s: render(svg, s, tmp / f"ico-{s}.png") for s in ICO}))
+        mac_pngs = {s: render(mac_svg, s, tmp / f"mac-{s}.png") for s in sorted({s for _, s in ICNS})}
         (out / f"{base}.icns").write_bytes(icns(mac_pngs))
         # Facthory's mark for the About box, one file per theme: light grounds get the mark, dark
         # grounds its mono file (the app picks by theme; facthory/ui/facthory_logo.rs).
