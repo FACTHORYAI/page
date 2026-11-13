@@ -42,8 +42,8 @@ ICO = [16, 20, 24, 32, 40, 48, 64, 128, 256]
 # Up to these pixel sizes the simplified form is used: the hero alone, larger.
 SMALL_PX = 24
 SMALL_MACOS_PX = 32
-# The About box's mark: 72 points at up to 4x.
-LOGO_PX = 288
+# The About box's mark: 72 points at up to 2.5x.
+LOGO_PX = 192
 # icns entry types holding PNG data, by pixel size; the @2x types reuse the same pixels.
 ICNS = [("icp4", 16), ("icp5", 32), ("icp6", 64), ("ic07", 128), ("ic08", 256), ("ic09", 512), ("ic10", 1024),
         ("ic11", 32), ("ic12", 64), ("ic13", 256), ("ic14", 512)]
