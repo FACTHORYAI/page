@@ -498,7 +498,9 @@ jobs:
         env:
           VERSION: ${{ needs.version.outputs.version }}
           ARCH: ${{ matrix.arch }}
-          SIGNED: ${{ needs.version.outputs.release }}
+          # Every run that signs also checks the signatures: a rehearsal (sign) must fail where a
+          # release would, not only the release itself.
+          SIGNED: ${{ needs.version.outputs.sign }}
         run: |
           args=(dist "$VERSION" --bin facthorypage --arch "$ARCH")
           if [ -d previous ]; then args+=(--previous previous); fi

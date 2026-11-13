@@ -318,6 +318,21 @@ find = "${GITHUB_ACTOR:-storytold}"
 replace = "${GITHUB_ACTOR:-facthory}"
 count = 1
 
+# The disk image never ships a file with a Finder attribute. Upstream's script already clears the
+# bundle's attributes before signing, builds the image with `create -srcfolder` and verifies the app
+# inside the finished image before it is notarized (its #525); this keeps the staged copy clean too.
+[[rule]]
+why = "macOS: the staged copy of the app carries no extended attribute or quarantine flag into the image"
+files = "packaging/macos/package.sh"
+find = '''
+ditto "$APP" "$STAGE/WordCraft.app"
+'''
+replace = '''
+ditto --noextattr --noqtn "$APP" "$STAGE/WordCraft.app"
+xattr -cr "$STAGE/WordCraft.app"
+'''
+count = 1
+
 # Notarization with the App Store Connect API key of Bandpey GmbH's other releases, not an Apple
 # account's app-specific password: package.sh reads the key's file, id and issuer (the release
 # workflow writes the .p8 under $RUNNER_TEMP, mode 600, and removes it again).
