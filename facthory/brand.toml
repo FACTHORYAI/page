@@ -252,6 +252,41 @@ replace = """
 """
 count = 1
 
+# A test of the community button expects it on by default and under upstream's label; the
+# branded build has it off by default and calls it Help and feedback.
+[[rule]]
+why = "The community-button test turns it on itself, under our label"
+files = "crates/ui-egui/src/tests.rs"
+find = '''    let mut a = app();
+    a.run("ui.backstage", json!({"value": true})).unwrap();
+    let mut h = harness(a);
+    h.run_steps(2);
+    assert!(h.query_by_label("Discord community").is_some(), "the community link shows by default");
+'''
+replace = '''    let mut a = app();
+    a.ui.show_discord = true;
+    a.run("ui.backstage", json!({"value": true})).unwrap();
+    let mut h = harness(a);
+    h.run_steps(2);
+    assert!(h.query_by_label("Help and feedback").is_some(), "the community link shows when the button is on");
+'''
+count = 1
+
+[[rule]]
+why = "... and the off state looks for our label"
+files = "crates/ui-egui/src/tests.rs"
+find = 'assert!(h.query_by_label("Discord community").is_none(), "the backstage link honors the same setting");'
+replace = 'assert!(h.query_by_label("Help and feedback").is_none(), "the backstage link honors the same setting");'
+count = 1
+
+# A PDF test pins the hash of an export, whose Creator and Producer name the app.
+[[rule]]
+why = "The golden hash of the PDF with a grey box: the file names Facthory Page as its producer"
+files = "crates/pdf/src/tests.rs"
+find = "assert_eq!(h, 0x1edbbffab353d744, \"{h:#x}\");"
+replace = "assert_eq!(h, 0x5f9304fd08007fa9, \"{h:#x}\");"
+count = 1
+
 # Test data that holds the name: the brand's name is two words, which changes a word count.
 [[rule]]
 why = "A word-count test counts the name as one word; ours is two"

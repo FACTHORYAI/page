@@ -15,7 +15,7 @@ const HEIGHT: f32 = 72.0;
 
 /// The texture of the mark for the theme, decoded once; `None` when the file can't be read.
 fn texture(ctx: &Context, dark: bool) -> Option<TextureHandle> {
-    let id = Id::new(if dark { "facthory.logo.dark" } else { "facthory.logo.light" });
+    let id = Id::unique(if dark { "facthory.logo.dark" } else { "facthory.logo.light" });
     if let Some(t) = ctx.data(|d| d.get_temp::<TextureHandle>(id)) {
         return Some(t);
     }
