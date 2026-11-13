@@ -252,6 +252,14 @@ replace = """
 """
 count = 1
 
+# Test data that holds the name: the brand's name is two words, which changes a word count.
+[[rule]]
+why = "A word-count test counts the name as one word; ours is two"
+files = "crates/doc/src/tests.rs"
+find = 'count_words("WordCraft是一个文字处理器，很好用！")'
+replace = 'count_words("Brand是一个文字处理器，很好用！")'
+count = 1
+
 # Notarization with the App Store Connect API key of Bandpey GmbH's other releases, not an Apple
 # account's app-specific password: package.sh reads the key's file, id and issuer (the release
 # workflow writes the .p8 under $RUNNER_TEMP, mode 600, and removes it again).

@@ -74,14 +74,18 @@ def glyph(product: str, fg: str, bg: str, detail: bool = True) -> str:
                 f'<rect x="6" y="12" width="88" height="76" rx="11" fill="{fg}"/>'
                 f'<g clip-path="url(#gridclip)"><rect x="6" y="12" width="88" height="27" fill="{bg}" fill-opacity=".34"/>{cuts}</g>')
     if product == "deck":
-        # A slide: a title, a few lines and a chart.
-        body = (f'<rect x="14" y="34" width="46" height="9" rx="4.5" fill="{bg}"/>'
-                f'<rect x="14" y="52" width="30" height="6" rx="3" fill="{bg}" fill-opacity=".6"/>'
-                f'<rect x="14" y="63" width="22" height="6" rx="3" fill="{bg}" fill-opacity=".6"/>'
-                f'<circle cx="76" cy="58" r="12" fill="{bg}" fill-opacity=".85"/>' if detail else
-                f'<rect x="14" y="35" width="50" height="11" rx="5.5" fill="{bg}"/>'
-                f'<circle cx="72" cy="60" r="13" fill="{bg}" fill-opacity=".85"/>')
-        return f'<rect x="4" y="22" width="92" height="56" rx="8" fill="{fg}"/>{body}'
+        # A slide on a stand: a title, lines of text and a chart.
+        body = (f'<rect x="14" y="26" width="44" height="9" rx="4.5" fill="{bg}"/>'
+                f'<rect x="14" y="43" width="28" height="6" rx="3" fill="{bg}" fill-opacity=".6"/>'
+                f'<rect x="14" y="54" width="20" height="6" rx="3" fill="{bg}" fill-opacity=".6"/>'
+                f'<rect x="63" y="46" width="8" height="14" rx="2" fill="{bg}" fill-opacity=".85"/>'
+                f'<rect x="74" y="38" width="8" height="22" rx="2" fill="{bg}" fill-opacity=".85"/>'
+                f'<rect x="85" y="30" width="8" height="30" rx="2" fill="{bg}" fill-opacity=".85"/>' if detail else
+                f'<rect x="14" y="26" width="46" height="11" rx="5.5" fill="{bg}"/>'
+                f'<rect x="64" y="42" width="11" height="22" rx="2.5" fill="{bg}" fill-opacity=".85"/>'
+                f'<rect x="80" y="30" width="11" height="34" rx="2.5" fill="{bg}" fill-opacity=".85"/>')
+        stand = f'<rect x="45" y="72" width="10" height="11" fill="{fg}"/><rect x="30" y="81" width="40" height="6" rx="3" fill="{fg}"/>'
+        return f'<rect x="4" y="12" width="92" height="62" rx="8" fill="{fg}"/>{body}{stand}'
     raise ValueError(f"unknown product {product!r}")
 
 
