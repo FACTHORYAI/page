@@ -6,6 +6,7 @@
 | `facthory/icons/page.svg` | with icons contributors; recoloured by Bandpey GmbH | `notepad-text` in with icons' Chrome style (https://github.com/withevergrow/withicons at 996cc78), recoloured to the Page colours | MIT |
 | `facthory/icons/page-macos.svg` | with icons contributors; recoloured by Bandpey GmbH | `facthory/icons/page.svg` scaled and placed on Apple's grid by `facthory/icons/fit.py`; the glyph itself is unchanged | MIT |
 | `facthory/icons/page-flat.svg` | with icons contributors; recoloured by Bandpey GmbH | `facthory/icons/page.svg` scaled and placed for Windows and Linux by `facthory/icons/fit.py`; the glyph itself is unchanged | MIT |
+| `facthory/icons/page-layer.svg` | with icons contributors; recoloured by Bandpey GmbH | `facthory/icons/page.svg` scaled and placed as the layer of the macOS 26 icon by `facthory/icons/fit.py`; the glyph itself is unchanged | MIT |
 | `facthory/icons/app-icon/facthorypage-1024.png` | with icons contributors; recoloured by Bandpey GmbH | rendered from `facthory/icons/page-flat.svg` by `facthory/icons/render.py` | MIT |
 | `facthory/icons/app-icon/facthorypage-logo-dark.png` | Bandpey GmbH | rendered from `facthory/icons/brand/mark-mono.svg`, the Facthory mark, by `facthory/icons/render.py` (drawn in the About box) | Facthory trademark, all rights reserved: not open source; usable unmodified only |
 | `assets/app-icon/facthorypage-logo-dark.png` | Bandpey GmbH | the branded tree's copy of `facthory/icons/app-icon/facthorypage-logo-dark.png` | Facthory trademark, all rights reserved: not open source; usable unmodified only |
@@ -14,6 +15,10 @@
 | `facthory/icons/app-icon/facthorypage-macos-512.png` | with icons contributors; recoloured by Bandpey GmbH | rendered from `facthory/icons/page-macos.svg` by `facthory/icons/render.py` | MIT |
 | `facthory/icons/app-icon/facthorypage.icns` | with icons contributors; recoloured by Bandpey GmbH | rendered from `facthory/icons/page-macos.svg` by `facthory/icons/render.py` | MIT |
 | `facthory/icons/app-icon/facthorypage.ico` | with icons contributors; recoloured by Bandpey GmbH | rendered from `facthory/icons/page-flat.svg` by `facthory/icons/render.py` | MIT |
+| `facthory/icons/app-icon/facthorypage.icon/Assets/facthorypage-layer.png` | with icons contributors; recoloured by Bandpey GmbH | rendered from `facthory/icons/page-layer.svg` by `facthory/icons/render.py` | MIT |
+| `assets/app-icon/facthorypage.icon/Assets/facthorypage-layer.png` | with icons contributors; recoloured by Bandpey GmbH | the branded tree's copy of `facthory/icons/app-icon/facthorypage.icon/Assets/facthorypage-layer.png` | MIT |
+| `facthory/icons/app-icon/facthorypage.icon/icon.json` | with icons contributors; recoloured by Bandpey GmbH | written by `facthory/icons/render.py` from `facthory/icons/fit.py`'s tile colours | MIT |
+| `assets/app-icon/facthorypage.icon/icon.json` | with icons contributors; recoloured by Bandpey GmbH | the branded tree's copy of `facthory/icons/app-icon/facthorypage.icon/icon.json` | MIT |
 | `facthory/icons/app-icon/facthorypage.svg` | with icons contributors; recoloured by Bandpey GmbH | rendered from `facthory/icons/page-flat.svg` by `facthory/icons/render.py` | MIT |
 | `facthory/icons/app-icon/hicolor/128x128/apps/com.facthory.page.png` | with icons contributors; recoloured by Bandpey GmbH | rendered from `facthory/icons/page-flat.svg` by `facthory/icons/render.py` | MIT |
 | `facthory/icons/app-icon/hicolor/16x16/apps/com.facthory.page.png` | with icons contributors; recoloured by Bandpey GmbH | rendered from `facthory/icons/page-flat.svg` by `facthory/icons/render.py` | MIT |
@@ -32,6 +37,7 @@
 | `facthory/icons/brand/word-mark-only.svg` | Bandpey GmbH | Facthory's logo (the lettering alone), copied unmodified from the Facthory Design System | Facthory trademark, all rights reserved: not open source; usable unmodified only |
 | `facthory/icons/brand/word-mark-only-mono.svg` | Bandpey GmbH | Facthory's logo (the lettering alone, for dark grounds), copied unmodified from the Facthory Design System | Facthory trademark, all rights reserved: not open source; usable unmodified only |
 | `facthory/icons/proof/page.png` | Bandpey GmbH | contact sheet of the icon candidates beside reference shapes, drawn by `facthory/icons/proof.py`; contains Facthory's mark | MIT OR Apache-2.0, except Facthory's mark in it: trademark of Bandpey GmbH |
+| `facthory/icons/proof/page-appearances.png` | Bandpey GmbH | contact sheet of the appearance-aware macOS icon (light, dark, and simulations of the system's tinted and clear styles) at the sizes the system shows, drawn by `facthory/icons/proof.py --appearances` from `app-icon/facthorypage.icon` | MIT |
 
 The app icon's licence (MIT), from `facthory/icons/LICENSE-withicons.txt`:
 

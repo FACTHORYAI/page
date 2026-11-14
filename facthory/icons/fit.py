@@ -4,26 +4,33 @@
 The glyph is `facthory/icons/<product>.svg`, unchanged: `notepad-text`, `table` and `presentation`
 from with icons in their Chrome style (MIT, `LICENSE-withicons.txt`), recoloured for the product.
 It is drawn small inside its own 512-unit canvas, so an icon made of that file as it is looks small
-in the Dock. This script measures the glyph, then writes two files that place it:
+in the Dock. This script measures the glyph, then writes three files that place it:
 
   <product>-macos.svg  Apple's grid: a 1024 canvas with an 824 x 824 rounded-square tile, tinted from
                        the glyph's colour, and the glyph's box at about 72 to 78% of the tile's
                        width (never more than 82% of its height), optically centred
   <product>-flat.svg   Windows, Linux and the scalable icon: no tile, the free-form glyph with its
                        cut-outs transparent, its longer side at 88% of the 1024 canvas
+  <product>-layer.svg  The layer of the macOS appearance-aware icon (render.py's <base>.icon): the glyph
+                       alone on a transparent 1024 canvas, at the same share of the canvas as the glyph
+                       has of the macOS tile, so the system's tile (the light and the dark fill of
+                       icon.json, which render.py writes from tile_colours() below) frames it as the
+                       .icns tile does
 
 The glyph is placed uniformly scaled and nothing else: not redrawn, recoloured or cropped.
 `render.py` renders the platform files from the two.
 
-  python3 facthory/icons/fit.py --product page        write both files (needs resvg and Pillow)
+  python3 facthory/icons/fit.py --product page        write the three files (needs resvg and Pillow)
   python3 facthory/icons/fit.py --product page --measure   print the glyph's box and the fit
 
-The dark tile of the proof sheet (`proof.py`) is made here too (`tile="dark"`).
+The tiles' colours, light and dark, are made here (`tile_colours`), for the .icns tile, the .icon's fills
+and the proofs alike, so the three cannot drift apart.
 """
 
 from __future__ import annotations
 
 import argparse
+import colorsys
 import re
 import subprocess
 import sys
@@ -44,8 +51,34 @@ ALPHA_EDGE = 24  # alpha above which a pixel is the glyph's (below it, the faint
 # The tile: white at the top, the product's tint at the bottom: the tiles main's macOS icons had.
 TILE_BOTTOM = {"page": "#D3EBEE", "grid": "#D6E4DC", "deck": "#F1D8E5"}
 TILE_EDGE = {"page": "#AFDBE1", "grid": "#BCD3C6", "deck": "#E3BFD2"}
-DARK_TILE = ("#34363C", "#16171A")
+# The dark tile: the product's hue (that of its light tile's edge) at low lightness, so the glyph's light
+# parts stand out and its dark cut-outs read as the tile; saturation and lightness (top, bottom) are the same
+# for every product, chosen by looking at Page's (facthory/icons/proof/page-appearances.png).
+DARK_SATURATION = 0.45
+DARK_LIGHTNESS = (0.19, 0.08)
+DARK_EDGE_LIGHTNESS = 0.30
 SHADOW = "#0B1F2A"
+
+
+def hex_rgb(colour: str) -> tuple[int, int, int]:
+    return int(colour[1:3], 16), int(colour[3:5], 16), int(colour[5:7], 16)
+
+
+def rgb_hex(r: float, g: float, b: float) -> str:
+    return "#{:02X}{:02X}{:02X}".format(*(round(max(0.0, min(1.0, c)) * 255) for c in (r, g, b)))
+
+
+def dark_colour(product: str, lightness: float) -> str:
+    r, g, b = (c / 255 for c in hex_rgb(TILE_EDGE[product]))
+    hue = colorsys.rgb_to_hls(r, g, b)[0]
+    return rgb_hex(*colorsys.hls_to_rgb(hue, lightness, DARK_SATURATION))
+
+
+def tile_colours(product: str, tile: str = "light") -> tuple[str, str, str]:
+    """The tile's colours as (top, bottom, edge), for "light" (the default tile) or "dark"."""
+    if tile == "light":
+        return "#FFFFFF", TILE_BOTTOM[product], TILE_EDGE[product]
+    return dark_colour(product, DARK_LIGHTNESS[0]), dark_colour(product, DARK_LIGHTNESS[1]), dark_colour(product, DARK_EDGE_LIGHTNESS)
 
 
 def resvg(args: list[str]) -> None:
@@ -113,8 +146,7 @@ def flat_scale(m: dict[str, float]) -> float:
 def macos_svg(product: str, glyph: Path, m: dict[str, float], tile: str = "light") -> str:
     x0 = MACOS_X
     r = round(MACOS_BODY * 0.2237, 2)  # Apple's corner, near enough
-    top, bottom = ("#FFFFFF", TILE_BOTTOM[product]) if tile == "light" else DARK_TILE
-    edge = TILE_EDGE[product] if tile == "light" else "#5A5D66"
+    top, bottom, edge = tile_colours(product, tile)
     scale = macos_scale(m)
     cx = cy = x0 + MACOS_BODY / 2
     return (
@@ -141,12 +173,30 @@ def flat_svg(product: str, glyph: Path, m: dict[str, float]) -> str:
     )
 
 
+def layer_scale(m: dict[str, float]) -> float:
+    """Pixels per unit on the 1024 canvas that is the whole tile: the glyph has the same share of it as of the macOS tile."""
+    return macos_scale(m) * CANVAS / MACOS_BODY
+
+
+def layer_svg(product: str, glyph: Path, m: dict[str, float]) -> str:
+    scale = layer_scale(m)
+    return (
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{CANVAS}" height="{CANVAS}" viewBox="0 0 {CANVAS} {CANVAS}">\n'
+        f"<!-- Facthory {product.capitalize()} icon layer for macOS: {product}.svg (with icons, Chrome style, MIT; LICENSE-withicons.txt),\n"
+        f"     recoloured by Bandpey GmbH, scaled and placed by facthory/icons/fit.py on the canvas that is the whole tile of the\n"
+        f"     appearance-aware icon: the glyph's box {100 * scale * (m['x1'] - m['x0']) / CANVAS:.0f}% of its width, as on the .icns tile.\n"
+        f"     The glyph itself is unchanged; the tile is the system's, filled by icon.json. -->\n"
+        f"{placed(glyph, m, scale, CANVAS / 2, CANVAS / 2)}\n</svg>\n"
+    )
+
+
 def write_all(product: str, out: Path = HERE) -> list[Path]:
     glyph = HERE / f"{product}.svg"
     m = measure(glyph)
-    paths = [out / f"{product}-macos.svg", out / f"{product}-flat.svg"]
+    paths = [out / f"{product}-macos.svg", out / f"{product}-flat.svg", out / f"{product}-layer.svg"]
     paths[0].write_text(macos_svg(product, glyph, m), encoding="utf-8")
     paths[1].write_text(flat_svg(product, glyph, m), encoding="utf-8")
+    paths[2].write_text(layer_svg(product, glyph, m), encoding="utf-8")
     return paths
 
 

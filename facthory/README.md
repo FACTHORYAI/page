@@ -15,11 +15,12 @@ Files Facthory adds to upstream's tree, and nothing else:
 | `facthory/brand.toml` | The brand as data: names, app ids, links, publisher, the exact edits, the installer GUID namespace, the mark check |
 | `facthory/rebrand.py` | Applies `brand.toml` to a checkout (`apply`) and checks shipped files for upstream marks (`check`) |
 | `facthory/icons/page.svg` | The Facthory Page icon's glyph: with icons' `notepad-text` in its Chrome style (MIT, `LICENSE-withicons.txt`), recoloured; the source of the icon files, never edited |
-| `facthory/icons/page-macos.svg`, `facthory/icons/page-flat.svg` | Written by `facthory/icons/fit.py` from that glyph: on Apple's grid (an 824 of 1024 tile, the glyph at about 75% of its width) for macOS, and free-form at 88% of the canvas, cut-outs transparent, for Windows, Linux and the scalable icon |
+| `facthory/icons/page-macos.svg`, `facthory/icons/page-flat.svg`, `facthory/icons/page-layer.svg` | Written by `facthory/icons/fit.py` from that glyph: on Apple's grid (an 824 of 1024 tile, the glyph at about 75% of its width) for the `.icns`, free-form at 88% of the canvas, cut-outs transparent, for Windows, Linux and the scalable icon, and the glyph alone on a transparent canvas, at the same share of it, as the layer of the macOS 26 icon |
 | `facthory/icons/LICENSE-withicons.txt` | The glyph's MIT licence; `render.py` copies its text into `ATTRIBUTION.md`, which the packages ship |
 | `facthory/icons/fit.py` | Measures the glyph and fits it to each platform's icon frame (see Icons) |
-| `facthory/icons/render.py` | Renders the icon set (`facthory/icons/app-icon/`, committed: `.icns`, `.ico`, hicolor PNGs, the scalable icon, and the Facthory mark for the About box in a light and a dark file) with resvg, and credits it in `ATTRIBUTION.md` |
-| `facthory/icons/proof.py`, `facthory/icons/proof/` | The contact sheet of the icon (main's old icon beside the new one, light and dark tiles, backed and unbacked cut-outs, light and dark grounds, 2x) |
+| `facthory/icons/render.py` | Renders the icon set (`facthory/icons/app-icon/`, committed: `.icns`, `.ico`, hicolor PNGs, the scalable icon, the Icon Composer bundle `<base>.icon` of the macOS 26 icon, and the Facthory mark for the About box in a light and a dark file) with resvg, and credits it in `ATTRIBUTION.md` |
+| `facthory/icons/proof.py`, `facthory/icons/proof/` | The contact sheets of the icon: `page.png` (main's old icon beside the new one, light and dark tiles, backed and unbacked cut-outs, light and dark grounds, 2x) and `page-appearances.png` (the macOS 26 icon's light and dark appearances composed from the `.icon` as it ships, simulations of the tinted and clear styles, a grid check) |
+| `facthory/appicon.py`, `facthory/test_appicon.py` | Compiles the `.icon` into `Assets.car` with the pinned Xcode's `actool`, puts it in the macOS bundle with `CFBundleIconName`, and checks the car's variants, the bundle and the `.icns` fallback; `install_check.py` runs the same check on the installed app (see Icons) |
 | `facthory/icons/brand/` | Facthory's own marks (mark, mono mark, word marks), unmodified from the Facthory Design System; the About box draws the mark, never recoloured, stretched, cropped or redrawn. Not in the app icons |
 | `facthory/sync.py` | Merges the next upstream release (W3), resolving the two known conflicts below |
 | `facthory/README.md` | This list |
@@ -66,7 +67,8 @@ And two upstream files changed:
 - **Publisher**: Bandpey GmbH in the Windows file properties, the MSI and the Linux packages.
 - **Windows Installer**: the UpgradeCode and every component GUID derive from our namespace, so
   Facthory Page never upgrades, replaces or shares components with an installed WordCraft.
-- **Icons**: our own set replaces upstream's (`facthory/icons/app-icon/`).
+- **Icons**: our own set replaces upstream's (`facthory/icons/app-icon/`). On macOS the bundle's
+  icon follows the system's appearance and the app sets no Dock icon of its own (see Icons).
 - **Links**: website `facthory.com/page`, source `github.com/FACTHORYAI/page`; the community
   (Discord) buttons become "Help and feedback", open our issue tracker, and the title-bar button
   is off by default.
@@ -211,9 +213,10 @@ marks the tokens miss fail the check.
 
 ```sh
 cargo install resvg
-python3 facthory/icons/fit.py --product page   # places the glyph: page-macos.svg, page-flat.svg
-python3 facthory/icons/render.py                # renders app-icon/, credits it
+python3 facthory/icons/fit.py --product page   # places the glyph: page-macos.svg, page-flat.svg, page-layer.svg
+python3 facthory/icons/render.py                # renders app-icon/ (incl. facthorypage.icon), credits it
 python3 facthory/icons/proof.py --product page  # the contact sheet (needs Pillow and origin/main)
+python3 facthory/icons/proof.py --product page --appearances   # the macOS 26 appearances (needs Pillow)
 ```
 
 The glyph (`page.svg`) is with icons' `notepad-text` in its Chrome style, recoloured; it is drawn small in
@@ -223,3 +226,41 @@ holds the glyph's box at 72 to 78% of its width (never above 82% of its height);
 the free-form glyph's longer side is 88% of the canvas, its cut-outs transparent. Facthory's mark is
 not in the icon: the About box draws it, `mark.svg`'s render on a light theme and `mark-mono.svg`'s on
 a dark one.
+
+### macOS: light, dark, tinted, clear
+
+Owner's decision (2026-11-14): the icon follows the system's theme with a background that suits it, and the
+glyph is never redrawn or recoloured. Which macOS shows what:
+
+| System | Reads | Shows |
+| ------ | ----- | ----- |
+| macOS 26 and later | `CFBundleIconName` → `Assets.car` (an Icon Composer bundle compiled by `actool`) | the light tile or the dark one by the system's appearance; the tinted and clear styles, made by the system from the layer |
+| macOS 11 to 15 | `CFBundleIconFile` → `Contents/Resources/<name>.icns` | one icon, the light tile, always: those systems have no per-appearance app icons, so a white tile in a dark Dock cannot be fixed there by any file |
+
+What ships: `facthory/icons/app-icon/facthorypage.icon/` (written by `render.py`: `icon.json` with the light fill, the
+dark fill and one layer, `Assets/facthorypage-layer.png`, the glyph alone on a transparent canvas) is copied to
+`assets/app-icon/` with the rest of the set. `packaging/macos/package.sh` calls `facthory/appicon.py build` (a rule
+in `brand.toml`) after the bundle's files are in place and before it is signed: it selects Xcode 26.0.1 (the
+`macos-15` image has it beside its default 16.4; forum reports say 26.1 and later ignore `--enable-icon-stack-fallback-generation=disabled`,
+so they would put generated old-format bitmaps in `Assets.car` that systems before 26 show instead of the `.icns`), runs
+`actool` as Tauri's bundler does, checks `assetutil --info` for the icon's images (the default and the dark variant;
+tinted and clear are listed and not required, since the system makes them), copies `Assets.car` into
+`Contents/Resources/`, sets `CFBundleIconName` (never `CFBundleIconFile`: the `.icns` stays) and fails the build when
+a variant, the car, the name or the fallback is missing. `Assets.car` is a resource, so the bundle's signature and
+notarization cover it. `install_check.py` runs the same checks on the installed app.
+
+The app sets no Dock icon of its own on macOS (a rule in `brand.toml` on `app_icon()`): eframe's runtime
+`setApplicationIconImage` would show one fixed image while the app runs and hide the bundle's.
+
+The dark tile's colours come from the light tile's hue (`fit.py`, `tile_colours`), the same formula for every
+app; `render.py` writes both fills into `icon.json` and `proof.py --appearances` composes the proof from that file.
+The tinted and clear rows of the proof are simulations (the glyph's luma on a tinted or grey tile): they show that
+the glyph's light and dark survive when the colour is taken out, not what macOS draws.
+
+### Windows and Linux
+
+One icon each, as before: Windows has no per-theme app icon (the taskbar and Start show the `.ico`, on light and
+dark alike), and the glyph's own dark outline and light body stay legible on both grounds (the first proof sheet's
+two grounds). Linux desktops take `Icon=com.facthory.page` from the hicolor theme, whose directories carry one icon
+per size; the specification has no light/dark variant of an app icon (a `-symbolic` icon is a redrawn, recoloured
+glyph, which is refused), so the free-form glyph with transparent cut-outs stays.

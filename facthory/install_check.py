@@ -35,6 +35,9 @@ import tempfile
 import tomllib
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import appicon  # noqa: E402
+
 ROOT = Path(__file__).resolve().parent.parent
 SIGNER = "CN=Bandpey GmbH"
 FEDORA = "fedora:44"
@@ -89,6 +92,12 @@ def macos(dist: Path, version: str, name: str, signed: bool) -> None:
         raise Fail(f"{app.name} declares version {info.get('CFBundleShortVersionString')}, not {version}")
     exe = app / "Contents" / "MacOS" / str(info.get("CFBundleExecutable", name))
     says_version(run([exe, "--version"]), version, app.name)
+    # The icon follows the system's appearance (macOS 26): Assets.car with its variants, named by CFBundleIconName, beside the .icns.
+    try:
+        appicon.check_app(app)
+    except appicon.AppIconError as e:
+        raise Fail(f"{app.name}'s icon: {e}") from e
+    print(f"ok: {app.name} has its appearance-aware icon and the .icns fallback")
     if signed:
         run(["codesign", "--verify", "--deep", "--strict", "--verbose=2", app])
         assessed = run(["spctl", "--assess", "--type", "execute", "--verbose=4", app])
