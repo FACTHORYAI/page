@@ -1,0 +1,59 @@
+# Scratch probe for the appearance-aware icon (branch claude/upbeat-lamport-hhlapx only; removed before the pull request).
+name: Facthory icon probe
+
+on:
+  push:
+    branches: [claude/upbeat-lamport-hhlapx]
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    name: actool on ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [macos-15, macos-26]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Environment
+        run: |
+          sw_vers; uname -m
+          ls /Applications | grep -i xcode || true
+          xcode-select -p
+      - name: Stub app and the current appicon.py build
+        continue-on-error: true
+        run: |
+          mkdir -p probe-out/Probe.app/Contents/Resources
+          /bin/cp -f facthory/icons/app-icon/facthorypage.icns probe-out/Probe.app/Contents/Resources/facthorypage.icns
+          printf '%s' '<?xml version="1.0" encoding="UTF-8"?><plist version="1.0"><dict><key>CFBundleIdentifier</key><string>com.example.probe</string><key>CFBundleName</key><string>Probe</string><key>CFBundlePackageType</key><string>APPL</string><key>CFBundleIconFile</key><string>facthorypage</string></dict></plist>' > probe-out/Probe.app/Contents/Info.plist
+          python3 facthory/appicon.py build --icon facthory/icons/app-icon/facthorypage.icon --app probe-out/Probe.app 2>&1 | tee probe-out/appicon-build.log
+          exit "${PIPESTATUS[0]}"
+      - name: actool variants on every Xcode 26
+        run: |
+          icon=facthory/icons/app-icon/facthorypage.icon
+          for xc in /Applications/Xcode_26*.app; do
+            v=$(basename "$xc" .app | sed 's/Xcode_//')
+            export DEVELOPER_DIR="$xc/Contents/Developer"
+            run() {
+              n=$1; shift; d="probe-out/$v-$n"; mkdir -p "$d"; echo "=== $v $n"
+              xcrun actool "$icon" --compile "$d" --output-format human-readable-text --notices --warnings --errors \
+                --output-partial-info-plist "$d/partial.plist" --app-icon facthorypage "$@" > "$d/actool.log" 2>&1
+              echo "exit $?"; cat "$d/actool.log"
+              if [ -f "$d/Assets.car" ]; then xcrun assetutil --info "$d/Assets.car" > "$d/assetutil.json" 2>&1; head -c 3000 "$d/assetutil.json"; echo; else echo "no car"; fi
+            }
+            run current --include-all-app-icons --enable-icon-stack-fallback-generation=disabled --development-region en --target-device mac --minimum-deployment-target 26.0 --platform macosx
+            run nofallbackflag --include-all-app-icons --development-region en --target-device mac --minimum-deployment-target 26.0 --platform macosx
+            run minimal --minimum-deployment-target 26.0 --platform macosx
+          done
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: probe-${{ matrix.runner }}
+          path: probe-out
+          if-no-files-found: warn
