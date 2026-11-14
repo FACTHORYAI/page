@@ -6,6 +6,12 @@ over). [icon] in brand.toml names the files and the file base:
   glyph      the glyph, unchanged (with icons' Chrome style, recoloured): the source of the others
   svg        Windows, Linux and the scalable icon: the free-form glyph, its longer side 88% of 1024
   macos_svg  macOS: an 824 x 824 tile on Apple's grid in the 1024 canvas, the glyph at about 75% of its width
+  layer_svg  macOS 26 and later: the glyph alone on a transparent 1024 canvas, the layer of <base>.icon (below)
+
+<base>.icon is the Icon Composer bundle of the appearance-aware macOS icon: icon.json (the light fill, the
+dark fill and the layer, written here from fit.py's tile colours) and Assets/<base>-layer.png. The system draws
+the tile; its tinted and clear styles are made by the system from the layer. packaging/macos/package.sh
+compiles it into Assets.car with facthory/appicon.py, beside the .icns of systems that predate it.
 
 macos_512 and svg_copy (default true) say whether upstream's layout has <base>-macos-512.png and
 <base>.svg. author, source and licence credit the glyph and its renders in ATTRIBUTION.md, notice
@@ -26,6 +32,7 @@ seldom edits the top of that file, so merges rarely touch the block.
 
 from __future__ import annotations
 
+import json
 import shutil
 import struct
 import subprocess
@@ -36,6 +43,8 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
+sys.path.insert(0, str(HERE))
+import fit  # noqa: E402
 BEGIN = "<!-- facthory:begin"
 END = "<!-- facthory:end -->"
 HICOLOR = [16, 24, 32, 48, 64, 128, 256, 512]
@@ -75,6 +84,46 @@ def icns(pngs: dict[int, bytes]) -> bytes:
     return b"icns" + struct.pack(">I", 8 + len(body)) + body
 
 
+def icon_colour(hex_colour: str) -> str:
+    r, g, b = (c / 255 for c in fit.hex_rgb(hex_colour))
+    return f"srgb:{r:.5f},{g:.5f},{b:.5f},1.00000"
+
+
+def icon_fill(product: str, tile: str) -> dict:
+    top, bottom, _ = fit.tile_colours(product, tile)
+    return {
+        "linear-gradient": [icon_colour(top), icon_colour(bottom)],
+        "orientation": {"start": {"x": 0.5, "y": 0.0}, "stop": {"x": 0.5, "y": 1.0}},
+    }
+
+
+def icon_json(product: str, base: str) -> dict:
+    """icon.json (Icon Composer's format; fields as its schema names them): the light tile as the default fill, the dark
+    tile for the dark appearance, and one group of one layer, the glyph, with the system's own lighting and translucency
+    off so the glyph's metal is drawn as it is. Tinted and clear are the system's: it makes them from the layer."""
+    return {
+        "fill-specializations": [
+            {"value": icon_fill(product, "light")},
+            {"appearance": "dark", "value": icon_fill(product, "dark")},
+        ],
+        "groups": [
+            {
+                "layers": [{"image-name": f"{base}-layer.png", "name": "glyph"}],
+                "shadow": {"kind": "neutral", "opacity": 0.5},
+                "specular": False,
+                "translucency": {"enabled": False, "value": 0.5},
+            }
+        ],
+        "supported-platforms": {"squares": "shared"},
+    }
+
+
+def write_icon_bundle(out: Path, product: str, base: str, layer: Path) -> None:
+    bundle = out / f"{base}.icon"
+    render(layer, 1024, bundle / "Assets" / f"{base}-layer.png")
+    (bundle / "icon.json").write_text(json.dumps(icon_json(product, base), indent=2) + "\n", encoding="utf-8")
+
+
 MARK_LICENCE = "Facthory trademark, all rights reserved: not open source; usable unmodified only"
 
 
@@ -90,15 +139,22 @@ def attribution(brand: dict, out: Path) -> None:
     rel = lambda p: p.relative_to(ROOT).as_posix()  # noqa: E731
     glyph = HERE / icon.get("glyph", icon["svg"])
     flat, mac = HERE / icon["svg"], HERE / icon["macos_svg"]
+    layer = HERE / icon["layer_svg"]
     rows = [f"| `{rel(glyph)}` | {author} | {source} | {licence} |"]
-    for p, what in ((mac, "on Apple's grid"), (flat, "for Windows and Linux")):
+    for p, what in ((mac, "on Apple's grid"), (flat, "for Windows and Linux"), (layer, "as the layer of the macOS 26 icon")):
         if p != glyph:
             rows.append(f"| `{rel(p)}` | {author} | `{rel(glyph)}` scaled and placed {what} by `facthory/icons/fit.py`; the glyph itself is unchanged | {licence} |")
     mac_files = {out / f"{icon['base']}.icns", out / f"{icon['base']}-macos-512.png"}
     for p in sorted(out.rglob("*")):
         if not p.is_file():
             continue
-        if p.name.endswith("-logo-light.png") or p.name.endswith("-logo-dark.png"):
+        if f"{icon['base']}.icon" in p.parts:
+            # The Icon Composer bundle: its layer is rendered from the layer SVG, its icon.json is written by render.py. The
+            # branded tree holds it under assets/app-icon/, where upstream's `cargo xtask assets` wants a row for every file.
+            how = f"rendered from `{rel(layer)}` by `facthory/icons/render.py`" if p.suffix == ".png" else "written by `facthory/icons/render.py` from `facthory/icons/fit.py`'s tile colours"
+            rows.append(f"| `{rel(p)}` | {author} | {how} | {licence} |")
+            rows.append(f"| `assets/app-icon/{p.relative_to(out).as_posix()}` | {author} | the branded tree's copy of `{rel(p)}` | {licence} |")
+        elif p.name.endswith("-logo-light.png") or p.name.endswith("-logo-dark.png"):
             mark = HERE / "brand" / ("mark.svg" if p.name.endswith("-light.png") else "mark-mono.svg")
             rows.append(f"| `{rel(p)}` | Bandpey GmbH | rendered from `{rel(mark)}`, the Facthory mark, by `facthory/icons/render.py` (drawn in the About box) | {MARK_LICENCE} |")
             rows.append(f"| `assets/app-icon/{p.name}` | Bandpey GmbH | the branded tree's copy of `{rel(p)}` | {MARK_LICENCE} |")
@@ -129,10 +185,10 @@ def main() -> int:
     with (HERE.parent / "brand.toml").open("rb") as f:
         brand = tomllib.load(f)
     icon, out = brand["icon"], HERE / "app-icon"
-    svg, mac_svg = HERE / icon["svg"], HERE / icon["macos_svg"]
+    svg, mac_svg, layer_svg = HERE / icon["svg"], HERE / icon["macos_svg"], HERE / icon["layer_svg"]
     glyph = HERE / icon.get("glyph", icon["svg"])
     # Check the sources before anything is deleted, so a typo in brand.toml leaves the set alone.
-    for s in (svg, mac_svg):
+    for s in (svg, mac_svg, layer_svg):
         if not s.is_file() or 'viewBox="0 0 1024 1024"' not in s.read_text(encoding="utf-8"):
             print(f"error: {s} is missing or lacks viewBox=\"0 0 1024 1024\" (python3 facthory/icons/fit.py)", file=sys.stderr)
             return 1
@@ -164,6 +220,7 @@ def main() -> int:
         if icon.get("svg_copy", True):
             shutil.copyfile(svg, out / f"{base}.svg")
         (out / f"{base}.ico").write_bytes(ico({s: render(svg, s, tmp / f"ico-{s}.png") for s in ICO}))
+        write_icon_bundle(out, icon["product"], base, layer_svg)
         mac_pngs = {s: render(mac_svg, s, tmp / f"mac-{s}.png") for s in sorted({s for _, s in ICNS})}
         (out / f"{base}.icns").write_bytes(icns(mac_pngs))
         # Facthory's mark for the About box, one file per theme: light grounds get the mark, dark

@@ -16,12 +16,15 @@ team = "ArtCraft team"
 repository = "https://github.com/storytold/wordcraft"
 
 [icon]
-# The glyph is page.svg, unchanged; facthory/icons/fit.py places it: page-macos.svg (Apple's grid) and
-# page-flat.svg (Windows, Linux, the scalable icon). render.py renders the platform files from those.
+# The glyph is page.svg, unchanged; facthory/icons/fit.py places it: page-macos.svg (Apple's grid), page-flat.svg
+# (Windows, Linux, the scalable icon) and page-layer.svg (the layer of the macOS 26 appearance-aware icon).
+# render.py renders the platform files from those, and writes <base>.icon from the layer and fit.py's tile colours.
+product = "page"
 glyph = "page.svg"
 svg = "page-flat.svg"
 base = "facthorypage"
 macos_svg = "page-macos.svg"
+layer_svg = "page-layer.svg"
 author = "with icons contributors; recoloured by Bandpey GmbH"
 source = "`notepad-text` in with icons' Chrome style (https://github.com/withevergrow/withicons at 996cc78), recoloured to the Page colours"
 licence = "MIT"
@@ -77,6 +80,12 @@ path = "icons/proof/page.png"
 author = "Bandpey GmbH"
 source = "contact sheet of the icon candidates beside reference shapes, drawn by `facthory/icons/proof.py`; contains Facthory's mark"
 licence = "MIT OR Apache-2.0, except Facthory's mark in it: trademark of Bandpey GmbH"
+
+[[asset]]
+path = "icons/proof/page-appearances.png"
+author = "Bandpey GmbH"
+source = "contact sheet of the appearance-aware macOS icon (light, dark, and simulations of the system's tinted and clear styles) at the sizes the system shows, drawn by `facthory/icons/proof.py --appearances` from `app-icon/facthorypage.icon`"
+licence = "MIT"
 
 [files]
 # Never touched: upstream's licences and notices stay exactly as written (Apache-2.0 §4).
@@ -330,6 +339,55 @@ ditto "$APP" "$STAGE/WordCraft.app"
 replace = '''
 ditto --noextattr --noqtn "$APP" "$STAGE/WordCraft.app"
 xattr -cr "$STAGE/WordCraft.app"
+'''
+count = 1
+
+# The macOS icon follows the system's appearance (macOS 26): facthory/appicon.py compiles the Icon Composer
+# bundle assets/app-icon/<base>.icon (copied from facthory/icons/app-icon/ below) into Assets.car with the pinned
+# Xcode's actool, puts it in the bundle, sets CFBundleIconName and checks the variants. It runs before the bundle is
+# signed, so the signature and notarization cover Assets.car; the .icns stays as CFBundleIconFile for older systems.
+[[rule]]
+why = "macOS: the appearance-aware icon (Assets.car with its variants, beside the .icns), before the bundle is signed"
+files = "packaging/macos/package.sh"
+find = '''
+printf 'APPL????' >"$APP/Contents/PkgInfo"
+'''
+replace = '''
+printf 'APPL????' >"$APP/Contents/PkgInfo"
+python3 "$ROOT/facthory/appicon.py" build --icon "$ROOT/assets/app-icon/wordcraft.icon" --app "$APP"
+'''
+count = 1
+
+# eframe sets the Dock icon at runtime from the window's icon (NSApplication setApplicationIconImage), which
+# would replace the bundle's appearance-aware icon with one fixed image while the app runs: the white tile in a
+# dark Dock. An empty icon is eframe's documented way to set none (NativeOptions::viewport, with_icon).
+[[rule]]
+why = "macOS: no runtime Dock icon, so the bundle's appearance-aware icon is the one the Dock shows"
+files = "apps/wordcraft/src/main.rs"
+find = '''
+/// Window, Dock and taskbar icon.
+fn app_icon() -> Option<egui::IconData> {
+    #[cfg(target_os = "macos")]
+    let png: &[u8] = include_bytes!("../../../assets/app-icon/wordcraft-macos-512.png");
+    #[cfg(not(target_os = "macos"))]
+    let png: &[u8] = include_bytes!("../../../assets/app-icon/hicolor/256x256/apps/ai.storyteller.wordcraft.png");
+    eframe::icon_data::from_png_bytes(png).map_err(|e| log::warn!("app icon: {e}")).ok()
+}
+'''
+replace = '''
+/// Window and taskbar icon. On macOS the bundle's own icon (Assets.car, with the .icns) follows the system's
+/// appearance, and eframe's runtime Dock icon would replace it with one fixed image: an empty icon sets none.
+#[cfg(target_os = "macos")]
+fn app_icon() -> Option<egui::IconData> {
+    Some(egui::IconData::default())
+}
+
+/// Window and taskbar icon.
+#[cfg(not(target_os = "macos"))]
+fn app_icon() -> Option<egui::IconData> {
+    let png: &[u8] = include_bytes!("../../../assets/app-icon/hicolor/256x256/apps/ai.storyteller.wordcraft.png");
+    eframe::icon_data::from_png_bytes(png).map_err(|e| log::warn!("app icon: {e}")).ok()
+}
 '''
 count = 1
 

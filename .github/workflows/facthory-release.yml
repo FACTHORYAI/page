@@ -208,6 +208,11 @@ jobs:
         uses: storytold/craft-common-actions/actions/checkout-craft-i18n@2b3fb9dc05036f73c77d18f753a3aa9da55fa386
       - name: Apply the Facthory brand
         run: python3 facthory/rebrand.py apply
+      - name: The appearance-aware icon compiles
+        # appicon.py's build on a stub bundle, in about a minute: a broken icon (no Xcode 26.0.1 on the
+        # image, an .icon actool refuses, a car without the default or the dark stack) fails here, not after
+        # the cargo build. The real compile into the real bundle stays in package.sh, before signing.
+        run: python3 facthory/appicon.py stub --icon assets/app-icon/facthorypage.icon
       - name: Check out craft-fonts
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
