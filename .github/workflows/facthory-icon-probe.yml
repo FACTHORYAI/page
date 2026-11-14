@@ -64,7 +64,19 @@ jobs:
           /bin/cp -Rf from15/app/Probe.app b/icns-only.app
           rm -f b/icns-only.app/Contents/Resources/Assets.car
           plutil -remove CFBundleIconName b/icns-only.app/Contents/Info.plist
-          for a in b/*.app; do echo "== $a"; plutil -p "$a/Contents/Info.plist"; ls -l "$a/Contents/Resources"; done
+          # Make each a real app (an executable, the plist keys LaunchServices wants) and sign it ad hoc, so the system treats it as one.
+          for a in b/*.app; do
+            mkdir -p "$a/Contents/MacOS"
+            printf '#!/bin/sh\nexit 0\n' > "$a/Contents/MacOS/probe"; chmod +x "$a/Contents/MacOS/probe"
+            n=$(basename "$a" .app)
+            plutil -replace CFBundleExecutable -string probe "$a/Contents/Info.plist"
+            plutil -replace CFBundleIdentifier -string "com.example.probe.$n" "$a/Contents/Info.plist"
+            plutil -replace CFBundleVersion -string 1 "$a/Contents/Info.plist"
+            plutil -replace CFBundleShortVersionString -string 1.0 "$a/Contents/Info.plist"
+            plutil -replace LSMinimumSystemVersion -string 11.0 "$a/Contents/Info.plist"
+            codesign -s - --force --deep "$a"
+            echo "== $a"; plutil -p "$a/Contents/Info.plist"; ls -l "$a/Contents/Resources"
+          done
       - name: Draw the system's icon of each in light and dark
         run: |
           cat > render.swift <<'S'
@@ -98,6 +110,7 @@ jobs:
             "$lsr" -f -R -trusted "$a" || true
             touch "$a"
             echo "== $n"; swift render.swift "$a" "out/$n" 2>&1 | grep -v '^$'
+            mkdir -p "out/ql-$n"; qlmanage -t -s 256 -o "out/ql-$n" "$a" 2>&1 | tail -2 || true
           done
           ls -l out
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
