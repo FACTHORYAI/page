@@ -56,8 +56,12 @@ LISTED = {"tinted": "tint", "clear": "clear"}
 # old format (`Icon Image`, listed only). With --enable-icon-stack-fallback-generation=disabled Xcode 26.0 and 26.0.1
 # write no bitmaps at all (and warn "Failed to generate flattened icon stack", which is expected); from 26.1 on
 # Xcode writes them anyway. The Xcode 26.0.1 car on a macos-15 runner holds the stack alone and is complete.
-STACK = "IconImageStack"
 FLATTENED = "Icon Image"
+# assetutil's name for the stack depends on the macOS it runs on: a macOS 26 host names the entries `IconImageStack`; a
+# macOS 15 host (the macos-15 runner, which Xcode 26.0.1's assetutil runs on) cannot read the type, prints "CoreUI:
+# Expecting a kCSIElementSignature ... couldn't materialize rendition" on stderr and lists the same entries, with the
+# same Name and Appearance, as `Unknown` (probe run 43617349785). Both are the stack; `<name>/Group` is its layers.
+STACK = ("IconImageStack", "Unknown")
 
 
 class AppIconError(Exception):
@@ -130,11 +134,11 @@ def run(args: list[str], env: dict[str, str] | None = None) -> str:
 # ---- the car ------------------------------------------------------------------------------------------------
 
 
-def icon_entries(info: object, name: str, kind: str = STACK) -> list[dict]:
-    """The entries of `assetutil --info` (a JSON array) of the given type that belong to the named icon."""
+def icon_entries(info: object, name: str, kinds: tuple[str, ...] = STACK) -> list[dict]:
+    """The entries of `assetutil --info` (a JSON array) of the given types that belong to the named icon."""
     if not isinstance(info, list):
         raise AppIconError("assetutil --info did not print a JSON array")
-    return [e for e in info if isinstance(e, dict) and e.get("AssetType") == kind and e.get("Name") == name]
+    return [e for e in info if isinstance(e, dict) and e.get("AssetType") in kinds and e.get("Name") == name]
 
 
 def _is(variant: str, token: str, appearance: str) -> bool:
@@ -150,7 +154,7 @@ def check_car_info(info: object, name: str) -> list[str]:
     default or dark appearance of it is missing."""
     stacks = icon_entries(info, name)
     if not stacks:
-        have = sorted({str(e.get("Name")) for e in info if isinstance(e, dict) and e.get("AssetType") == STACK}) if isinstance(info, list) else []
+        have = sorted({str(e.get("Name")) for e in info if isinstance(e, dict) and e.get("AssetType") in STACK}) if isinstance(info, list) else []
         raise AppIconError(f"Assets.car has no icon image stack named {name!r} (icon image stacks: {', '.join(have) or 'none'})")
     appearances = [str(e.get("Appearance", "")) for e in stacks]
     lines = [f"{len(stacks)} icon image stack(s) named {name!r}: {', '.join(a or '(default)' for a in appearances)}"]
@@ -166,7 +170,9 @@ def check_car_info(info: object, name: str) -> list[str]:
     for variant, token in LISTED.items():
         n = sum(token in a.lower() for a in appearances)
         lines.append(f"{variant}: {n} entr{'y' if n == 1 else 'ies'} listed (made by the system from the layer; not required)")
-    flat = icon_entries(info, name, FLATTENED)
+    flat = icon_entries(info, name, (FLATTENED,))
+    groups = icon_entries(info, f"{name}/Group", ("IconGroup", "Unknown"))
+    lines.append(f"{len(groups)} icon group(s) (the layers): {', '.join(str(e.get('Appearance', '(default)')) for e in groups) or 'none'}")
     lines.append(f"{len(flat)} flattened bitmap(s) of the old icon format (none is expected from Xcode 26.0.x with the fallback off; not required)")
     return lines
 

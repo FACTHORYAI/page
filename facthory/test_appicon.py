@@ -28,12 +28,14 @@ ICON = HERE / "icons" / "app-icon" / "facthorypage.icon"
 AQUA, DARK, TINT = "NSAppearanceNameAqua", "NSAppearanceNameDarkAqua", "ISAppearanceTintable"
 
 
-def listing(*appearances: str, name: str = "facthorypage", flattened: int = 0) -> list[dict]:
+def listing(*appearances: str, name: str = "facthorypage", flattened: int = 0, host15: bool = False) -> list[dict]:
     """The entries of the Xcode 26.0.1 car of the Page icon (macos-15 runner, probe run 43617349785 and after), by
     appearance; `flattened` adds the bitmaps Xcode 26.1 and later write regardless."""
+    # host15: the macOS 15 runner's assetutil cannot read the icon's types and lists the entries as `Unknown`.
+    group, stack = ("Unknown", "Unknown") if host15 else ("IconGroup", "IconImageStack")
     return (
-        [{"AssetType": "IconGroup", "Name": f"{name}/Group", "Appearance": a} for a in appearances]
-        + [{"AssetType": "IconImageStack", "Name": name, "Appearance": a, "RenditionName": f"{name}.iconstack"} for a in appearances]
+        [{"AssetType": group, "Name": f"{name}/Group", "Appearance": a} for a in appearances]
+        + [{"AssetType": stack, "Name": name, "Appearance": a} for a in appearances]
         + [{"AssetType": "Icon Image", "Name": name, "PixelWidth": 1024, "Scale": 1} for _ in range(flattened)]
         + [{"AssetType": "Image", "Name": f"{name}_Assets/{name}-layer"}, {"AssetType": "Color", "Name": f"{name}_Assets/Color-1"}]
     )
@@ -80,6 +82,18 @@ class Car(unittest.TestCase):
         lines = appicon.check_car_info(listing(DARK, AQUA, TINT), "facthorypage")
         self.assertIn("default: 1 entry", lines)
         self.assertIn("dark: 1 entry", lines)
+
+    def test_the_listing_of_a_macos_15_host_passes(self) -> None:
+        # assetutil on the macos-15 runner prints the same entries with AssetType "Unknown" (probe run 43617349785).
+        lines = appicon.check_car_info(listing(DARK, AQUA, TINT, host15=True), "facthorypage")
+        self.assertIn("dark: 1 entry", lines)
+        self.assertTrue(any(line.startswith("3 icon group(s)") for line in lines))
+
+    def test_unknown_entries_of_other_names_are_no_icon(self) -> None:
+        # The colours and gradients are `Unknown` there too, under names of their own.
+        info = [{"AssetType": "Unknown", "Name": "facthorypage_Assets/Gradient-1"}, {"AssetType": "Image", "Name": "facthorypage_Assets/facthorypage-layer"}]
+        with self.assertRaisesRegex(appicon.AppIconError, "no icon image stack named"):
+            appicon.check_car_info(info, "facthorypage")
 
     def test_the_stack_alone_is_a_complete_icon(self) -> None:
         # What Xcode 26.0.1 writes with the old format off: no flattened bitmaps. The guard used to ask for those
