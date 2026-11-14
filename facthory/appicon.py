@@ -12,6 +12,9 @@ Xcode builds none of this for us, so this script runs `actool` the way Xcode doe
       with `assetutil --info`, copies it to <App>.app/Contents/Resources/, sets CFBundleIconName in Info.plist
       (CFBundleIconFile and the .icns stay as they are) and checks the bundle. It fails on any missing piece.
       Run it before the bundle is signed: Assets.car is a resource, so the signature and notarization cover it.
+  python3 facthory/appicon.py stub --icon assets/app-icon/<name>.icon [--icns <file>] [--keep <dir>]
+      the same build into a throwaway stub bundle (an Info.plist and an .icns), so a broken icon fails in a minute, long
+      before the real bundle is assembled; --keep puts the stub bundle in <dir> for a look.
   python3 facthory/appicon.py check <App>.app
       checks a finished bundle (the same checks, no compile); install_check.py runs it on the installed app.
   python3 facthory/appicon.py source <name>.icon
@@ -43,12 +46,18 @@ XCODE_FOLDER = "/Applications"
 # The oldest system that reads an icon stack; the .icns serves the rest.
 ICON_TARGET = "26.0"
 
-# What a car must hold for the icon's name, by variant: a substring looked for (lower case) in the JSON of the
-# icon's entries of `assetutil --info`. "default" has none: any entry of the icon is it.
-VARIANTS = {"default": None, "dark": "dark"}
-# Listed in the log when present, never required: the system makes these from the layer, and which entries
-# assetutil shows for them is not something Apple documents.
+# What a car must hold for the icon's name: its icon image stack (what macOS 26 reads and draws: one per
+# appearance, the layers, fills and colours it names are in the car too), by appearance. A substring looked for in
+# the stack's `Appearance` in `assetutil --info` (lower case); the default has none of "dark" and "tint".
+VARIANTS = {"default": "aqua", "dark": "darkaqua"}
+# Listed in the log when present, never required: the system makes these from the layer.
 LISTED = {"tinted": "tint", "clear": "clear"}
+# The entry types of `assetutil --info` that hold the icon: the stack (required) and the flattened bitmaps of the
+# old format (`Icon Image`, listed only). With --enable-icon-stack-fallback-generation=disabled Xcode 26.0 and 26.0.1
+# write no bitmaps at all (and warn "Failed to generate flattened icon stack", which is expected); from 26.1 on
+# Xcode writes them anyway. The Xcode 26.0.1 car on a macos-15 runner holds the stack alone and is complete.
+STACK = "IconImageStack"
+FLATTENED = "Icon Image"
 
 
 class AppIconError(Exception):
@@ -121,32 +130,44 @@ def run(args: list[str], env: dict[str, str] | None = None) -> str:
 # ---- the car ------------------------------------------------------------------------------------------------
 
 
-def icon_entries(info: object, name: str) -> list[dict]:
-    """The entries of `assetutil --info` (a JSON array) that are the named icon's images."""
+def icon_entries(info: object, name: str, kind: str = STACK) -> list[dict]:
+    """The entries of `assetutil --info` (a JSON array) of the given type that belong to the named icon."""
     if not isinstance(info, list):
         raise AppIconError("assetutil --info did not print a JSON array")
-    return [e for e in info if isinstance(e, dict) and e.get("AssetType") == "Icon Image" and e.get("Name") == name]
+    return [e for e in info if isinstance(e, dict) and e.get("AssetType") == kind and e.get("Name") == name]
+
+
+def _is(variant: str, token: str, appearance: str) -> bool:
+    a = appearance.lower()
+    if variant == "default":
+        # The light stack is the one for NSAppearanceNameAqua (or one that names no appearance).
+        return (token in a or not a) and "dark" not in a and "tint" not in a
+    return token in a
 
 
 def check_car_info(info: object, name: str) -> list[str]:
-    """What the car's listing says about the icon `name`: lines for the log. Raises when the icon or a variant is missing."""
-    entries = icon_entries(info, name)
-    if not entries:
-        names = sorted({str(e.get("Name")) for e in info if isinstance(e, dict) and e.get("AssetType") == "Icon Image"}) if isinstance(info, list) else []
-        raise AppIconError(f"Assets.car has no icon image named {name!r} (icon images: {', '.join(names) or 'none'})")
-    text = [json.dumps(e, sort_keys=True).lower() for e in entries]
-    lines = [f"{len(entries)} icon image(s) named {name!r}", *(f"  {t[:240]}" for t in text[:40])]
+    """What the car's listing says about the icon `name`: lines for the log. Raises when the icon's stack or the
+    default or dark appearance of it is missing."""
+    stacks = icon_entries(info, name)
+    if not stacks:
+        have = sorted({str(e.get("Name")) for e in info if isinstance(e, dict) and e.get("AssetType") == STACK}) if isinstance(info, list) else []
+        raise AppIconError(f"Assets.car has no icon image stack named {name!r} (icon image stacks: {', '.join(have) or 'none'})")
+    appearances = [str(e.get("Appearance", "")) for e in stacks]
+    lines = [f"{len(stacks)} icon image stack(s) named {name!r}: {', '.join(a or '(default)' for a in appearances)}"]
     for variant, token in VARIANTS.items():
-        n = len(text) if token is None else sum(token in t for t in text)
+        n = sum(_is(variant, token, a) for a in appearances)
         if n == 0:
             raise AppIconError(
-                f"Assets.car lacks the {variant} variant of {name!r}: none of its {len(entries)} icon images mentions {token!r}. "
-                f"Its icon images, to see what assetutil calls the variants:\n" + "\n".join(f"  {t[:400]}" for t in text[:40])
+                f"Assets.car lacks the {variant} variant of {name!r}: none of its {len(stacks)} icon image stacks has an "
+                f"appearance matching {token!r}. Its stacks' appearances, to see what assetutil calls the variants: "
+                + ", ".join(repr(a) for a in appearances)
             )
         lines.append(f"{variant}: {n} entr{'y' if n == 1 else 'ies'}")
     for variant, token in LISTED.items():
-        n = sum(token in t for t in text)
+        n = sum(token in a.lower() for a in appearances)
         lines.append(f"{variant}: {n} entr{'y' if n == 1 else 'ies'} listed (made by the system from the layer; not required)")
+    flat = icon_entries(info, name, FLATTENED)
+    lines.append(f"{len(flat)} flattened bitmap(s) of the old icon format (none is expected from Xcode 26.0.x with the fallback off; not required)")
     return lines
 
 
@@ -227,6 +248,21 @@ def build(icon: Path, app: Path, folder: str = XCODE_FOLDER) -> None:
     check_app(app, env)
 
 
+def stub(icon: Path, icns: Path | None = None, keep: Path | None = None, folder: str = XCODE_FOLDER) -> None:
+    """build() into a throwaway bundle that has what package.sh leaves before the icon step: an Info.plist with
+    CFBundleIconFile and the .icns. A broken icon fails here in a minute instead of after a long build."""
+    with tempfile.TemporaryDirectory() as tmp:
+        app = (keep or Path(tmp)) / "Probe.app"
+        res = app / "Contents" / "Resources"
+        res.mkdir(parents=True, exist_ok=True)
+        # The stub's .icns only has to be one (the check reads its magic); the real one is a copy when given.
+        (res / "stub.icns").write_bytes(icns.read_bytes() if icns else b"icns\x00\x00\x00\x08")
+        (app / "Contents" / "Info.plist").write_bytes(
+            plistlib.dumps({"CFBundleIdentifier": "com.example.iconstub", "CFBundleName": "Stub", "CFBundlePackageType": "APPL", "CFBundleIconFile": "stub"})
+        )
+        build(icon, app, folder)
+
+
 def tool_env(folder: str = XCODE_FOLDER) -> dict[str, str] | None:
     """The environment of the pinned Xcode's tools when it is installed (its assetutil reads what its actool wrote), else the default's."""
     try:
@@ -248,6 +284,10 @@ def main() -> int:
     b = sub.add_parser("build", help="compile the .icon and put it in the bundle")
     b.add_argument("--icon", type=Path, required=True)
     b.add_argument("--app", type=Path, required=True)
+    t = sub.add_parser("stub", help="build into a throwaway stub bundle, to prove the icon compiles")
+    t.add_argument("--icon", type=Path, required=True)
+    t.add_argument("--icns", type=Path)
+    t.add_argument("--keep", type=Path, help="a folder to leave the stub bundle (Probe.app) in")
     c = sub.add_parser("check", help="check a finished bundle")
     c.add_argument("app", type=Path)
     s = sub.add_parser("source", help="check the .icon bundle")
@@ -256,6 +296,8 @@ def main() -> int:
     try:
         if args.cmd == "build":
             build(args.icon, args.app)
+        elif args.cmd == "stub":
+            stub(args.icon, args.icns, args.keep)
         elif args.cmd == "check":
             check_app(args.app)
         else:

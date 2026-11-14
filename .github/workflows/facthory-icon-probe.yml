@@ -9,51 +9,100 @@ permissions:
   contents: read
 
 jobs:
-  probe:
-    name: actool on ${{ matrix.runner }}
-    strategy:
-      fail-fast: false
-      matrix:
-        runner: [macos-15, macos-26]
-    runs-on: ${{ matrix.runner }}
+  build:
+    name: appicon.py on macos-15
+    runs-on: macos-15
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: The guard on a stub bundle, as the release will run it
+        run: |
+          mkdir -p probe-out/app
+          python3 facthory/appicon.py stub --icon facthory/icons/app-icon/facthorypage.icon --icns facthory/icons/app-icon/facthorypage.icns --keep probe-out/app 2>&1 | grep -v '^dyld' | tee probe-out/stub.log
+          cd probe-out/app && DEVELOPER_DIR=/Applications/Xcode_26.0.1.app/Contents/Developer xcrun assetutil --info Probe.app/Contents/Resources/Assets.car > ../assetutil.json
+          cd .. && ls -l app/Probe.app/Contents/Resources && plutil -p app/Probe.app/Contents/Info.plist
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: stub-macos-15
+          path: probe-out
+          if-no-files-found: warn
+
+  render:
+    name: the system's icon on macos-26
+    needs: build
+    runs-on: macos-26
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Environment
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: stub-macos-15
+          path: from15
+      - name: Bundles to look at
         run: |
-          sw_vers; uname -m
-          ls /Applications | grep -i xcode || true
-          xcode-select -p
-      - name: Stub app and the current appicon.py build
-        continue-on-error: true
-        run: |
-          mkdir -p probe-out/Probe.app/Contents/Resources
-          /bin/cp -f facthory/icons/app-icon/facthorypage.icns probe-out/Probe.app/Contents/Resources/facthorypage.icns
-          printf '%s' '<?xml version="1.0" encoding="UTF-8"?><plist version="1.0"><dict><key>CFBundleIdentifier</key><string>com.example.probe</string><key>CFBundleName</key><string>Probe</string><key>CFBundlePackageType</key><string>APPL</string><key>CFBundleIconFile</key><string>facthorypage</string></dict></plist>' > probe-out/Probe.app/Contents/Info.plist
-          python3 facthory/appicon.py build --icon facthory/icons/app-icon/facthorypage.icon --app probe-out/Probe.app 2>&1 | tee probe-out/appicon-build.log
-          exit "${PIPESTATUS[0]}"
-      - name: actool variants on every Xcode 26
-        run: |
+          sw_vers
+          mkdir -p b out
           icon=facthory/icons/app-icon/facthorypage.icon
-          for xc in /Applications/Xcode_26*.app; do
-            v=$(basename "$xc" .app | sed 's/Xcode_//')
-            export DEVELOPER_DIR="$xc/Contents/Developer"
-            run() {
-              n=$1; shift; d="probe-out/$v-$n"; mkdir -p "$d"; echo "=== $v $n"
-              xcrun actool "$icon" --compile "$d" --output-format human-readable-text --notices --warnings --errors \
-                --output-partial-info-plist "$d/partial.plist" --app-icon facthorypage "$@" > "$d/actool.log" 2>&1
-              echo "exit $?"; cat "$d/actool.log"
-              if [ -f "$d/Assets.car" ]; then xcrun assetutil --info "$d/Assets.car" > "$d/assetutil.json" 2>&1; head -c 3000 "$d/assetutil.json"; echo; else echo "no car"; fi
+          icns=facthory/icons/app-icon/facthorypage.icns
+          # 1. the car built by Xcode 26.0.1 on macOS 15, as the release builds it
+          /bin/cp -Rf from15/app/Probe.app b/car-xcode26.0.1-built-on-macos15.app
+          # 2. the same Xcode on this macOS 26 host
+          mkdir -p b26 && python3 facthory/appicon.py stub --icon "$icon" --icns "$icns" --keep b26 2>&1 | grep -v '^dyld' | tee out/stub-on-26.log
+          /bin/mv -f b26/Probe.app b/car-xcode26.0.1-built-on-macos26.app
+          # 3. a newer Xcode, minimal flags: the car and the bitmaps both
+          export DEVELOPER_DIR=/Applications/Xcode_26.6.0.app/Contents/Developer
+          mkdir -p c26 && xcrun actool "$icon" --compile c26 --output-format human-readable-text --notices --warnings --errors --output-partial-info-plist c26/p.plist --app-icon facthorypage --minimum-deployment-target 26.0 --platform macosx > out/actool-26.6-minimal.log 2>&1
+          unset DEVELOPER_DIR
+          /bin/cp -Rf from15/app/Probe.app b/car-xcode26.6-minimal.app
+          /bin/cp -f c26/Assets.car b/car-xcode26.6-minimal.app/Contents/Resources/Assets.car
+          # 4. the control: the .icns alone, no car, no CFBundleIconName
+          /bin/cp -Rf from15/app/Probe.app b/icns-only.app
+          rm -f b/icns-only.app/Contents/Resources/Assets.car
+          plutil -remove CFBundleIconName b/icns-only.app/Contents/Info.plist
+          for a in b/*.app; do echo "== $a"; plutil -p "$a/Contents/Info.plist"; ls -l "$a/Contents/Resources"; done
+      - name: Draw the system's icon of each in light and dark
+        run: |
+          cat > render.swift <<'S'
+          import AppKit
+          let args = CommandLine.arguments
+          let path = args[1], out = args[2]
+          _ = NSApplication.shared
+          func png(_ name: NSAppearance.Name, _ file: String) {
+            NSApp.appearance = NSAppearance(named: name)
+            let img = NSWorkspace.shared.icon(forFile: path)
+            let n = 256
+            guard let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: n, pixelsHigh: n, bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0),
+                  let ctx = NSGraphicsContext(bitmapImageRep: rep) else { print("no context"); return }
+            NSGraphicsContext.saveGraphicsState()
+            NSGraphicsContext.current = ctx
+            NSAppearance(named: name)!.performAsCurrentDrawingAppearance {
+              NSColor(calibratedWhite: 0.5, alpha: 1).setFill()
+              NSRect(x: 0, y: 0, width: n, height: n).fill()
+              img.draw(in: NSRect(x: 0, y: 0, width: n, height: n), from: .zero, operation: .sourceOver, fraction: 1)
             }
-            run current --include-all-app-icons --enable-icon-stack-fallback-generation=disabled --development-region en --target-device mac --minimum-deployment-target 26.0 --platform macosx
-            run nofallbackflag --include-all-app-icons --development-region en --target-device mac --minimum-deployment-target 26.0 --platform macosx
-            run minimal --minimum-deployment-target 26.0 --platform macosx
+            NSGraphicsContext.restoreGraphicsState()
+            try? rep.representation(using: .png, properties: [:])?.write(to: URL(fileURLWithPath: file))
+            print(file, "size", img.size, "reps", img.representations.count, img.representations.map { "\($0.pixelsWide)x\($0.pixelsHigh)" })
+          }
+          png(.aqua, out + "-light.png")
+          png(.darkAqua, out + "-dark.png")
+          S
+          lsr=/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister
+          for a in b/*.app; do
+            n=$(basename "$a" .app)
+            "$lsr" -f -R -trusted "$a" || true
+            touch "$a"
+            echo "== $n"; swift render.swift "$a" "out/$n" 2>&1 | grep -v '^$'
           done
+          ls -l out
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
-          name: probe-${{ matrix.runner }}
-          path: probe-out
+          name: render-macos-26
+          path: out
           if-no-files-found: warn
