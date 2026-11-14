@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Tests of appicon.py that need no macOS: the .icon source, the car checks against listings of the shape
 `assetutil --info` prints (a JSON array; `IconImageStack` entries with a `Name` and an `Appearance`, as the Xcode
-26.0.1 car of the Page icon lists them: no flattened `Icon Image` bitmaps, which that Xcode writes none of with the
+26.0.1 car of the app icon lists them: no flattened `Icon Image` bitmaps, which that Xcode writes none of with the
 old format off),
 the bundle checks, the actool command line and the Xcode selection. `build` itself needs macOS and runs in the
 release workflow's macOS job.
@@ -29,7 +29,7 @@ AQUA, DARK, TINT = "NSAppearanceNameAqua", "NSAppearanceNameDarkAqua", "ISAppear
 
 
 def listing(*appearances: str, name: str = "facthorypage", flattened: int = 0, host15: bool = False) -> list[dict]:
-    """The entries of the Xcode 26.0.1 car of the Page icon (macos-15 runner, probe run 43617349785 and after), by
+    """The entries of the Xcode 26.0.1 car of the app icon (macos-15 runner, probe run 43617349785 and after), by
     appearance; `flattened` adds the bitmaps Xcode 26.1 and later write regardless."""
     # host15: the macOS 15 runner's assetutil cannot read the icon's types and lists the entries as `Unknown`.
     group, stack = ("Unknown", "Unknown") if host15 else ("IconGroup", "IconImageStack")

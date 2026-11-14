@@ -99,18 +99,28 @@ jobs:
             }
             NSGraphicsContext.restoreGraphicsState()
             try? rep.representation(using: .png, properties: [:])?.write(to: URL(fileURLWithPath: file))
-            print(file, "size", img.size, "reps", img.representations.count, img.representations.map { "\($0.pixelsWide)x\($0.pixelsHigh)" })
+            print(file, "size", img.size, "reps", img.representations.count, String(describing: type(of: img.representations.first as Any)))
           }
+          print(path, "isFilePackage", NSWorkspace.shared.isFilePackage(atPath: path))
           png(.aqua, out + "-light.png")
           png(.darkAqua, out + "-dark.png")
           S
           lsr=/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister
+          within() { perl -e 'alarm shift; exec @ARGV' "$@"; }
+          # Controls: an app the system ships, to see whether this runner draws app icons at all.
+          for ctl in /System/Applications/Calculator.app /Applications/Safari.app /System/Cryptexes/App/System/Applications/Safari.app; do
+            [ -d "$ctl" ] || continue
+            n=control-$(basename "$ctl" .app)
+            echo "== $n"; within 90 swift render.swift "$ctl" "out/$n" 2>&1 | grep -v '^$'
+          done
           for a in b/*.app; do
             n=$(basename "$a" .app)
-            "$lsr" -f -R -trusted "$a" || true
-            touch "$a"
-            echo "== $n"; swift render.swift "$a" "out/$n" 2>&1 | grep -v '^$'
-            mkdir -p "out/ql-$n"; qlmanage -t -s 256 -o "out/ql-$n" "$a" 2>&1 | tail -2 || true
+            # Install it where LaunchServices looks, and register it.
+            sudo /bin/rm -rf "/Applications/$n.app"; sudo /bin/cp -Rf "$a" "/Applications/$n.app"
+            "$lsr" -f -R -trusted "/Applications/$n.app" || true
+            echo "== $n"; mdls -name kMDItemContentType "/Applications/$n.app" || true
+            within 90 swift render.swift "/Applications/$n.app" "out/$n" 2>&1 | grep -v '^$'
+            mkdir -p "out/ql-$n"; within 40 qlmanage -t -s 256 -o "out/ql-$n" "/Applications/$n.app" 2>&1 | tail -2 || true
           done
           ls -l out
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

@@ -241,12 +241,18 @@ What ships: `facthory/icons/app-icon/facthorypage.icon/` (written by `render.py`
 dark fill and one layer, `Assets/facthorypage-layer.png`, the glyph alone on a transparent canvas) is copied to
 `assets/app-icon/` with the rest of the set. `packaging/macos/package.sh` calls `facthory/appicon.py build` (a rule
 in `brand.toml`) after the bundle's files are in place and before it is signed: it selects Xcode 26.0.1 (the
-`macos-15` image has it beside its default 16.4; forum reports say 26.1 and later ignore `--enable-icon-stack-fallback-generation=disabled`,
-so they would put generated old-format bitmaps in `Assets.car` that systems before 26 show instead of the `.icns`), runs
-`actool` as Tauri's bundler does, checks `assetutil --info` for the icon's images (the default and the dark variant;
-tinted and clear are listed and not required, since the system makes them), copies `Assets.car` into
-`Contents/Resources/`, sets `CFBundleIconName` (never `CFBundleIconFile`: the `.icns` stays) and fails the build when
-a variant, the car, the name or the fallback is missing. `Assets.car` is a resource, so the bundle's signature and
+`macos-15` image has it beside its default 16.4), runs `actool` as Tauri's bundler does with
+`--enable-icon-stack-fallback-generation=disabled`, checks `assetutil --info` for the icon's image stack in the default
+and the dark appearance (`IconImageStack`, named `Unknown` by a macOS 15 host's `assetutil`; tinted and clear are
+listed and not required, since the system makes them), copies `Assets.car` into `Contents/Resources/`, sets
+`CFBundleIconName` (never `CFBundleIconFile`: the `.icns` stays) and fails the build when a variant, the car, the name
+or the fallback is missing. The flag is needed on that host: without it Xcode 26's `actool` crashes on macOS 15 while it
+renders the old-format bitmaps (the tool closed the connection). With it Xcode 26.0.1 warns `Failed to generate
+flattened icon stack` (expected) and writes the stack alone, with no old-format bitmaps in the car, so systems before
+26 show the `.icns`. Xcode 26.1 and later write the bitmaps regardless (the logged count says); the guard never asks
+for them. An earlier guard asked for those bitmaps (`Icon Image` entries) and failed a car that held the whole icon
+(release run 43604567145). The release's macOS job runs `appicon.py stub` first, the same build into a throwaway
+bundle, so a broken icon fails in the first minutes. `Assets.car` is a resource, so the bundle's signature and
 notarization cover it. `install_check.py` runs the same checks on the installed app.
 
 The app sets no Dock icon of its own on macOS (a rule in `brand.toml` on `app_icon()`): eframe's runtime
