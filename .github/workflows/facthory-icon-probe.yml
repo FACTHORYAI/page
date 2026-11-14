@@ -107,21 +107,28 @@ jobs:
           S
           lsr=/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister
           within() { perl -e 'alarm shift; exec @ARGV' "$@"; }
-          # Controls: an app the system ships, to see whether this runner draws app icons at all.
-          for ctl in /System/Applications/Calculator.app /Applications/Safari.app /System/Cryptexes/App/System/Applications/Safari.app; do
-            [ -d "$ctl" ] || continue
-            n=control-$(basename "$ctl" .app)
-            echo "== $n"; within 90 swift render.swift "$ctl" "out/$n" 2>&1 | grep -v '^$'
-          done
           for a in b/*.app; do
             n=$(basename "$a" .app)
             # Install it where LaunchServices looks, and register it.
             sudo /bin/rm -rf "/Applications/$n.app"; sudo /bin/cp -Rf "$a" "/Applications/$n.app"
             "$lsr" -f -R -trusted "/Applications/$n.app" || true
-            echo "== $n"; mdls -name kMDItemContentType "/Applications/$n.app" || true
-            within 90 swift render.swift "/Applications/$n.app" "out/$n" 2>&1 | grep -v '^$'
-            mkdir -p "out/ql-$n"; within 40 qlmanage -t -s 256 -o "out/ql-$n" "/Applications/$n.app" 2>&1 | tail -2 || true
           done
+          shoot() { # $1 = suffix
+            for p in /System/Applications/Calculator.app /Applications/car-xcode26.0.1-built-on-macos15.app /Applications/car-xcode26.6-minimal.app /Applications/icns-only.app; do
+              n=$(basename "$p" .app); [ "${n#car-}" = "$n" ] && [ "$n" != icns-only ] && n=control-$n
+              within 90 swift render.swift "$p" "out/$n-$1" 2>&1 | grep -v '^$' || true
+            done
+          }
+          echo "== system appearance before: $(defaults read -g AppleInterfaceStyle 2>&1)"
+          shoot sys-light
+          echo "== switching the system to dark"
+          within 60 osascript -e 'tell application "System Events" to tell appearance preferences to set dark mode to true' 2>&1 || {
+            echo "osascript failed; trying defaults"
+            defaults write -g AppleInterfaceStyle Dark; killall -HUP cfprefsd || true; killall Dock || true
+          }
+          sleep 8
+          echo "== system appearance now: $(defaults read -g AppleInterfaceStyle 2>&1)"
+          shoot sys-dark
           ls -l out
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
