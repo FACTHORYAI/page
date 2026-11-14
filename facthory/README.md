@@ -40,6 +40,7 @@ Files Facthory adds to upstream's tree, and nothing else:
 | `facthory/update/facthory_update.rs` | The updater, copied into the app at build time (see Updates) |
 | `facthory/ui/facthory_logo.rs` | The About box's logo, copied into the app at build time: the mark on a light theme, the mono mark on a dark one (upstream's About box shows none) |
 | `facthory/update/updates_ui.rs` | Replaces upstream's update window (`crates/ui-egui/src/updates_ui.rs`): Help's Check for Updates opens our latest release; upstream's updater is left out (see Updates) |
+| `.github/workflows/facthory-codeql.yml` | CodeQL for rust, python and actions, by hand only: writes SARIF without uploading it to code scanning and keeps it as the artifact `codeql-sarif` (14 days), so the findings of GitHub's default setup can be read |
 | `.github/workflows/facthory-fidelity.yml` | The fidelity corpus run: weekly, by hand, and on corpus changes; pass rates as the job summary |
 | `facthory/corpus/` | The fidelity corpus (W6): `corpus.toml` (real Office files, pinned, never committed), `fidelity.py` (the runner), `scan.py` (checks a candidate file), and its README |
 | `facthory/store/listing.md` | The Microsoft Store listing (W9): every field ready to paste, with what must happen before it is submitted |
