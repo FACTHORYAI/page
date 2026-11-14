@@ -37,10 +37,11 @@ import sys
 import tempfile
 from pathlib import Path
 
-# Xcode 26.0.1: the runners' (macos-15 image) Xcode that has `actool` for .icon and that still honours
-# --enable-icon-stack-fallback-generation=disabled. From 26.1 on, reports say Xcode ignores it and puts
-# generated bitmaps of the old icon format into Assets.car, which systems before 26 then show instead of the
-# .icns. A runner image without this Xcode fails the build, by name, instead of building another icon.
+# Xcode 26.0.1: the runners' (macos-15 image) Xcode that has `actool` for .icon and that honours
+# --enable-icon-stack-fallback-generation=disabled. Measured on a macOS 26 host (probe run 43617349785): 26.1 and
+# later ignore the flag and put generated bitmaps of the old icon format into Assets.car, which systems before 26
+# may then show instead of the .icns. A runner image without this Xcode fails the build, by name, instead of
+# building another icon.
 XCODE = "26.0.1"
 XCODE_FOLDER = "/Applications"
 # The oldest system that reads an icon stack; the .icns serves the rest.
